@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const passport = require("./passport.js");
+const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const authMiddleware = require("./middleware/auth.js");
 const authController = require("./controllers/authControllers.js");

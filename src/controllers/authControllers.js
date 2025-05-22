@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
-const pool = require("../db.js");
+const pool = require("../config/db.js");
 const dotenv = require("dotenv");
 dotenv.config();
 
