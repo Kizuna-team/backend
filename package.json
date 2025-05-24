@@ -4,7 +4,7 @@
   "description": "交友軟體Web版(後端)",
   "main": "server.js",
   "scripts": {
-    "dev": "node src/server.js"
+    "dev": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",
@@ -25,14 +25,17 @@
     "globals": "^16.1.0"
   },
   "dependencies": {
+    "2025-kizuna-backend": "file:",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.10",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "socket.io": "^4.8.1"
   }
 }

@@ -60,7 +60,7 @@ async function login(req, res) {
       const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
         expiresIn: "7d",
       });
-      res.json({ accessToken, refreshToken });
+      res.json({ accessToken, refreshToken, userId: user.id, username: user.username });
     } else {
       res.status(401).json({ message: "帳號或密碼錯誤" });
     }
