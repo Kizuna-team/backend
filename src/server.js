@@ -44,6 +44,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
 });
 
+// 啟用 socket.io 聊天室邏輯
+// setupSocket(io);
+
+// 錯誤處理中間件（建議加入）
+app.use((err, req, res, next) => {
+  console.error("伺服器錯誤:", err.stack);
+  res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
+});
+
 app.listen(3000, () =>
   console.log("✅ Server running on http://localhost:3000")
 );
