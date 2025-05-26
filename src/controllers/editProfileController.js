@@ -8,14 +8,9 @@ const getProfile = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "未授權操作" });
     }
-
-    // const result = await pool.query(
-    //   `SELECT name, age, bio FROM users WHERE id = $1`,
-    //   [userId]
-    // );
-
+    console.log("req.body.interest =", req.body.interest);
     const result = await pool.query(
-      `SELECT id, name, gender, orientation, bio, age, location, zodiac, mbti, job FROM profiles WHERE user_id = $1`,
+      `SELECT id, name, gender, orientation, bio, age, location, zodiac, mbti, job, interest FROM profiles WHERE user_id = $1`,
       [userId]
     );
 
@@ -51,7 +46,6 @@ const updateProfile = async (req, res) => {
       "job",
       "interest",
     ];
-
     const updates = [];
     const values = [];
     let paramIndex = 1;
@@ -64,7 +58,8 @@ const updateProfile = async (req, res) => {
 
         // interest 陣列，把 JS 陣列轉成 JSON 字串 （適用 jsonb 欄位）
         if (field === "interest" && Array.isArray(req.body[field])) {
-          values.push(JSON.stringify(req.body[field]));
+          // values.push(JSON.stringify(req.body[field]));
+          values.push(req.body[field]); // 直接推陣列
         } else {
           values.push(req.body[field]);
         }
