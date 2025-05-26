@@ -1,10 +1,12 @@
 {
   "name": "2025-kizuna-backend",
   "version": "1.0.0",
-  "description": "交友軟體Web版(後端)",
+  "description": "kizuna(backend)",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate"
   },
   "repository": {
     "type": "git",
@@ -21,8 +23,7 @@
     "@eslint/js": "^9.26.0",
     "@eslint/json": "^0.12.0",
     "eslint": "^9.26.0",
-    "eslint-plugin-vue": "^10.1.0",
-    "globals": "^16.1.0"
+    "eslint-plugin-vue": "^10.1.0"
   },
   "dependencies": {
     "2025-kizuna-backend": "file:",
@@ -30,6 +31,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",

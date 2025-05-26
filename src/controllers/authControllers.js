@@ -1,7 +1,9 @@
+const db = require("../db/index.js");
+const { usersTable } = require("../db/schema.js");
+const { eq } = require("drizzle-orm");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
-const pool = require("../config/db.js");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -18,20 +20,20 @@ async function register(req, res) {
   // 正式環境要拿掉raw_password欄位
   try {
     // 註冊的帳號不能重複 所以先檢查 username 是否已經存在
-    const checkUser = await pool.query(
-      "SELECT id FROM users WHERE username = $1",
-      [username]
-    );
+    const checkUser = await db.select().from(usersTable).where(eq(usersTable.username,username));
+    console.log(checkUser);
     // 如果已經有相同名稱的帳號名稱
-    if (checkUser.rows.length > 0) {
+    if (checkUser.length > 0) {
       return res.status(400).json({ message: "此帳號已存在，請嘗試其他名稱" });
     }
 
     // 有通過檢查才真的把這位使用者帳號密碼加入資料庫
-    await pool.query(
-      "INSERT INTO users (username, password, raw_password) VALUES ($1, $2, $3)",
-      [username, hashed, password]
-    );
+    await db.insert(usersTable).values({
+      username: username,
+      password: hashed,
+      // 測試用 正式環境會移除
+      raw_password: password,
+    })
     res.json({ message: "註冊成功" });
   } catch (error) {
     res.status(400).json({
@@ -45,12 +47,10 @@ async function login(req, res) {
   const { username, password } = req.body;
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
-      username,
-    ]);
+    const result = await db.select().from(usersTable).where(eq(usersTable.username,username)); 
     // debug
     // console.log(result);
-    const user = result.rows[0];
+    const user = result[0];
     if (user && (await bcrypt.compare(password, user.password))) {
       const accessToken = jwt.sign(
         { id: user.id, username: user.username },
@@ -60,7 +60,12 @@ async function login(req, res) {
       const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
         expiresIn: "7d",
       });
-      res.json({ accessToken, refreshToken, userId: user.id, username: user.username });
+      res.json({
+        accessToken,
+        refreshToken,
+        userId: user.id,
+        username: user.username,
+      });
     } else {
       res.status(401).json({ message: "帳號或密碼錯誤" });
     }

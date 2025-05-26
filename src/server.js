@@ -21,9 +21,9 @@ app.use(express.json());
 app.use(passport.initialize());
 
 // API 在這設定前端打什麼 後端去執行哪個方法
-app.post("/api/register", authController.register);
-app.post("/api/login", authController.login);
-app.post("/api/refresh", authController.refresh);
+app.post("/auth/register", authController.register);
+app.post("/auth/login", authController.login);
+app.post("/refresh", authController.refresh);
 app.get("/auth/google", authController.googleAuth);
 app.get("/auth/google/callback", authController.googleAuthCallback);
 
@@ -32,8 +32,8 @@ app.get("/api/me", authMiddleware, (req, res) => {
   res.json({ message: "驗證成功", user: req.user });
 });
 
-// 啟用 socket.io 聊天室邏輯
-setupSocket(io);
+// // 啟用 socket.io 聊天室邏輯
+// setupSocket(io);
 
 server.listen(3000, () =>
   console.log("✅ Server with Socket.io running on http://localhost:3000")
