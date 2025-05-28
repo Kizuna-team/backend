@@ -10,6 +10,7 @@ const activityRoutes=require("./routes/activityRoutes.js")
 const http = require("http");
 const { Server } = require("socket.io");
 const setupSocket = require("./controllers/chatControllers.js");
+const photoRoutes = require("./routes/upload.js");
 
 dotenv.config();
 
@@ -17,12 +18,13 @@ const app = express();
 
 // 讓 express 和 socket.io 共用一個 server
 const server = http.createServer(app);
-const io = new Server(server, {cors:{origin:"*"}});
+const io = new Server(server, { cors: { origin: "*" } });
 // console.log(io);
 
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
+app.use("/api", photoRoutes);
 
 // API 在這設定前端打什麼 後端去執行哪個方法
 app.post("/auth/register", authController.register);

@@ -36,9 +36,17 @@ const activities = pgTable("activities", {
   createdBy: varchar("created_by", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow(),
 });
+//上傳照片
+const photosTable = pgTable("photos", {
+  id: serial("id").primaryKey(),
+  image_url: varchar("image_url", { length: 255 }),
+  image_key: varchar("image_key", { length: 255 }),
+  uploaded_at: timestamp("uploaded_at").defaultNow(),
+});
 
 module.exports = {
   usersTable,
   messagesTable,
   activities,
+  photosTable,
 };
