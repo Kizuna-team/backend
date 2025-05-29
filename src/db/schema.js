@@ -54,7 +54,7 @@ const profileTable = pgTable("profiles", {
   name: varchar("name", { length: 15 }).notNull(),
   gender: varchar("gender", { length: 8 }).notNull(),
   orientation: varchar("orientation", { length: 15 }).notNull(),
-  bio: text("bio"),
+  bio: varchar({ length: 255 }),
   age: integer("age").notNull(),
   location: varchar("location", { length: 31 }).notNull(),
   zodiac: varchar("zodiac", { length: 15 }),
