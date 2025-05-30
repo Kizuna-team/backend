@@ -7,6 +7,8 @@ const authController = require("./controllers/authControllers.js");
 const activityRoutes = require("./routes/activityRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes.js");
 const photoRoutes = require("./routes/upload.js");
+const authRoutes = require("./routes/authRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -22,18 +24,9 @@ app.use(express.json());
 app.use(passport.initialize());
 app.use("/api", photoRoutes);
 
-// API 在這設定前端打什麼 後端去執行哪個方法
-app.post("/auth/register", authController.register);
-app.post("/auth/login", authController.login);
-app.post("/auth/refresh", authController.refresh);
-app.get("/auth/google", authController.googleAuth);
-app.get("/auth/google/callback", authController.googleAuthCallback);
-app.use("/activities", activityRoutes);
-
-// 測試需要 token 的 API
-app.get("/api/me", authMiddleware, (req, res) => {
-  res.json({ message: "驗證成功", user: req.user });
-});
+// 掛載 API router
+app.use("/auth", authRoutes);
+app.use("/recommendations", recommendationRoutes);
 
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/api/profile", editProfileRoutes);

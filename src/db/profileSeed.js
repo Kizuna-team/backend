@@ -1,5 +1,5 @@
-const db = require("./src/db/index.js"); // 初始化 db
-const { usersTable, profileTable } = require("./src/db/schema.js"); // schema
+const db = require("./index.js"); // 初始化 db
+const { usersTable, profileTable } = require("./schema.js"); // schema
 const profilesSeed = require("./fake-profile.js"); // ESModule 轉 import
 const bcrypt = require("bcrypt");
 
@@ -30,8 +30,10 @@ async function seed() {
   // 插入 users
   const insertedUsers = await db.insert(usersTable).values(userData).returning({ id: usersTable.id });
 
-  console.log(`✅ 成功建立 ${insertedUsers.length} 筆 users`);
-  console.log(`✅ 成功建立 ${profilesSeed.length} 筆 profile`);
+  // 如果 profilesSeed 的長度 < usersTable 中人物的總數 
+  // 等下 map func 會出錯 因為insert到一半 就會不知道接下來要插在哪
+  console.log(`✅成功建立 ${insertedUsers.length} 筆 users`);
+  console.log(`✅成功建立 ${profilesSeed.length} 筆 profile`);
 
   // 組成 profile 資料
   const profileData = insertedUsers.map((user, i) => {

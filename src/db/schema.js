@@ -8,7 +8,7 @@ const {
   foreignKey,
   timestamp,
   date,
-  pgEnum
+  pgEnum,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -27,7 +27,6 @@ const messagesTable = pgTable("messages", {
   content: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow().notNull(),
 });
-
 
 const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
@@ -48,7 +47,11 @@ const photosTable = pgTable("photos", {
 
 // 使用者個人檔案
 // 以 userId 當作唯一識別
-const orientationEnum = pgEnum('orientation_enum', ['異性戀', '同性戀', '雙性戀']);
+const orientationEnum = pgEnum("orientation_enum", [
+  "異性戀",
+  "同性戀",
+  "雙性戀",
+]);
 // 使用者個人簡介(地區、興趣)
 const profileTable = pgTable("profiles", {
   userId: integer("user_id")
@@ -65,7 +68,7 @@ const profileTable = pgTable("profiles", {
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 15 }),
   interests: varchar("interests", { length: 50 }).array().notNull(),
-  last_active_at: timestamp({withTimezone: true}).defaultNow().notNull(),
+  last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
 module.exports = {
@@ -74,7 +77,5 @@ module.exports = {
   activities,
   photosTable,
   profileTable,
-  orientationEnum
+  orientationEnum,
 };
-
-  
