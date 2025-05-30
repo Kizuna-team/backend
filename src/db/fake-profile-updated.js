@@ -8,7 +8,7 @@ const profilesSeed = [
     "zodiac": "獅子座",
     "mbti": "ISTJ",
     "job": "業務",
-    "interest": [
+    "interests": [
       "高爾夫",
       "滑板",
       "紅酒品鑑",
@@ -46,7 +46,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ESFP",
     "job": "業務",
-    "interest": [
+    "interests": [
       "有氧運動",
       "紅酒品鑑",
       "跳繩",
@@ -80,7 +80,7 @@ const profilesSeed = [
     "zodiac": "獅子座",
     "mbti": "ENTP",
     "job": "工程師",
-    "interest": [
+    "interests": [
       "馬拉松",
       "編織毛線",
       "手工藝（手作飾品）",
@@ -114,7 +114,7 @@ const profilesSeed = [
     "zodiac": "天蠍座",
     "mbti": "ESTJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "編織毛線",
       "城市探索",
       "小提琴",
@@ -149,7 +149,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ESFJ",
     "job": "業務",
-    "interest": [
+    "interests": [
       "閱讀非小說類",
       "相聲",
       "有氧運動",
@@ -183,7 +183,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "INTJ",
     "job": "教師",
-    "interest": [
+    "interests": [
       "外語學習",
       "爬牆（抱石）",
       "製作蠟燭",
@@ -220,7 +220,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ISFP",
     "job": "教師",
-    "interest": [
+    "interests": [
       "參加演唱會／音樂祭",
       "威士忌品鑑",
       "異國料理學習",
@@ -257,7 +257,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ISTJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "網球",
       "心理學",
       "文化研究",
@@ -293,7 +293,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ENTP",
     "job": "產品經理",
-    "interest": [
+    "interests": [
       "釣魚",
       "香氛調配",
       "植物栽培（多肉、觀葉植物）",
@@ -331,7 +331,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "ENTJ",
     "job": "工程師",
-    "interest": [
+    "interests": [
       "模型製作（鋼彈、迷你場景）",
       "香氛調配",
       "編曲",
@@ -367,7 +367,7 @@ const profilesSeed = [
     "zodiac": "雙子座",
     "mbti": "INFP",
     "job": "作家",
-    "interest": [
+    "interests": [
       "有氧運動",
       "紅酒品鑑",
       "雕刻",
@@ -401,7 +401,7 @@ const profilesSeed = [
     "zodiac": "牡羊座",
     "mbti": "INTP",
     "job": "教師",
-    "interest": [
+    "interests": [
       "城市探索",
       "小提琴",
       "插花",
@@ -435,7 +435,7 @@ const profilesSeed = [
     "zodiac": "巨蟹座",
     "mbti": "ESFP",
     "job": "學生",
-    "interest": [
+    "interests": [
       "高爾夫",
       "拼布縫紉",
       "雕刻",
@@ -473,7 +473,7 @@ const profilesSeed = [
     "zodiac": "巨蟹座",
     "mbti": "INTJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "遙控車／遙控飛機",
       "製作蠟燭",
       "心理學",
@@ -507,7 +507,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "ESTP",
     "job": "產品經理",
-    "interest": [
+    "interests": [
       "天文學",
       "家庭料理",
       "編織毛線",
@@ -543,7 +543,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "ISFP",
     "job": "作家",
-    "interest": [
+    "interests": [
       "馬拉松",
       "平面設計",
       "咖啡拉花",
@@ -582,7 +582,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "ISFJ",
     "job": "健身教練",
-    "interest": [
+    "interests": [
       "3D建模",
       "瑜伽冥想",
       "攝影旅行",
@@ -621,7 +621,7 @@ const profilesSeed = [
     "zodiac": "天蠍座",
     "mbti": "INTJ",
     "job": "舞者",
-    "interest": [
+    "interests": [
       "手帳設計",
       "地理探索",
       "DJ",
@@ -656,7 +656,7 @@ const profilesSeed = [
     "zodiac": "金牛座",
     "mbti": "ESTP",
     "job": "音樂人",
-    "interest": [
+    "interests": [
       "瑜伽冥想",
       "瑜伽",
       "馬拉松",
@@ -690,7 +690,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ESFP",
     "job": "舞者",
-    "interest": [
+    "interests": [
       "紅酒品鑑",
       "電動遊戲",
       "網球",
@@ -729,7 +729,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "ISTJ",
     "job": "舞者",
-    "interest": [
+    "interests": [
       "羽毛球",
       "外語學習",
       "自行車",
@@ -767,7 +767,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ISFP",
     "job": "音樂人",
-    "interest": [
+    "interests": [
       "看電影",
       "電子音樂製作",
       "旅遊規劃",
@@ -801,7 +801,7 @@ const profilesSeed = [
     "zodiac": "金牛座",
     "mbti": "ESFJ",
     "job": "工程師",
-    "interest": [
+    "interests": [
       "羽毛球",
       "鋼琴",
       "健身重訓",
@@ -836,7 +836,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ENTJ",
     "job": "業務",
-    "interest": [
+    "interests": [
       "拼布縫紉",
       "旅遊規劃",
       "攝影旅行",
@@ -870,7 +870,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "ESFP",
     "job": "產品經理",
-    "interest": [
+    "interests": [
       "雕刻",
       "配音",
       "歷史研究",
@@ -906,7 +906,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "ISTJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "翻譯",
       "唱歌",
       "調酒",
@@ -940,7 +940,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ISFP",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "烘焙",
       "水彩畫",
       "馬拉松",
@@ -979,7 +979,7 @@ const profilesSeed = [
     "zodiac": "天蠍座",
     "mbti": "ISFP",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "威士忌品鑑",
       "瑜伽",
       "雕刻",
@@ -1013,7 +1013,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "ESFP",
     "job": "作家",
-    "interest": [
+    "interests": [
       "威士忌品鑑",
       "香氛調配",
       "爵士鼓",
@@ -1048,7 +1048,7 @@ const profilesSeed = [
     "zodiac": "牡羊座",
     "mbti": "ESTJ",
     "job": "健身教練",
-    "interest": [
+    "interests": [
       "相聲",
       "水彩畫",
       "天文學",
@@ -1087,7 +1087,7 @@ const profilesSeed = [
     "zodiac": "水瓶座",
     "mbti": "ESFJ",
     "job": "音樂人",
-    "interest": [
+    "interests": [
       "水彩畫",
       "桌球",
       "唱歌",
@@ -1121,7 +1121,7 @@ const profilesSeed = [
     "zodiac": "金牛座",
     "mbti": "ESFJ",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "天文學",
       "調酒",
       "插花",
@@ -1158,7 +1158,7 @@ const profilesSeed = [
     "zodiac": "金牛座",
     "mbti": "ENFJ",
     "job": "健身教練",
-    "interest": [
+    "interests": [
       "歷史研究",
       "衝浪",
       "植物栽培（多肉、觀葉植物）",
@@ -1194,7 +1194,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ISFP",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "跳繩",
       "水彩畫",
       "樂團演出",
@@ -1229,7 +1229,7 @@ const profilesSeed = [
     "zodiac": "雙子座",
     "mbti": "ISFJ",
     "job": "作家",
-    "interest": [
+    "interests": [
       "畫畫（素描）",
       "配音",
       "閱讀非小說類",
@@ -1265,7 +1265,7 @@ const profilesSeed = [
     "zodiac": "水瓶座",
     "mbti": "INFJ",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "籃球",
       "吉他",
       "作曲",
@@ -1301,7 +1301,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "INFJ",
     "job": "咖啡師",
-    "interest": [
+    "interests": [
       "木工",
       "寵物照顧",
       "烘焙",
@@ -1337,7 +1337,7 @@ const profilesSeed = [
     "zodiac": "處女座",
     "mbti": "ESTJ",
     "job": "工程師",
-    "interest": [
+    "interests": [
       "看展覽",
       "紅酒品鑑",
       "家庭料理",
@@ -1372,7 +1372,7 @@ const profilesSeed = [
     "zodiac": "獅子座",
     "mbti": "INFP",
     "job": "舞者",
-    "interest": [
+    "interests": [
       "志工活動",
       "文化研究",
       "拼布縫紉",
@@ -1410,7 +1410,7 @@ const profilesSeed = [
     "zodiac": "處女座",
     "mbti": "ESTP",
     "job": "健身教練",
-    "interest": [
+    "interests": [
       "看電影",
       "收藏（郵票、模型、玩具）",
       "唱歌",
@@ -1447,7 +1447,7 @@ const profilesSeed = [
     "zodiac": "獅子座",
     "mbti": "INFP",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "模型製作（鋼彈、迷你場景）",
       "雕刻",
       "舞蹈（街舞、芭蕾、現代舞）",
@@ -1485,7 +1485,7 @@ const profilesSeed = [
     "zodiac": "天秤座",
     "mbti": "ISTJ",
     "job": "工程師",
-    "interest": [
+    "interests": [
       "心理學",
       "爬牆（抱石）",
       "遙控車／遙控飛機",
@@ -1519,7 +1519,7 @@ const profilesSeed = [
     "zodiac": "處女座",
     "mbti": "ESFP",
     "job": "業務",
-    "interest": [
+    "interests": [
       "相聲",
       "皮拉提斯",
       "陶藝",
@@ -1556,7 +1556,7 @@ const profilesSeed = [
     "zodiac": "水瓶座",
     "mbti": "ENTP",
     "job": "設計師",
-    "interest": [
+    "interests": [
       "城市探索",
       "程式設計",
       "皮拉提斯",
@@ -1593,7 +1593,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ISFJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "油畫",
       "外語學習",
       "心理學",
@@ -1631,7 +1631,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ISFJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "武術（跆拳道、空手道、柔道）",
       "電子音樂製作",
       "網球",
@@ -1667,7 +1667,7 @@ const profilesSeed = [
     "zodiac": "獅子座",
     "mbti": "INTJ",
     "job": "產品經理",
-    "interest": [
+    "interests": [
       "登山",
       "健身重訓",
       "咖啡拉花",
@@ -1703,7 +1703,7 @@ const profilesSeed = [
     "zodiac": "雙魚座",
     "mbti": "INTJ",
     "job": "健身教練",
-    "interest": [
+    "interests": [
       "爬牆（抱石）",
       "調酒",
       "網球",
@@ -1737,7 +1737,7 @@ const profilesSeed = [
     "zodiac": "射手座",
     "mbti": "ESFJ",
     "job": "產品經理",
-    "interest": [
+    "interests": [
       "樂團演出",
       "攝影旅行",
       "手工藝（手作飾品）",
@@ -1773,7 +1773,7 @@ const profilesSeed = [
     "zodiac": "魔羯座",
     "mbti": "ISFJ",
     "job": "行銷專員",
-    "interest": [
+    "interests": [
       "樂團演出",
       "編曲",
       "文化研究",

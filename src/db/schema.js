@@ -67,9 +67,9 @@ const profileTable = pgTable("profiles", {
   zodiac: varchar("zodiac", { length: 15 }),
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 15 }),
-  interests: varchar("interests", { length: 50 }).array().notNull(),
+  interests: varchar({ length: 15}).array().notNull(),
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
-});
+}); 
 
 module.exports = {
   usersTable,
