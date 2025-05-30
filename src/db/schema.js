@@ -7,6 +7,7 @@ const {
   text,
   foreignKey,
   timestamp,
+  date,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -26,7 +27,18 @@ const messagesTable = pgTable("messages", {
   created_at: timestamp().defaultNow().notNull(),
 });
 
+const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }),
+  location: varchar("location", { length: 255 }),
+  date: date("date"),
+  description: text("description"),
+  createdBy: varchar("created_by", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
 module.exports = {
   usersTable,
-  messagesTable
-}
+  messagesTable,
+  activities,
+};
