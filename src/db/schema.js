@@ -8,12 +8,13 @@ const {
   foreignKey,
   timestamp,
   date,
+  pgEnum
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
 const usersTable = pgTable("users", {
   id: serial().primaryKey().notNull(),
-  username: varchar({ length: 100 }).notNull(),
+  username: varchar({ length: 20 }).notNull(),
   password: varchar({ length: 255 }).notNull(),
   raw_password: varchar({ length: 20 }).notNull(),
 });
@@ -26,6 +27,7 @@ const messagesTable = pgTable("messages", {
   content: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow().notNull(),
 });
+
 
 const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
@@ -46,6 +48,8 @@ const photosTable = pgTable("photos", {
 
 // 使用者個人檔案
 // 以 userId 當作唯一識別
+const orientationEnum = pgEnum('orientation_enum', ['異性戀', '同性戀', '雙性戀']);
+// 使用者個人簡介(地區、興趣)
 const profileTable = pgTable("profiles", {
   userId: integer("user_id")
     .primaryKey()
@@ -53,7 +57,7 @@ const profileTable = pgTable("profiles", {
     .references(() => usersTable.id),
   name: varchar("name", { length: 15 }).notNull(),
   gender: varchar("gender", { length: 8 }).notNull(),
-  orientation: varchar("orientation", { length: 15 }).notNull(),
+  orientation: orientationEnum("orientation").notNull(),
   bio: varchar({ length: 255 }),
   age: integer("age").notNull(),
   location: varchar("location", { length: 31 }).notNull(),
@@ -61,6 +65,7 @@ const profileTable = pgTable("profiles", {
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 15 }),
   interests: varchar("interests", { length: 50 }).array().notNull(),
+  last_active_at: timestamp({withTimezone: true}).defaultNow().notNull(),
 });
 
 module.exports = {
@@ -69,4 +74,7 @@ module.exports = {
   activities,
   photosTable,
   profileTable,
+  orientationEnum
 };
+
+  
