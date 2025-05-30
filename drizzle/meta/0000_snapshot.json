@@ -1,5 +1,5 @@
 {
-  "id": "5db1d0b4-7895-4116-a7c5-9f08bced7871",
+  "id": "39dd51cf-c345-40cf-9188-1d955f9fd28f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -245,7 +245,7 @@
         },
         "interests": {
           "name": "interests",
-          "type": "varchar(50)[]",
+          "type": "varchar(15)[]",
           "primaryKey": false,
           "notNull": true
         }
@@ -256,12 +256,8 @@
           "name": "profiles_user_id_users_id_fk",
           "tableFrom": "profiles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

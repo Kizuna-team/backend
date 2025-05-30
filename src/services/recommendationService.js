@@ -44,7 +44,7 @@ async function getAdvancedRecommendedProfiles({
         gte(profileTable.last_active_at, activeSince)
       )
     )
-    .limit(30) // 撈 30 筆做排序
+    .limit(20) // 撈 20 筆做排序
     .offset(offset);
 
   // 排序邏輯

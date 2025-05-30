@@ -23,7 +23,7 @@ CREATE TABLE "profiles" (
 	"zodiac" varchar(15) NOT NULL,
 	"mbti" varchar(5) NOT NULL,
 	"job" varchar(15) NOT NULL,
-	"interest" varchar(15)[] NOT NULL,
+	"interests" varchar(15)[] NOT NULL,
 	"orientation" "orientation_enum" NOT NULL,
 	"last_active_at" timestamp with time zone DEFAULT now() NOT NULL
 );

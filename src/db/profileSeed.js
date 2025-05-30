@@ -1,6 +1,6 @@
 const db = require("./index.js"); // 初始化 db
 const { usersTable, profileTable } = require("./schema.js"); // schema
-const profilesSeed = require("./fake-profile.js"); // ESModule 轉 import
+const profilesSeed = require("./fake-profile.js");
 const bcrypt = require("bcrypt");
 
 async function seed() {
@@ -38,6 +38,7 @@ async function seed() {
   // 組成 profile 資料
   const profileData = insertedUsers.map((user, i) => {
     const seed = profilesSeed[i];
+    console.log(seed);
     return {
       user_id: user.id,
       gender: seed.gender,
@@ -47,7 +48,7 @@ async function seed() {
       zodiac: seed.zodiac,
       mbti: seed.mbti,
       job: seed.job,
-      interest: seed.interest,
+      interests: seed.interests,
       orientation: seed.orientation,
       last_active_at: new Date(),
     };
