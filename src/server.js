@@ -2,21 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
-const authMiddleware = require("./middleware/auth.js");
-const authController = require("./controllers/authControllers.js");
-const activityRoutes = require("./routes/activityRoutes.js");
-const editProfileRoutes = require("./routes/editProfileRoutes.js");
-const photoRoutes = require("./routes/upload.js");
-const authRoutes = require("./routes/authRoutes");
-const recommendationRoutes = require("./routes/recommendationRoutes");
-const profileRoutes = require("./routes/profileRoutes");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 
 // 以下為即時聊天室新增模組
-const http = require("http");
-const { Server } = require("socket.io");
-const setupSocket = require("./controllers/chatControllers.js");
+// const http = require("http");
+// const { Server } = require("socket.io");
+// const setupSocket = require("./controllers/chatControllers.js");
 
 
 dotenv.config();
