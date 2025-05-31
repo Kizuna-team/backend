@@ -5,7 +5,7 @@ const { eq } = require("drizzle-orm");
 
 async function getProfileByUserId(req, res) {
   try {
-    console.log(req.params)
+    // console.log(req.params)
     const userId = parseInt(req.params.userId);
 
     // 查 profileTable
