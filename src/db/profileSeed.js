@@ -38,7 +38,7 @@ async function seed() {
   // 組成 profile 資料
   const profileData = insertedUsers.map((user, i) => {
     const seed = profilesSeed[i];
-    console.log(seed);
+    // console.log(seed);
     return {
       user_id: user.id,
       gender: seed.gender,

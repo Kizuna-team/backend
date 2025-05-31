@@ -4,6 +4,7 @@ const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
