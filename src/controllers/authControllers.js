@@ -20,7 +20,10 @@ async function register(req, res) {
   // 正式環境要拿掉raw_password欄位
   try {
     // 註冊的帳號不能重複 所以先檢查 username 是否已經存在
-    const checkUser = await db.select().from(usersTable).where(eq(usersTable.username,username));
+    const checkUser = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
     console.log(checkUser);
     // 如果已經有相同名稱的帳號名稱
     if (checkUser.length > 0) {
@@ -33,7 +36,7 @@ async function register(req, res) {
       password: hashed,
       // 測試用 正式環境會移除
       raw_password: password,
-    })
+    });
     res.json({ message: "註冊成功" });
   } catch (error) {
     res.status(400).json({
@@ -47,7 +50,10 @@ async function login(req, res) {
   const { username, password } = req.body;
 
   try {
-    const result = await db.select().from(usersTable).where(eq(usersTable.username,username)); 
+    const result = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
     // debug
     // console.log(result);
     const user = result[0];

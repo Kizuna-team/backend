@@ -3,7 +3,9 @@ const cors = require("cors");
 const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const authMiddleware = require("./middleware/auth.js");
-const authController = require("./controllers/authControllers.js");
+const authController = require("./controllers/authControllers.js")
+const activityController=require("./controllers/activityControllers.js")
+
 // 以下為即時聊天室新增模組
 const http = require("http");
 const { Server } = require("socket.io");
@@ -26,6 +28,7 @@ app.post("/auth/login", authController.login);
 app.post("/refresh", authController.refresh);
 app.get("/auth/google", authController.googleAuth);
 app.get("/auth/google/callback", authController.googleAuthCallback);
+app.use('/activities', activitiesRoutes)
 
 // 測試需要 token 的 API
 app.get("/api/me", authMiddleware, (req, res) => {
