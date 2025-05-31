@@ -28,7 +28,7 @@ app.post("/auth/login", authController.login);
 app.post("/refresh", authController.refresh);
 app.get("/auth/google", authController.googleAuth);
 app.get("/auth/google/callback", authController.googleAuthCallback);
-app.use('/activities', activitiesRoutes)
+app.use('/activities', activityController)
 
 // 測試需要 token 的 API
 app.get("/api/me", authMiddleware, (req, res) => {
