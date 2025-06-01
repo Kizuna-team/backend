@@ -5,7 +5,7 @@ const { eq } = require("drizzle-orm");
 
 // Get取得使用者個人資料
 const getProfile = async (req, res) => {
-  console.log(" 進入 getProfile handler");
+  console.log("getProfile req.user:", req.user);
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -14,7 +14,7 @@ const getProfile = async (req, res) => {
 
     const result = await db
       .select({
-        id: profileTable.id,
+        userId: profileTable.userId,
         name: profileTable.name,
         gender: profileTable.gender,
         orientation: profileTable.orientation,
@@ -67,6 +67,16 @@ const createProfile = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "未授權，請先登入" });
     }
+    // 先檢查是否已有資料，有就回傳409(沒有設關聯？)
+    const existingProfile = await db
+      .select()
+      .from(profileTable)
+      .where(eq(profileTable.userId, userId))
+      .limit(1);
+
+    if (existingProfile.length > 0) {
+      return res.status(409).json({ message: "使用者資料已存在" });
+    }
 
     const {
       name,
@@ -81,11 +91,11 @@ const createProfile = async (req, res) => {
       interests,
     } = req.body || {};
 
-    // 新增完直接導向到「編輯畫面」
+    // 沒有使用者資料才新增
     const newData = await db
       .insert(profileTable)
       .values({
-        user_id: userId,
+        userId: userId,
         name: name || "",
         gender: gender || "U", // U 表示 unknown
         bio: bio || "",
@@ -96,7 +106,6 @@ const createProfile = async (req, res) => {
         job: job || "",
         orientation: orientation || "unknown",
         interests: interests || [],
-        // interests: JSON.stringify(interests || []), // 將 interest 轉為 JSON 字串存入 DB
       })
       .returning(); // 回傳新增的資料
 
@@ -156,7 +165,7 @@ const updateProfile = async (req, res) => {
     const updateResult = await db
       .update(profileTable)
       .set(updateData)
-      .where(eq(profileTable.user_id, userId))
+      .where(eq(profileTable.userId, userId))
       .returning();
 
     if (updateResult.length === 0) {

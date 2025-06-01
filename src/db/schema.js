@@ -44,9 +44,29 @@ const photosTable = pgTable("photos", {
   uploaded_at: timestamp("uploaded_at").defaultNow(),
 });
 
+// 使用者個人檔案
+// 以 userId 當作唯一識別
+const profileTable = pgTable("profiles", {
+  userId: integer("user_id")
+    .primaryKey()
+    .notNull()
+    .references(() => usersTable.id),
+  name: varchar("name", { length: 15 }).notNull(),
+  gender: varchar("gender", { length: 8 }).notNull(),
+  orientation: varchar("orientation", { length: 15 }).notNull(),
+  bio: text("bio"),
+  age: integer("age").notNull(),
+  location: varchar("location", { length: 31 }).notNull(),
+  zodiac: varchar("zodiac", { length: 15 }),
+  mbti: varchar("mbti", { length: 5 }),
+  job: varchar("job", { length: 15 }),
+  interests: varchar("interests", { length: 50 }).array().notNull(),
+});
+
 module.exports = {
   usersTable,
   messagesTable,
   activities,
   photosTable,
+  profileTable,
 };
