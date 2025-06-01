@@ -2,10 +2,7 @@ const {
   pgTable,
   serial,
   varchar,
-  char,
   integer,
-  text,
-  foreignKey,
   timestamp,
   date,
   pgEnum,
@@ -71,6 +68,34 @@ const profileTable = pgTable("profiles", {
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
+// 商品表格
+const productsTable = pgTable("products", {
+  id: serial().primaryKey().notNull(),
+  name: varchar({ length: 100 }).notNull(),
+  price: integer().notNull(),
+  description: varchar({ length: 255 }).notNull(),
+  image_url: varchar({ length: 255 }).notNull(),
+  created_at: timestamp().defaultNow().notNull(),
+});
+
+// 訂單表( 1筆 = 一次送禮行為 )
+const giftOrdersTable = pgTable("gift_orders",{
+    // 這邊的 id 是訂單流水編號 
+    id: serial().primaryKey().notNull(),
+    sender_id: integer().notNull().references(()=>usersTable.id),
+    receiver_id: integer().notNull().references(()=>usersTable.id),
+    // status: 
+    created_at: timestamp().defaultNow()
+})
+
+// 訂單明細( 1筆 = 一個商品 + 買的數量)
+const OrderItemsTable = pgTable("order_items",{
+    id: serial().primaryKey().notNull(),
+    gift_order_id: integer().notNull().references(()=>giftOrdersTable.id),
+    product_id: integer().notNull().references(()=>productsTable.id),
+    quantity: integer().notNull(),
+})
+
 module.exports = {
   usersTable,
   messagesTable,
@@ -78,4 +103,7 @@ module.exports = {
   photosTable,
   profileTable,
   orientationEnum,
+  productsTable,
+  giftOrdersTable,
+  OrderItemsTable
 };
