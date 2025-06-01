@@ -1,0 +1,1 @@
+ALTER TABLE "photos" ADD COLUMN "uploaded_at" timestamp DEFAULT now();
