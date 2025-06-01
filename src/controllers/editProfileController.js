@@ -14,7 +14,11 @@ const getProfile = async (req, res) => {
 
     const result = await db
       .select({
+<<<<<<< HEAD
         userId: profileTable.userId,
+=======
+        id: profileTable.id,
+>>>>>>> 6a1756d (refactor: convert SQL queries to drizzle-orm)
         name: profileTable.name,
         gender: profileTable.gender,
         orientation: profileTable.orientation,
@@ -165,7 +169,11 @@ const updateProfile = async (req, res) => {
     const updateResult = await db
       .update(profileTable)
       .set(updateData)
+<<<<<<< HEAD
       .where(eq(profileTable.userId, userId))
+=======
+      .where(eq(profileTable.user_id, userId))
+>>>>>>> 6a1756d (refactor: convert SQL queries to drizzle-orm)
       .returning();
 
     if (updateResult.length === 0) {
