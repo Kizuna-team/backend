@@ -10,8 +10,8 @@ const {
   deletePhoto,
 } = require("../controllers/uploadController");
 
-router.post("/upload", upload.single("image"), uploadImage);
-router.get("/photos", getPhotos);
-router.delete("/photos/:key", deletePhoto);
+router.post("/", upload.single("image"), uploadImage);
+router.get("/", getPhotos);
+router.delete("/:key", deletePhoto);
 
 module.exports = router;
