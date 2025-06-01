@@ -5,13 +5,13 @@ const dotenv = require("dotenv");
 const authMiddleware = require("./middleware/auth.js");
 const authController = require("./controllers/authControllers.js");
 const activityRoutes = require("./routes/activityRoutes.js");
+const editProfileRoutes = require("./routes/editProfileRoutes.js");
+const photoRoutes = require("./routes/upload.js");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
 const { Server } = require("socket.io");
 const setupSocket = require("./controllers/chatControllers.js");
-const photoRoutes = require("./routes/upload.js");
-const editProfileRoutes = require("./routes/editProfileRoutes.js");
 
 dotenv.config();
 
@@ -35,9 +35,9 @@ app.get("/api/me", authMiddleware, (req, res) => {
   res.json({ message: "驗證成功", user: req.user });
 });
 
-// 掛載子路由群組
-app.use("/api/edit-profile", editProfileRoutes);
-
+// 掛載子路由群組 REST API建議 以資源為單位
+app.use("/api/profile", editProfileRoutes);
+app.use("/api/photos", photoRoutes);
 // 錯誤處理中間件（建議加入）
 app.use((err, req, res, next) => {
   console.error("伺服器錯誤:", err.stack);
