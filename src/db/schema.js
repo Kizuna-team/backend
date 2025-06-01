@@ -98,6 +98,7 @@ const OrderItemsTable = pgTable("order_items",{
 
 module.exports = {
   usersTable,
+  profileTable,
   messagesTable,
   activities,
   photosTable,
