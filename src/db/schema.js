@@ -68,13 +68,14 @@ const profileTable = pgTable("profiles", {
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
-// 商品表格
+// 網站中有販售的商品表格
 const productsTable = pgTable("products", {
   id: serial().primaryKey().notNull(),
   name: varchar({ length: 100 }).notNull(),
   price: integer().notNull(),
   description: varchar({ length: 255 }).notNull(),
   image_url: varchar({ length: 255 }).notNull(),
+  inventory: integer().notNull(),
   created_at: timestamp().defaultNow().notNull(),
 });
 

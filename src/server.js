@@ -5,7 +5,8 @@ const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-const oderRoutes = require("./routes/orderRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -27,7 +28,8 @@ app.use("/api", photoRoutes);
 app.use("/auth", authRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/profile", profileRoutes);
-app.use("/order", oderRoutes);
+app.use("/order", orderRoutes);
+app.use("/products", productRoutes);
 
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/api/profile", editProfileRoutes);
