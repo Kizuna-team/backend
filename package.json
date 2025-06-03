@@ -8,7 +8,7 @@
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "seed": "node src/db/seed.js",
-    "clear":"node src/db/clearActivities.js"
+    "clear": "node src/db/clearActivities.js"
   },
   "repository": {
     "type": "git",

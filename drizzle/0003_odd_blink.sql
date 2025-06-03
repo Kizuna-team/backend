@@ -1,1 +1,0 @@
-ALTER TABLE "photos" DROP COLUMN "uploaded_at";
