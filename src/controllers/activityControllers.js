@@ -42,7 +42,7 @@ exports.createActivity = async (req, res) => {
 
 exports.updateActivity = async (req, res) => {
   const id = parseInt(req.params.id);
-  const { title, location, date, description } = req.body;
+  const { title, location, date, description,createdBy } = req.body;
 
   try {
     const [updated] = await db
