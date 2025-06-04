@@ -1,12 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const activityController = require("../controllers/activityControllers.js");
+// 0604 黃馨: 文瑜~~我幫你用解構取方法 比較簡潔
+const {getAllActivities,getActivityById,createActivity,updateActivity,deleteActivity} = require("../controllers/activityControllers.js");
 const authMiddleware = require("../middleware/auth.js");
 
-router.get("/", activityController.getAllActivities);
-router.get("/:id", authMiddleware, activityController.getActivityById);
-router.post("/", authMiddleware, activityController.createActivity);
-router.put("/:id", authMiddleware, activityController.updateActivity);
-router.delete("/:id", authMiddleware, activityController.deleteActivity);
+// 公開取得所有活動
+router.get("/", getAllActivities);
+
+// 需要授權的操作
+router.get("/:id", authMiddleware, getActivityById);
+router.post("/", authMiddleware, createActivity);
+router.put("/:id", authMiddleware, updateActivity);
+router.delete("/:id", authMiddleware, deleteActivity);
 
 module.exports = router;
