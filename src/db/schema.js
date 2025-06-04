@@ -6,6 +6,7 @@ const {
   timestamp,
   date,
   pgEnum,
+  text,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開

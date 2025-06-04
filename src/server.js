@@ -4,9 +4,10 @@ const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
-const profileRoutes = require("./routes/profileRoutes");
+const editProfileRoutes = require("./routes/editProfileRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
+const photoRoutes = require("./routes/upload.js");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -27,7 +28,6 @@ app.use("/api", photoRoutes);
 // 掛載 API router
 app.use("/auth", authRoutes);
 app.use("/recommendations", recommendationRoutes);
-app.use("/profile", profileRoutes);
 app.use("/order", orderRoutes);
 app.use("/products", productRoutes);
 
