@@ -50,19 +50,22 @@ async function login(req, res) {
   const { username, password } = req.body;
 
   try {
+    // console.log("收到 login 請求", username, password);
     const result = await db
       .select()
       .from(usersTable)
       .where(eq(usersTable.username, username));
     // debug
-    // console.log(result);
+    // console.log("資料庫查詢結果", result);
     const user = result[0];
     if (user && (await bcrypt.compare(password, user.password))) {
+      // console.log("密碼比對成功 產生token");
       const accessToken = jwt.sign(
         { id: user.id, username: user.username },
         JWT_SECRET,
         { expiresIn: "15m" }
       );
+      // console.log("印出accessToken : ",accessToken);
       const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
         expiresIn: "7d",
       });

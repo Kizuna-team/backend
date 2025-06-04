@@ -8,7 +8,12 @@
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "seed": "node src/db/seed.js",
-    "clear": "node src/db/clearActivities.js"
+    "clear":"node src/db/clearActivities.js",
+    "push": "drizzle-kit push",
+    "dev:match": "node src/db/profileSeed.js",
+    "seed:profiles": "node src/db/profileSeed.js",
+    "seed:products": "node src/db/productSeed.js",
+    "lint": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -44,6 +49,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.16.0",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
   }
 }
