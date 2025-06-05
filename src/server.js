@@ -15,8 +15,6 @@ const activityRoutes = require("./routes/activityRoutes");
 // const { Server } = require("socket.io");
 // const setupSocket = require("./controllers/chatControllers.js");
 
-
-
 dotenv.config();
 
 const app = express();
@@ -24,7 +22,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
-app.use("/api", photoRoutes);
+// app.use("/api", photoRoutes);
 
 // 掛載 API router
 app.use("/auth", authRoutes);
