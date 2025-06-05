@@ -22,6 +22,20 @@
       "when": 1748871793820,
       "tag": "0003_late_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1749144209560,
+      "tag": "0004_brave_patch",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1749146109101,
+      "tag": "0005_married_warstar",
+      "breakpoints": true
     }
   ]
 }

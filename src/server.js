@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const passport = require("./config/passport.js");
+// const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
@@ -23,7 +23,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(passport.initialize());
+// app.use(passport.initialize());
 app.use("/api", photoRoutes);
 
 // 掛載 API router

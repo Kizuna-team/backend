@@ -10,9 +10,10 @@ const {
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
+// 0605 修改 username 長度 因為google登入也要存資料
 const usersTable = pgTable("users", {
   id: serial().primaryKey().notNull(),
-  username: varchar({ length: 20 }).notNull(),
+  username: varchar({ length: 50 }).notNull(),
   password: varchar({ length: 255 }).notNull(),
   raw_password: varchar({ length: 20 }).notNull(),
 });
