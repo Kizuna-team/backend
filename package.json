@@ -8,7 +8,6 @@
     "debug": "nodemon --inspect-brk src/server.js",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "seed": "node src/db/seed.js",
     "seed:activity": "node src/db/activitySeed.js",
     "clear": "node src/db/clearActivities.js",
     "push": "drizzle-kit push",
