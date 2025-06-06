@@ -11,7 +11,6 @@ const {
   updateActivity,
   deleteActivity,
 } = require("../controllers/activityControllers.js");
-
 const authMiddleware = require("../middleware/auth.js");
 
 // 公開取得所有活動
