@@ -64,7 +64,7 @@ async function login(req, res) {
       const accessToken = jwt.sign(
         { id: user.id, username: user.username },
         JWT_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
       // console.log("印出accessToken : ",accessToken);
       const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
