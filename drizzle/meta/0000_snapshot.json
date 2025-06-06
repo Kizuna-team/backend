@@ -151,6 +151,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -493,6 +499,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "last_active_at": {
+          "name": "last_active_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
