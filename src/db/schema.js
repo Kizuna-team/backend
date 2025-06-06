@@ -33,6 +33,7 @@ const activities = pgTable("activities", {
   description: text("description"),
   createdBy: varchar("created_by", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow(),
+  imageUrl: varchar('image_url', { length: 500 }),
 });
 //上傳照片
 const photosTable = pgTable("photos", {
