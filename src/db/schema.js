@@ -83,12 +83,18 @@ const productsTable = pgTable("products", {
 
 // 訂單表( 1筆 = 一次送禮行為 )
 const giftOrdersTable = pgTable("gift_orders",{
-    // 這邊的 id 是訂單流水編號 
+    // 這邊的 id 是訂單流水編號（ 內部用 ）
     id: serial().primaryKey().notNull(),
+    // 對外公告的訂單編號
+    order_id: varchar( "order_id" , { length: 40 }).notNull().unique(),
     sender_id: integer().notNull().references(()=>usersTable.id),
     receiver_id: integer().notNull().references(()=>usersTable.id),
-    // status: 
-    created_at: timestamp().defaultNow()
+    status: varchar("status", { length: 20 }).default("pending"),
+    // LINE Pay transactionId
+    transaction_id: varchar("transaction_id", { length: 100 }),
+    // 訂單金額
+    amount: integer("amount").notNull(),
+    created_at: timestamp("created_at").defaultNow()
 })
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
