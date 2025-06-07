@@ -9,6 +9,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
 const photoRoutes = require("./routes/upload.js");
 const activityRoutes = require("./routes/activityRoutes");
+const friendsRoutes = require("./routes/friends");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -36,6 +37,7 @@ app.use("/activities", activityRoutes);
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/api/profile", editProfileRoutes);
 app.use("/api/photos", photoRoutes);
+app.use("/api", friendsRoutes);
 
 // 啟用 socket.io 聊天室邏輯
 // setupSocket(io);
