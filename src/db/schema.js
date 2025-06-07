@@ -78,6 +78,8 @@ const productsTable = pgTable("products", {
   image_url: varchar({ length: 255 }).notNull(),
   inventory: integer().notNull(),
   created_at: timestamp().defaultNow().notNull(),
+  category: varchar("category", { length: 100 }),
+  sales: integer("sales").default(0),
 });
 
 // 訂單表( 1筆 = 一次送禮行為 )
@@ -104,7 +106,6 @@ module.exports = {
   messagesTable,
   activities,
   photosTable,
-  profileTable,
   orientationEnum,
   productsTable,
   giftOrdersTable,
