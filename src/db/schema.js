@@ -1,3 +1,4 @@
+const { primaryKey } = require("drizzle-orm/gel-core");
 const {
   pgTable,
   serial,
@@ -107,7 +108,37 @@ const OrderItemsTable = pgTable("order_items", {
   quantity: integer().notNull(),
 });
 
-// 喜歡不喜歡
+// 紀錄使用者對另一個使用者的喜歡與不喜歡狀態
+const likesTable = pgTable("likes", {
+  fromId: integer("from_id")
+    .notNull()
+    .references(() => usersTable.id),
+  toId: integer("to_id")
+    .notNull()
+    .references(() => usersTable.id),
+  status: integer("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  // 複合主鍵，避免同一對關係重複出現
+  pk: primaryKey({ columns: ["from_id", "to_id"] }),
+});
+
+// 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
+const superLikesTable = pgTable("superLikes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  usedAt: date("used_at", { mode: "date" }).notNull(),
+});
+
+// 使用者成為訂閱會員紀錄
+const subscriptionsTable = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  startDate: timestamp("startDate", { withTimezone: true }).notNull(),
+  endDate: timestamp("end_date", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }) // 成為會員的日期+時間 = 訂單時間？
+    .defaultNow()
+    .notNull(),
+});
 
 module.exports = {
   usersTable,
@@ -118,4 +149,7 @@ module.exports = {
   productsTable,
   giftOrdersTable,
   OrderItemsTable,
+  likesTable,
+  superLikesTable,
+  subscriptionsTable,
 };
