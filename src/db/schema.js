@@ -5,7 +5,6 @@ const {
   integer,
   timestamp,
   date,
-  pgEnum,
   text,
 } = require("drizzle-orm/pg-core");
 
@@ -45,11 +44,11 @@ const photosTable = pgTable("photos", {
 
 // 使用者個人檔案
 // 以 userId 當作唯一識別
-const orientationEnum = pgEnum("orientation_enum", [
-  "異性戀",
-  "同性戀",
-  "雙性戀",
-]);
+// const orientationEnum = pgEnum("orientation_enum", [
+//   "異性戀",
+//   "同性戀",
+//   "雙性戀",
+// ]);
 // 使用者個人簡介(地區、興趣)
 const profileTable = pgTable("profiles", {
   userId: integer("user_id")
@@ -58,7 +57,7 @@ const profileTable = pgTable("profiles", {
     .references(() => usersTable.id),
   name: varchar("name", { length: 15 }).notNull(),
   gender: varchar("gender", { length: 8 }).notNull(),
-  orientation: orientationEnum("orientation").notNull(),
+  orientation: integer("orientation").notNull(),
   bio: varchar({ length: 255 }),
   age: integer("age").notNull(),
   location: varchar("location", { length: 31 }).notNull(),
@@ -108,13 +107,14 @@ const OrderItemsTable = pgTable("order_items", {
   quantity: integer().notNull(),
 });
 
+// 喜歡不喜歡
+
 module.exports = {
   usersTable,
   messagesTable,
   activities,
   photosTable,
   profileTable,
-  orientationEnum,
   productsTable,
   giftOrdersTable,
   OrderItemsTable,
