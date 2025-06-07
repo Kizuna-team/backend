@@ -113,6 +113,7 @@ module.exports = {
   messagesTable,
   activities,
   photosTable,
+  profileTable,
   orientationEnum,
   productsTable,
   giftOrdersTable,
