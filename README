@@ -1,13 +1,20 @@
 
 # kizuna-project｜交友配對網站
 
+>「Kizuna（絆）」在日語中意為「羈絆」，
+>象徵人與人之間的連結，
+>本專案希望透過科技促進彼此間的真誠交流。
+
 本專案為 kizuna 交友網站的後端系統，負責處理使用者資料、配對邏輯、金流、聊天室、活動揪團等功能。  
-採用 Node.js + Express 架構，資料庫使用 PostgreSQL，並整合 Passport 做使用者驗證。
+採用 Node.js + Express 架構，搭配 Drizzle 操作 PostgreSQL 資料庫，
+使用 Passport 搭配 JWT 驗證，並透過 Google-Auth-Library 實現 Google OAuth 第三方登入，
+確保使用者登入流程安全並提升整體使用體驗。
 
 ## 使用技術
 
   * `Express`
   * `Passport`
+  * `Google-Auth-Library`
   * `PostgreSQL`
   * `Socket.IO`
   
@@ -47,14 +54,9 @@ npm run dev
 
 * 資料庫: `PostgreSQL`
 
-* 使用 `Tailwind` 時，要下載 `VSCode` 的擴充功能(`extensions`) 「`Headwind`」這樣大家的 `class`中的`Tailwind`順序才會一樣  
-![image](https://github.com/user-attachments/assets/488a73f4-b0e0-4d9c-8fb3-fd7a1cdcbd4d)
-
 * 命名方式 以 使用者名稱 為例
   * 資料庫欄位請使用 蛇式命名法 ( snacke-case ) => user_name
   * `JavaScript` 使用 駝峰式命名法 => userName
-
-* `.vue`檔案 請以 `<script setup> + Composition API` 撰寫
 
 * `.env`環境變數設定
 
