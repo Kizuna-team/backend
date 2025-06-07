@@ -65,7 +65,7 @@ const profileTable = pgTable("profiles", {
   zodiac: varchar("zodiac", { length: 15 }),
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 15 }),
-  interests: varchar({ length: 15}).array().notNull(),
+  interests: varchar({ length: 15 }).array().notNull(),
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -81,26 +81,33 @@ const productsTable = pgTable("products", {
 });
 
 // 訂單表( 1筆 = 一次送禮行為 )
-const giftOrdersTable = pgTable("gift_orders",{
-    // 這邊的 id 是訂單流水編號 
-    id: serial().primaryKey().notNull(),
-    sender_id: integer().notNull().references(()=>usersTable.id),
-    receiver_id: integer().notNull().references(()=>usersTable.id),
-    // status: 
-    created_at: timestamp().defaultNow()
-})
+const giftOrdersTable = pgTable("gift_orders", {
+  // 這邊的 id 是訂單流水編號
+  id: serial().primaryKey().notNull(),
+  sender_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  receiver_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  // status:
+  created_at: timestamp().defaultNow(),
+});
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
-const OrderItemsTable = pgTable("order_items",{
-    id: serial().primaryKey().notNull(),
-    gift_order_id: integer().notNull().references(()=>giftOrdersTable.id),
-    product_id: integer().notNull().references(()=>productsTable.id),
-    quantity: integer().notNull(),
-})
+const OrderItemsTable = pgTable("order_items", {
+  id: serial().primaryKey().notNull(),
+  gift_order_id: integer()
+    .notNull()
+    .references(() => giftOrdersTable.id),
+  product_id: integer()
+    .notNull()
+    .references(() => productsTable.id),
+  quantity: integer().notNull(),
+});
 
 module.exports = {
   usersTable,
-  profileTable,
   messagesTable,
   activities,
   photosTable,
@@ -108,5 +115,5 @@ module.exports = {
   orientationEnum,
   productsTable,
   giftOrdersTable,
-  OrderItemsTable
+  OrderItemsTable,
 };

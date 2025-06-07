@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1748623686695,
-      "tag": "0000_chilly_blink",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1748750127439,
-      "tag": "0002_fantastic_lorna_dane",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1748871793820,
-      "tag": "0003_late_omega_red",
+      "when": 1749061377879,
+      "tag": "0000_hard_dagger",
       "breakpoints": true
     }
   ]
