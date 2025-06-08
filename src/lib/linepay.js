@@ -2,13 +2,14 @@ import crypto from "crypto"
 import "dotenv/config"
 
 const { LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY } = process.env
+console.log("LINEPAY_CHANNEL_ID:", LINEPAY_CHANNEL_ID)
+console.log("LINEPAY_CHANNEL_SECRET_KEY:", LINEPAY_CHANNEL_SECRET_KEY)
 
-function signKey(clientKey, msg) {
-  const encoder = new TextEncoder()
+function signKey(secretKey, msg) {
   return crypto
-    .createHmac("sha256", encoder.encode(clientKey))
-    .update(encoder.encode(msg))
-    .digest("base64")
+    .createHmac("sha256", secretKey)
+    .update(msg)
+    .digest("base64");
 }
 
 async function requestOnlineAPI({
