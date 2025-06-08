@@ -6,7 +6,11 @@ const { eq, and } = require("drizzle-orm");
 const createLike = async (req, res) => {
   const userId = req.user?.id;
   if (!userId) {
-    return res.status(401).json({ message: "未授權操作" });
+    return res.status(401).json({
+      success: false,
+      matched: false,
+      message: "未授權操作，請先登入",
+    });
   }
 
   const { targetId, status } = req.body;
@@ -33,9 +37,7 @@ const createLike = async (req, res) => {
         )
       );
 
-    const isMatched = likesRecord.length > 0;
-
-    if (isMatched) {
+    if (likesRecord.length > 0) {
       await db
         .insert(matchesTable)
         .values({
@@ -44,8 +46,19 @@ const createLike = async (req, res) => {
           matchedAt: new Date(),
         })
         .onConflictDoNothing();
+
+      return res.json({
+        success: true,
+        matched: true,
+        message: "雙方配對成功！",
+      });
+    } else {
+      return res.json({
+        success: true,
+        matched: false,
+        message: "已送出喜歡，等待對方回應",
+      });
     }
-    return res.json({ matched: isMatched });
   } catch (error) {
     console.error("Create like failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });

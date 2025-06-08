@@ -9,7 +9,7 @@ const getProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ message: "未授權操作" });
+      return res.status(401).json({ message: "未授權操作，請先登入" });
     }
 
     const result = await db
