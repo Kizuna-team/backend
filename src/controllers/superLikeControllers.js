@@ -101,7 +101,8 @@ const sendSuperLike = async (req, res) => {
 
     return res.status(200).json({
       message: "成功發送 Super Like",
-      data: `剩下 ${remainingCount - 1} 次`,
+      matched: true,
+      remainingCount: remainingCount - 1,
     });
   } catch (error) {
     console.error("sendSuperLike failed:", error);
