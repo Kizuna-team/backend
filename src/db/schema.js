@@ -1,4 +1,4 @@
-const { primaryKey } = require("drizzle-orm/gel-core");
+// const { primaryKey } = require("drizzle-orm/gel-core");
 const {
   pgTable,
   serial,
@@ -8,7 +8,7 @@ const {
   date,
   text,
   unique,
-  index,
+  primaryKey,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -111,21 +111,25 @@ const orderItemsTable = pgTable("order_items", {
 });
 
 // 紀錄使用者對另一個使用者的喜歡與不喜歡狀態
-const likesTable = pgTable("likes", {
-  userId: integer("user_id")
-    .notNull()
-    .references(() => usersTable.id),
-  targetId: integer("target_id")
-    .notNull()
-    .references(() => usersTable.id),
-  status: integer("status").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  // 複合主鍵，避免同一對關係重複出現
-  pk: primaryKey({ columns: ["from_id", "to_id"] }),
-});
+const likesTable = pgTable(
+  "likes",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    targetId: integer("target_id")
+      .notNull()
+      .references(() => usersTable.id),
+    status: integer("status").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (likes) => ({
+    uniqueLike: unique().on(likes.userId, likes.targetId), // ✅ 關鍵：限制重複
+  })
+);
 
 // 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
-const superLikesTable = pgTable("superLikes", {
+const superLikesTable = pgTable("super_likes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   targetId: integer("target_id").notNull(),

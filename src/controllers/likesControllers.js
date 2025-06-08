@@ -12,18 +12,17 @@ const createLike = async (req, res) => {
       message: "未授權操作，請先登入",
     });
   }
-
   const { targetId, status } = req.body;
   try {
+    console.log("🚨 準備插入資料:", { userId, targetId, status });
     await db
       .insert(likesTable)
-      .values({ userId, targetId, status })
-      // 不用先查有沒有這筆資料，不存在用insert，已存在用update
-      // 當有人再次對同一人按喜歡/不喜歡時，會衝突 > update
-      .onConflictDoUpdate({
-        target: ["user_id", "target_id"],
-        set: { status },
-      });
+      .values({
+        userId,
+        targetId,
+        status,
+      })
+      .onConflictDoNothing();
 
     // 查詢對方是否也 喜歡:1
     const likesRecord = await db
@@ -61,6 +60,7 @@ const createLike = async (req, res) => {
     }
   } catch (error) {
     console.error("Create like failed:", error.message);
+    console.error("送出 like 發生錯誤", error);
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
   }
 };
