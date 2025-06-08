@@ -1,8 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { getFriends } = require("../controllers/friendsController");
+const {
+  sendFriendRequest,
+  getReceivedRequests,
+  acceptFriendRequest,
+  getFriendsList,
+} = require("../controllers/friendsController");
 
-
-router.get("/", getFriends); 
+router.post("/request", sendFriendRequest);      
+router.get("/requests", getReceivedRequests);      
+router.post("/accept", acceptFriendRequest);      
+router.get("/", getFriendsList);                    
 
 module.exports = router;
