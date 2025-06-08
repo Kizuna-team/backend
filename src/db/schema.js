@@ -7,6 +7,8 @@ const {
   timestamp,
   date,
   text,
+  unique,
+  index,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -97,7 +99,7 @@ const giftOrdersTable = pgTable("gift_orders", {
 });
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
-const OrderItemsTable = pgTable("order_items", {
+const orderItemsTable = pgTable("order_items", {
   id: serial().primaryKey().notNull(),
   gift_order_id: integer()
     .notNull()
@@ -141,6 +143,27 @@ const subscriptionsTable = pgTable("subscriptions", {
     .notNull(),
 });
 
+// 雙向配對成功紀錄，可以直接查表撈取雙方資料
+// 在插入資料時用程式邏輯保證 matchUserAId < matchUserBId
+const matchesTable = pgTable("matches", {
+  id: serial("id").primaryKey(),
+  matchUserAId: integer("match_user_a_id")
+    .notNull()
+    .references(() => usersTable.id),
+  matchUserBId: integer("match_user_b_id")
+    .notNull()
+    .references(() => usersTable.id),
+  matchedAt: timestamp("matched_at").defaultNow().notNull(),
+});
+
+// 避免重複配對
+// const uniqueMatch = unique("matches_unique").on(
+//   matchesTable.matchUserAId,
+//   matchesTable.matchUserBId
+// );
+// 排序訊息、最新配對在最上面
+// const matchedAtIdx = index("matched_at_index").on(matchesTable.matchedAt);
+
 module.exports = {
   usersTable,
   messagesTable,
@@ -149,8 +172,9 @@ module.exports = {
   profileTable,
   productsTable,
   giftOrdersTable,
-  OrderItemsTable,
+  orderItemsTable,
   likesTable,
   superLikesTable,
   subscriptionsTable,
+  matchesTable,
 };

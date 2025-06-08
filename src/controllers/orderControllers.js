@@ -1,5 +1,5 @@
 const db = require("../db/index.js");
-const { giftOrdersTable, OrderItemsTable } = require("../db/schema.js");
+const { giftOrdersTable, orderItemsTable } = require("../db/schema.js");
 
 async function createOrder(req, res) {
   const { sender_id, receiver_id, items } = req.body;
@@ -41,7 +41,7 @@ async function createOrder(req, res) {
       console.log(itemRows);
 
       // 插入多筆 items
-      await tx.insert(OrderItemsTable).values(itemRows);
+      await tx.insert(orderItemsTable).values(itemRows);
 
       res.json({ success: true, gift_order_id: id });
     });
