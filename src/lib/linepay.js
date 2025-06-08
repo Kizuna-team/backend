@@ -23,18 +23,11 @@ async function requestOnlineAPI({
   const nonce = crypto.randomUUID()
   let signature = ""
 
-  // 根據不同方式(method)生成MAC
-  if (method === "GET") {
-    signature = signKey(
-      LINEPAY_CHANNEL_SECRET_KEY,
-      LINEPAY_CHANNEL_SECRET_KEY + apiPath + queryString + nonce
-    )
-  } else if (method === "POST") {
-    signature = signKey(
-      LINEPAY_CHANNEL_SECRET_KEY,
-      LINEPAY_CHANNEL_SECRET_KEY + apiPath + JSON.stringify(data) + nonce
-    )
-  }
+  signature = signKey(
+    LINEPAY_CHANNEL_SECRET_KEY,
+    LINEPAY_CHANNEL_SECRET_KEY + apiPath + JSON.stringify(data) + nonce
+  )
+
   const headers = {
     "X-LINE-ChannelId": LINEPAY_CHANNEL_ID,
     "X-LINE-Authorization": signature,
