@@ -110,10 +110,10 @@ const OrderItemsTable = pgTable("order_items", {
 
 // 紀錄使用者對另一個使用者的喜歡與不喜歡狀態
 const likesTable = pgTable("likes", {
-  fromId: integer("from_id")
+  userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id),
-  toId: integer("to_id")
+  targetId: integer("target_id")
     .notNull()
     .references(() => usersTable.id),
   status: integer("status").notNull(),
@@ -126,6 +126,7 @@ const likesTable = pgTable("likes", {
 const superLikesTable = pgTable("superLikes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  targetId: integer("target_id").notNull(),
   usedAt: date("used_at", { mode: "date" }).notNull(),
 });
 

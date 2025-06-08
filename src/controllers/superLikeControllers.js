@@ -1,34 +1,75 @@
+// 前端點擊super like按鈕後的處理邏輯
 const db = require("../db/index.js");
-const { superLikesTable } = require("../db/schema.js");
-const { isValidMember } = require("../services/subscriptionService");
-const { eq, and } = require("drizzle-orm");
+const { superLikesTable, likesTable } = require("../db/schema");
+const { checkSuperLikeAuth } = require("../services/superLikeService");
 
-// 已經用了幾次 Super Like
-const getSuperLikeCounts = async (userId) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const counts = await db
-    .select()
-    .from(superLikesTable)
-    .where(
-      and(eq(superLikesTable.userId, userId), eq(superLikesTable.usedAt, today))
-    );
-  // 這個使用者今天用幾次 Super like
-  return counts.length;
-};
+const sendSuperLike = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { targetId } = req.body;
 
-// （會員上限 5，非會員上限 1）判斷 Super Like 剩多少使用次數能用？ 是不是會員？
-const checkSuperLikeAuth = async (userId) => {
-  const isMember = await isValidMember(userId);
-  const usedCount = await getSuperLikeCounts(userId);
+    if (!userId) {
+      return res.status(401).json({
+        message: "未授權操作",
+      });
+    }
 
-  // 用會員狀態決定使用上限、以使用次數小於限制判斷還能繼續使用
-  const limit = isMember ? 5 : 1;
-  const isWithinLimit = usedCount < limit;
+    // 解構 取得使用者 會員狀態與剩餘次數
+    const { isMember, limit, remainingCount, isWithinLimit } =
+      await checkSuperLikeAuth(userId);
 
-  return { isWithinLimit, isValidMember: isMember };
+    // 次數用盡，沒權限繼續使用此操作
+    if (!isWithinLimit) {
+      return res.status(403).json({
+        message: `今日使用次數已達${limit}次上限`,
+      });
+    }
+
+    // 是某已對對方使用like
+    const likeRecord = await db.query.likesTable.findFirst({
+      where: {
+        userId,
+        targetId,
+      },
+    });
+
+    if (likeRecord) {
+      return res.status(409).json({
+        message: "已對此對象送出過like",
+      });
+    }
+
+    // 是某已對對方使用過super like
+    const superLikeRecord = await db.query.superLikesTable.findFirst({
+      where: {
+        userId,
+        targetId,
+      },
+    });
+
+    if (superLikeRecord) {
+      return res.status(409).json({
+        message: "已對此對象送出過super like",
+      });
+    }
+
+    // 新增super like 紀錄，限制是「一天只能用幾次」
+    await db.insert(superLikesTable).values({
+      userId,
+      targetId,
+      usedAt: new Date(),
+    });
+
+    return res.status(200).json({
+      message: "成功發送 Super Like",
+      data: `剩下 ${remainingCount - 1} 次`,
+    });
+  } catch (error) {
+    console.error("sendSuperLike failed:", error);
+    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+  }
 };
 
 module.exports = {
-  getSuperLikeCounts,
-  checkSuperLikeAuth,
+  sendSuperLike,
 };
