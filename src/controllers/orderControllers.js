@@ -40,6 +40,7 @@ async function createOrder(req, res) {
           name: product.name,
           quantity: item.quantity,
           price: product.price,
+          imageUrl: product.image_url,
         };
       });
 
@@ -88,13 +89,15 @@ async function createOrder(req, res) {
         orderId: orderId,
         packages: [
           {
+            id: `package-${gift_order_id}`,
             amount: totalAmount,
+            name: "購物車商品包",
             products: linepayItems
           }
         ],
         redirectUrls: {
-          confirmUrl: "http://localhost:3888/order/confirm",
-          cancelUrl: "http://localhost:3888/order/cancel"
+          confirmUrl: "http://localhost:3000/order/confirm",
+          cancelUrl: "http://localhost:3000/order/cancel"
         }
       };
 
@@ -136,6 +139,55 @@ async function createOrder(req, res) {
   }
 }
 
+// 確認付款流程 
+async function confirmOrder(req, res) {
+  const { transactionId, orderId } = req.query;
+
+  try {
+  // 拿著 orderId 到資料庫中抓訂單總金額
+    const [order] = await db
+      .select()
+      .from(giftOrdersTable)
+      .where(eq(giftOrdersTable.order_id, orderId));
+
+    if (!order) {
+      return res.status(404).send("訂單不存在");
+    }
+
+    const orderAmount = order.amount;
+    
+    const result = await requestOnlineAPI({
+      method: "POST",
+      apiPath: `/v3/payments/${transactionId}/confirm`,
+      data: {
+        amount: orderAmount,
+        currency: "TWD",
+      },
+    });
+
+    console.log("LINE Pay confirm 回傳結果：", result);
+
+    if (result.returnCode === "0000") {
+      // 付款成功，更新訂單狀態
+      await db.update(giftOrdersTable)
+        .set({
+          status: "paid",
+          transaction_id: transactionId,
+          // 訂單狀態可以加上付款方式(現在沒有這個欄位)
+          // payment_method: "LINE Pay"
+        })
+        .where(eq(giftOrdersTable.order_id, orderId));
+      res.send("付款成功！感謝您的訂購 🎉");
+    } else {
+      res.status(400).send("付款確認失敗：" + result.returnMessage);
+    }
+  } catch (err) {
+    console.error("付款確認錯誤", err);
+    res.status(500).send("伺服器錯誤，請稍後再試！");
+  }
+};
+
 module.exports = {
   createOrder,
+  confirmOrder
 };
