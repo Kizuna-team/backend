@@ -9,13 +9,17 @@ const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
 const photoRoutes = require("./routes/upload.js");
 const activityRoutes = require("./routes/activityRoutes");
+const authMiddleware = require("./middleware/auth.js");
+const db = require("./db/index.js");
+const { usersTable, subscriptionsTable, subscriptionPlansTable } = require("./db/schema.js");
+const { eq, and, desc } = require("drizzle-orm");
+const ecpayRoutes = require("./routes/ecpay");
+const subPlansRoutes = require("./routes/subPlans");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
 // const { Server } = require("socket.io");
 // const setupSocket = require("./controllers/chatControllers.js");
-
-
 
 dotenv.config();
 
@@ -36,6 +40,56 @@ app.use("/activities", activityRoutes);
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/api/profile", editProfileRoutes);
 app.use("/api/photos", photoRoutes);
+
+app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
+app.use("/api/ecpay", ecpayRoutes);
+app.use("/api/subPlans", subPlansRoutes);
+
+app.get("/api/me", authMiddleware, async (req, res) => {
+  try {
+    //把使用者資料抓出來（基本資訊 + 訂閱方案名稱）
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        username: usersTable.username,
+        subscription_plan: usersTable.subscription_plan,
+        subscription_name: subscriptionPlansTable.name,
+      })
+      .from(usersTable)
+      .leftJoin(
+        subscriptionPlansTable,
+        eq(usersTable.subscription_plan, subscriptionPlansTable.id)
+      )
+      .where(eq(usersTable.id, req.user.id));
+
+    //查訂單：抓出「最新一筆付款成功的訂單」的時間
+    const [latestPaidOrder] = await db
+      .select({
+        paid_at: subscriptionsTable.paid_at,
+      })
+      .from(subscriptionsTable)
+      .where(
+        and(
+          eq(subscriptionsTable.user_id, req.user.id),
+          eq(subscriptionsTable.status, "paid")
+        )
+      )
+      .orderBy(desc(subscriptionsTable.paid_at))
+      .limit(1);
+
+    res.json({
+      user: {
+        username: user.username,
+        subscription_plan: user.subscription_plan,
+        subscription_name: user.subscription_name,
+        paid_at: latestPaidOrder?.paid_at ?? null,
+      },
+    });
+  } catch (error) {
+    console.error("❌ 無法取得會員資料", error);
+    res.status(500).json({ message: "取得會員資料失敗" });
+  }
+});
 
 // 啟用 socket.io 聊天室邏輯
 // setupSocket(io);
