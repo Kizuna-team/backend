@@ -16,6 +16,7 @@ const usersTable = pgTable("users", {
   username: varchar({ length: 50 }).notNull(),
   password: varchar({ length: 255 }).notNull(),
   raw_password: varchar({ length: 20 }).notNull(),
+  subscription_plan: integer().references(() => subscriptionPlansTable.id), // 預設掛免費方案（id = 1）付費是2
 });
 
 // 保存訊息的表格
@@ -105,6 +106,26 @@ const OrderItemsTable = pgTable("order_items",{
     quantity: integer().notNull(),
 })
 
+// 訂閱(訂單)資料
+const subscriptionPlansTable = pgTable("subscription_plans", {
+  id: serial().primaryKey().notNull(),
+  name: varchar({ length: 50 }).notNull(),
+  price: integer().notNull(),
+  description: varchar({ length: 255 }).default("尚未填寫描述"),
+});
+
+const subscriptionsTable = pgTable("subscriptions", {
+  id: serial().primaryKey().notNull(),
+  user_id: integer().notNull(),
+  plan: varchar({ length: 20 }).notNull(),
+  price: integer().notNull(),
+  status: varchar({ length: 20 }).notNull(), // 狀態：pending, paid
+  merchanttradeno: varchar({ length: 30 }).notNull(), // 綠界自訂編號（不能重複）
+  trade_no: varchar({ length: 30 }), // 綠界平台回傳的交易編號
+  paid_at: timestamp(), 
+  created_at: timestamp().defaultNow().notNull(),
+});
+
 module.exports = {
   usersTable,
   profileTable,
@@ -115,5 +136,7 @@ module.exports = {
   orientationEnum,
   productsTable,
   giftOrdersTable,
-  OrderItemsTable
+  OrderItemsTable,
+  subscriptionPlansTable,
+  subscriptionsTable
 };
