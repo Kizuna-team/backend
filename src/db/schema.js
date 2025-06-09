@@ -135,10 +135,10 @@ const superLikesTable = pgTable("super_likes", {
 });
 
 // 使用者成為訂閱會員紀錄
-const subscriptionsTable = pgTable("subscriptions", {
+const membersTable = pgTable("members", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  startDate: timestamp("startDate", { withTimezone: true }).notNull(),
+  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
   endDate: timestamp("end_date", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }) // 成為會員的日期+時間 = 訂單時間？
     .defaultNow()
@@ -177,6 +177,6 @@ module.exports = {
   orderItemsTable,
   likesTable,
   superLikesTable,
-  subscriptionsTable,
+  membersTable,
   matchesTable,
 };
