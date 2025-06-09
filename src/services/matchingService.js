@@ -1,8 +1,13 @@
 const db = require("../db/index.js");
-const { likesTable, superLikesTable } = require("../db/schema.js");
-const { eq, and, inArray } = require("drizzle-orm");
+const {
+  likesTable,
+  superLikesTable,
+  photosTable,
+  profileTable,
+} = require("../db/schema.js");
+const { eq, and } = require("drizzle-orm");
 
-// 查出所有喜歡我的人
+// 查出所有喜歡我的人ID
 const getLikedMeUserIds = async (userId) => {
   // 查詢喜歡表 status = 1 對我按「Like」的使用者 ID
   const likesRecord = await db
@@ -30,7 +35,7 @@ const getLikedMeUserIds = async (userId) => {
   return filteredUserIds;
 };
 
-// 查出所有我喜歡的人
+// 查出所有我喜歡的人ID
 const getMyLikedTargetIds = async (userId) => {
   const likesRecord = await db
     .select({ targetId: likesTable.targetId })
@@ -51,8 +56,8 @@ const getMyLikedTargetIds = async (userId) => {
   return filteredTargetIds;
 };
 
-// 雙方互相有興趣的
-const getMatchedUserIds = async (userId) => {
+// 查出雙方互相有興趣的人ID
+const getMutualUsersIds = async (userId) => {
   const likedMe = await getLikedMeUserIds(userId);
   const iLiked = await getMyLikedTargetIds(userId);
 
@@ -66,8 +71,25 @@ const getMatchedUserIds = async (userId) => {
   return matchedUserIds;
 };
 
+// 取得互相喜歡的使用者個人檔案的 照片、名字
+// 回傳的每筆資料裡就會同時有使用者名字跟對應照片網址;
+const getMatchedProfiles = async (userIds) => {
+  if (userIds.length === 0) return [];
+
+  return await db
+    .select({
+      // userId: profileTable.userId,
+      name: profileTable.name,
+      avatarUrl: photosTable.avatarUrl,
+    })
+    .from(profileTable)
+    .leftJoin(photosTable, photosTable.userId, "=", profileTable.userId)
+    .where(inArray(profileTable.userId, matchedUserIds));
+};
+
 module.exports = {
   getLikedMeUserIds, // 喜歡我的
   getMyLikedTargetIds, // 我喜歡的
-  getMatchedUserIds, // 互相喜歡的
+  getMutualUsersIds, // 互相喜歡的
+  getMatchedProfiles, //取得互相喜歡的使用者的個人檔案資料
 };

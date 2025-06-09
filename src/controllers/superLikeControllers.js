@@ -75,7 +75,11 @@ const createSuperLike = async (req, res) => {
       .select()
       .from(likesTable)
       .where(
-        and(eq(likesTable.userId, targetId), eq(likesTable.targetId, userId))
+        and(
+          eq(likesTable.userId, targetId),
+          eq(likesTable.targetId, userId),
+          eq(likesTable.status, 1)
+        )
       )
       .limit(1);
 
@@ -111,9 +115,10 @@ const createSuperLike = async (req, res) => {
         })
         .onConflictDoNothing(); // 防止重複配對紀錄
     }
+    matched = true;
 
     return res.status(200).json({
-      message: "成功發送 Super Like",
+      message: matched ? "雙方配對成功！" : "成功發送 Super Like",
       matched: true,
       remainingCount: remainingCount - 1,
     });
