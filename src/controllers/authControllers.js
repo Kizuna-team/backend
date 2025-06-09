@@ -9,10 +9,10 @@ const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
 
 dotenv.config();
-
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 // debug
 // console.log(`JWT_SECRET: ${JWT_SECRET}`);
-// console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
+console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
 
 async function register(req, res) {
   const { username, password } = req.body;
