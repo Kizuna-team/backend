@@ -30,7 +30,7 @@ const createSuperLike = async (req, res) => {
     }
 
     // 已對對方使用like
-    const userLike = await db
+    const myLike = await db
       .select()
       .from(likesTable)
       .where(
@@ -38,14 +38,14 @@ const createSuperLike = async (req, res) => {
       )
       .limit(1);
 
-    if (userLike.length > 0) {
+    if (myLike.length > 0) {
       return res.status(409).json({
-        message: "已對此對象送出過like",
+        message: "不可重複送出 Like",
       });
     }
 
     // 已對對方使用過super like
-    const userSuperLike = await db
+    const mySuperLike = await db
       .select()
       .from(superLikesTable)
       .where(
@@ -56,13 +56,13 @@ const createSuperLike = async (req, res) => {
       )
       .limit(1);
 
-    if (userSuperLike.length > 0) {
+    if (mySuperLike.length > 0) {
       return res.status(409).json({
-        message: "已對此對象送出過super like",
+        message: "已經Super Like 過",
       });
     }
 
-    // 正式新增 super like 紀錄
+    // 新增 super like 紀錄
     await db.insert(superLikesTable).values({
       userId,
       targetId,
@@ -92,7 +92,7 @@ const createSuperLike = async (req, res) => {
       .limit(1);
 
     // 任一方有 Like 或 SuperLike，且對方也有才算配對成功
-    const userLikedRecord = userLike[0] || userSuperLike[0];
+    const userLikedRecord = myLike[0] || mySuperLike[0];
     const targetUserLikedRecord = targetUserLike[0] || targetUserSuperLike[0];
 
     // 確保較小的 ID 在前面，配對資料庫要避免重複配對 (1, 2) 和 (2, 1)
@@ -118,7 +118,7 @@ const createSuperLike = async (req, res) => {
       remainingCount: remainingCount - 1,
     });
   } catch (error) {
-    console.error("createSuperLike failed:", error);
+    console.error("createSuperLike failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
