@@ -14,7 +14,8 @@
     "dev:match": "node src/db/profileSeed.js",
     "seed:profiles": "node src/db/profileSeed.js",
     "seed:products": "node src/db/productSeed.js",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "debug":"nodemon --inspect-brk src/server.js"
   },
   "repository": {
     "type": "git",
