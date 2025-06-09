@@ -1,4 +1,3 @@
-// const { primaryKey } = require("drizzle-orm/gel-core");
 const {
   pgTable,
   serial,
@@ -8,7 +7,6 @@ const {
   date,
   text,
   unique,
-  primaryKey,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -110,7 +108,7 @@ const orderItemsTable = pgTable("order_items", {
   quantity: integer().notNull(),
 });
 
-// 紀錄使用者對另一個使用者的喜歡與不喜歡狀態
+// 紀錄使用者對另一個使用者的喜歡與不喜歡狀態;
 const likesTable = pgTable(
   "likes",
   {
@@ -124,7 +122,7 @@ const likesTable = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (likes) => ({
-    uniqueLike: unique().on(likes.userId, likes.targetId), // ✅ 關鍵：限制重複
+    uniqueLike: unique().on(likes.userId, likes.targetId),
   })
 );
 

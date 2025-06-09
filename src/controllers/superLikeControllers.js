@@ -2,10 +2,11 @@
 // 先確定沒送過、沒超過限制，再寫入 superLikesTable
 // 最後判斷是否配對成功
 const db = require("../db/index.js");
-const { superLikesTable, matchesTable } = require("../db/schema");
+const { likesTable, superLikesTable, matchesTable } = require("../db/schema");
 const { checkSuperLikeAuth } = require("../services/superLikeService");
+const { eq, and } = require("drizzle-orm");
 
-const sendSuperLike = async (req, res) => {
+const createSuperLike = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { targetId } = req.body;
@@ -29,26 +30,33 @@ const sendSuperLike = async (req, res) => {
     }
 
     // 已對對方使用like
-    const userLike = await db.query.likesTable.findFirst({
-      where: {
-        userId,
-        targetId,
-      },
-    });
-    if (userLike) {
+    const userLike = await db
+      .select()
+      .from(likesTable)
+      .where(
+        and(eq(likesTable.userId, userId), eq(likesTable.targetId, targetId))
+      )
+      .limit(1);
+
+    if (userLike.length > 0) {
       return res.status(409).json({
         message: "已對此對象送出過like",
       });
     }
 
     // 已對對方使用過super like
-    const userSuperLike = await db.query.superLikesTable.findFirst({
-      where: {
-        userId,
-        targetId,
-      },
-    });
-    if (userSuperLike) {
+    const userSuperLike = await db
+      .select()
+      .from(superLikesTable)
+      .where(
+        and(
+          eq(superLikesTable.userId, userId),
+          eq(superLikesTable.targetId, targetId)
+        )
+      )
+      .limit(1);
+
+    if (userSuperLike.length > 0) {
       return res.status(409).json({
         message: "已對此對象送出過super like",
       });
@@ -63,24 +71,29 @@ const sendSuperLike = async (req, res) => {
 
     // 接著判斷是否配對成功，插入 matchesTable
     // 查詢 對方（targetId）Like 你（userId）的紀錄
-    const targetUserLike = await db.query.likesTable.findFirst({
-      where: {
-        userId: targetId,
-        targetId: userId,
-      },
-    });
+    const targetUserLike = await db
+      .select()
+      .from(likesTable)
+      .where(
+        and(eq(likesTable.userId, targetId), eq(likesTable.targetId, userId))
+      )
+      .limit(1);
 
     // 查詢 對方（targetId）superLike 你（userId）的紀錄
-    const targetUserSuperLike = await db.query.superLikesTable.findFirst({
-      where: {
-        userId: targetId,
-        targetId: userId,
-      },
-    });
+    const targetUserSuperLike = await db
+      .select()
+      .from(superLikesTable)
+      .where(
+        and(
+          eq(superLikesTable.userId, targetId),
+          eq(superLikesTable.targetId, userId)
+        )
+      )
+      .limit(1);
 
     // 任一方有 Like 或 SuperLike，且對方也有才算配對成功
-    const userLikedRecord = userLike || userSuperLike;
-    const targetUserLikedRecord = targetUserLike || targetUserSuperLike;
+    const userLikedRecord = userLike[0] || userSuperLike[0];
+    const targetUserLikedRecord = targetUserLike[0] || targetUserSuperLike[0];
 
     // 確保較小的 ID 在前面，配對資料庫要避免重複配對 (1, 2) 和 (2, 1)
     if (userLikedRecord && targetUserLikedRecord) {
@@ -105,11 +118,11 @@ const sendSuperLike = async (req, res) => {
       remainingCount: remainingCount - 1,
     });
   } catch (error) {
-    console.error("sendSuperLike failed:", error);
+    console.error("createSuperLike failed:", error);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
 
 module.exports = {
-  sendSuperLike,
+  createSuperLike,
 };

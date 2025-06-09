@@ -5,7 +5,9 @@ const { eq, and } = require("drizzle-orm");
 
 // 使用者已經用了幾次 Super Like
 const getSuperLikeCounts = async (userId) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // 時間歸零，確保是純日期
+  console.log("今天使用superlike的日期:", today.toISOString()); // 檢查日期格式
   const counts = await db
     .select()
     .from(superLikesTable)
