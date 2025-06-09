@@ -14,4 +14,4 @@ router.post("/", upload.single("image"), uploadImage);
 router.get("/", getPhotos);
 router.delete("/:key", deletePhoto);
 
-module.exports = router;
+module.exports = router; 
