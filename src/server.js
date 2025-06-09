@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 // const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
+const dayjs = require("dayjs");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const editProfileRoutes = require("./routes/editProfileRoutes");
@@ -55,6 +56,8 @@ app.get("/api/me", authMiddleware, async (req, res) => {
         subscription_plan: usersTable.subscription_plan,
         subscription_name: subscriptionPlansTable.name,
       })
+      // 拿著現在登入者的id 去找到 usersTable 對應的id (找到那位使用者)
+      // 然後 usersTable 有存放該使用者目前的 訂閱等級 把該訂閱等級對應的方案名稱取出
       .from(usersTable)
       .leftJoin(
         subscriptionPlansTable,
@@ -62,7 +65,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       )
       .where(eq(usersTable.id, req.user.id));
 
-    //查訂單：抓出「最新一筆付款成功的訂單」的時間
+    // 查訂單，抓最新一筆 paid
     const [latestPaidOrder] = await db
       .select({
         paid_at: subscriptionsTable.paid_at,
@@ -77,6 +80,55 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       .orderBy(desc(subscriptionsTable.paid_at))
       .limit(1);
 
+    // 判斷會員資格是否過期
+    // 判斷是否過期（測試用 1 分鐘）
+    if (latestPaidOrder?.paid_at) {
+      const paidAt = dayjs(latestPaidOrder.paid_at).tz("Asia/Taipei");
+      const now = dayjs().tz("Asia/Taipei");
+
+      console.log("paidAt:", paidAt.format("YYYY-MM-DD HH:mm:ss"));
+      console.log("now:", now.format("YYYY-MM-DD HH:mm:ss"));
+
+      const diffInMinutes = now.diff(paidAt, "minute");
+
+      console.log("已過分鐘數:", diffInMinutes);
+
+      // 測試用：如果已超過 2 分鐘 → 更新回免費方案
+      if (diffInMinutes >= 2 && user.subscription_plan !== 1) {
+        console.log("超過 2 分鐘，更新回免費方案");
+
+        await db
+          .update(usersTable)
+          .set({
+            subscription_plan: 1, // 免費方案 id = 1
+          })
+          .where(eq(usersTable.id, req.user.id));
+
+        // 重新查一次最新的 subscription_plan
+        const [updatedUser] = await db
+          .select({
+            subscription_plan: usersTable.subscription_plan,
+            subscription_name: subscriptionPlansTable.name,
+          })
+          .from(usersTable)
+          .leftJoin(
+            subscriptionPlansTable,
+            eq(usersTable.subscription_plan, subscriptionPlansTable.id)
+          )
+          .where(eq(usersTable.id, req.user.id));
+
+        // 回傳更新後的 user
+        return res.json({
+          user: {
+            username: user.username,
+            subscription_plan: updatedUser.subscription_plan,
+            subscription_name: updatedUser.subscription_name,
+            paid_at: latestPaidOrder.paid_at,
+          },
+        });
+      }
+    }
+    // 正常回傳 user（沒過期）
     res.json({
       user: {
         username: user.username,
