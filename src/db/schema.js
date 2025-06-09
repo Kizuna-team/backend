@@ -28,12 +28,12 @@ const messagesTable = pgTable("messages", {
 const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
-  location: varchar("location", { length: 255 }),
+  location: varchar("location", { length: 255 }).notNull(),
   date: date("date").notNull(),
-  description: text("description"),
-  createdBy: varchar("created_by", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow(),
-  imageUrl: varchar('image_url', { length: 500 }),
+  description: text("description").notNull(),
+  created_by_id: integer("created_by_id").notNull().references(() => usersTable.id),
+  created_at: timestamp("created_at").defaultNow(),
+  image_url: varchar('image_url', { length: 255 }),
 });
 //上傳照片
 const photosTable = pgTable("photos", {
