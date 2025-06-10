@@ -3,14 +3,15 @@ const { usersTable } = require("../db/schema.js");
 const { eq } = require("drizzle-orm");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const passport = require("passport");
 const dotenv = require("dotenv");
-dotenv.config();
+const { OAuth2Client } = require('google-auth-library');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+require('dotenv').config();
+
+dotenv.config();
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 // debug
-console.log(`JWT_SECRET: ${JWT_SECRET}`);
+// console.log(`JWT_SECRET: ${JWT_SECRET}`);
 console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
 
 async function register(req, res) {
@@ -101,25 +102,109 @@ function refresh(req, res) {
   }
 }
 
-// step1 : 導向 Google 登入頁
-function googleAuth(req, res) {
-  return passport.authenticate("google", { scope: ["email", "profile"] })(
-    req,
-    res
-  );
+// // step1 : 導向 Google 登入頁
+// function googleAuth(req, res) {
+//   return passport.authenticate("google", { scope: ["email", "profile"] })(
+//     req,
+//     res
+//   );
+// }
+
+// // step2: Google 認證完後 回到這邊
+// function googleAuthCallback(req, res, next) {
+//   passport.authenticate("google", { session: false }, (err, user) => {
+//     if (err) return next(err);
+//     if (!user) return res.redirect("/auth/google"); // 沒登入成功就導回去
+
+//     // 登入成功：把 user 資料傳到前端
+//     const userData = encodeURIComponent(JSON.stringify(user));
+//     // 重新導向哪裡
+//     res.redirect(`http://localhost:5173/profile?user=${userData}`);
+//   })(req, res, next);
+// }
+
+
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, HOST } = process.env;
+
+const client = new OAuth2Client({
+  clientId: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  redirectUri: `${HOST}/callback`,
+});
+
+// 產生 Google 授權 URL
+async function googleAuth(req, res) {
+  const authorizeUrl = client.generateAuthUrl({
+    access_type: 'offline',
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+    ],
+  });
+  res.redirect(authorizeUrl);
 }
 
-// step2: Google 認證完後 回到這邊
-function googleAuthCallback(req, res, next) {
-  passport.authenticate("google", { session: false }, (err, user) => {
-    if (err) return next(err);
-    if (!user) return res.redirect("/auth/google"); // 沒登入成功就導回去
+// callback route
+async function googleCallback(req, res) {
+  const { code } = req.query;
 
-    // 登入成功：把 user 資料傳到前端
-    const userData = encodeURIComponent(JSON.stringify(user));
-    // 重新導向哪裡
-    res.redirect(`http://localhost:5173/profile?user=${userData}`);
-  })(req, res, next);
+  try {
+    // 用授權碼換取 token
+    const { tokens } = await client.getToken(code);
+    console.log('Google tokens:', tokens);
+    client.setCredentials(tokens);
+
+    // 取得用戶資訊
+    const userInfo = await client.request({
+      url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+    });
+
+    const { email, sub: googleId, name, picture } = userInfo.data;
+
+    // 查 usersTable 是否已有 user
+    let user = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, email)); // 假設 username 用 email
+
+    if (user.length === 0) {
+      // 沒有 → 自動創建 user
+      const newUser = await db
+        .insert(usersTable)
+        .values({
+          username: email,
+          password: '', // 第三方登入不用密碼
+          raw_password: '',
+        })
+        .returning();
+
+      user = newUser;
+    }
+
+    // 產生 JWT
+    const accessToken = jwt.sign(
+      {
+        id: user[0].id,
+        username: user[0].username,
+      },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user[0].id },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // 回傳 token + user
+    res.redirect(
+      `http://localhost:5173/profile?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${user[0].id}&username=${user[0].username}`
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(400).send('Error fetching Google user info');
+  }
 }
 
 module.exports = {
@@ -127,5 +212,5 @@ module.exports = {
   login,
   refresh,
   googleAuth,
-  googleAuthCallback,
+  googleCallback,
 };

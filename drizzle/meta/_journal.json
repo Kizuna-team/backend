@@ -8,6 +8,27 @@
       "when": 1749061377879,
       "tag": "0000_hard_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1749144209560,
+      "tag": "0004_brave_patch",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1749146109101,
+      "tag": "0005_married_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1749275103360,
+      "tag": "0006_good_rhino",
+      "breakpoints": true
     }
   ]
 }
