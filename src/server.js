@@ -5,10 +5,8 @@ const dotenv = require("dotenv");
 const dayjs = require("dayjs");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
-const editProfileRoutes = require("./routes/editProfileRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
-const photoRoutes = require("./routes/upload.js");
 const activityRoutes = require("./routes/activityRoutes");
 const authMiddleware = require("./middleware/auth.js");
 const db = require("./db/index.js");
@@ -16,6 +14,9 @@ const { usersTable, subscriptionsTable, subscriptionPlansTable } = require("./db
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay");
 const subPlansRoutes = require("./routes/subPlans");
+const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
+const editProfileRoutes = require("./routes/editProfileRoutes");
+
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -28,8 +29,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-// app.use(passport.initialize());
-app.use("/api", photoRoutes);
+
 
 // 掛載 API router
 app.use("/auth", authRoutes);
@@ -39,8 +39,8 @@ app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
 
 // 掛載子路由群組 REST API建議 以資源為單位
-app.use("/api/profile", editProfileRoutes);
-app.use("/api/photos", photoRoutes);
+app.use("/profile", editProfileRoutes);
+app.use("/photos", editPhotoRoutes);
 
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);

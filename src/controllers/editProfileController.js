@@ -104,7 +104,7 @@ const createProfile = async (req, res) => {
         zodiac: zodiac || "",
         mbti: mbti || "",
         job: job || "",
-        orientation: orientation || "unknown",
+        orientation: orientation || 2, // 沒填就預設男女都可以
         interests: interests || [],
       })
       .returning(); // 回傳新增的資料
