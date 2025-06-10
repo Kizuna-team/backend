@@ -20,22 +20,28 @@ const createLike = async (req, res) => {
   try {
     console.log("🚨 準備插入資料:", { userId, targetId, status });
 
-    // 查詢super like 是否也有按過的紀錄
-    const superLikesRecord = await db
+    // 查詢super like、like 是否也有按過的紀錄
+    const mySuperLikesRecord = await db
       .select()
       .from(superLikesTable)
       .where(
         and(
-          eq(superLikesTable.userId, targetId),
-          eq(superLikesTable.targetId, userId)
+          eq(superLikesTable.userId, userId),
+          eq(superLikesTable.targetId, targetId)
         )
       );
+    const myLikesRecord = await db
+      .select()
+      .from(likesTable)
+      .where(
+        and(eq(likesTable.userId, userId), eq(likesTable.targetId, targetId))
+      );
 
-    if (superLikesRecord.length > 0) {
+    if (mySuperLikesRecord.length > 0 || myLikesRecord.length > 0) {
       return res.status(409).json({
         success: false,
         matched: false,
-        message: "不可重複送出 Like",
+        message: "不可重複發送喜歡",
       });
     }
 
@@ -49,8 +55,8 @@ const createLike = async (req, res) => {
       })
       .onConflictDoNothing();
 
-    // 查詢對方是否也 喜歡:1 > 這樣就是互相like
-    const likesRecord = await db
+    // 查詢對方是否也 喜歡:1 > 這樣就是互相like 插入matches
+    const targetLikesRecord = await db
       .select()
       .from(likesTable)
       .where(
@@ -61,7 +67,7 @@ const createLike = async (req, res) => {
         )
       );
 
-    if (likesRecord.length > 0) {
+    if (targetLikesRecord.length > 0) {
       await db
         .insert(matchesTable)
         .values({

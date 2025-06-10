@@ -70,7 +70,7 @@ const createSuperLike = async (req, res) => {
     });
 
     // 接著判斷是否配對成功，插入 matchesTable
-    // 查詢 對方（targetId）Like 你（userId）的紀錄
+    // 先查詢 對方（targetId）Like 你（userId）的紀錄
     const targetUserLike = await db
       .select()
       .from(likesTable)
@@ -95,12 +95,15 @@ const createSuperLike = async (req, res) => {
       )
       .limit(1);
 
-    // 任一方有 Like 或 SuperLike，且對方也有才算配對成功
+    // 查找是否任一方有 Like 或 SuperLike
     const userLikedRecord = myLike[0] || mySuperLike[0];
     const targetUserLikedRecord = targetUserLike[0] || targetUserSuperLike[0];
 
+    // 所以 只要雙方有互相就算配對成功(!!轉布林值)
+    const matched = !!(userLikedRecord && targetUserLikedRecord);
+
     // 確保較小的 ID 在前面，配對資料庫要避免重複配對 (1, 2) 和 (2, 1)
-    if (userLikedRecord && targetUserLikedRecord) {
+    if (matched) {
       const ids = [userId, targetId];
       const sortedIds = ids.sort((a, b) => a - b);
       const idA = sortedIds[0];
@@ -115,11 +118,14 @@ const createSuperLike = async (req, res) => {
         })
         .onConflictDoNothing(); // 防止重複配對紀錄
     }
-    matched = true;
+
+    const message = matched
+      ? "已成功發送 Super Like 且 配對成功！"
+      : "已成功發送 Super Like";
 
     return res.status(200).json({
-      message: matched ? "雙方配對成功！" : "成功發送 Super Like",
-      matched: true,
+      message,
+      matched,
       remainingCount: remainingCount - 1,
     });
   } catch (error) {
