@@ -30,7 +30,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
 // 掛載 API router
 app.use("/auth", authRoutes);
 app.use("/recommendations", recommendationRoutes);

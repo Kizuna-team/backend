@@ -84,6 +84,7 @@ const productsTable = pgTable("products", {
 });
 
 // 訂單表( 1筆 = 一次送禮行為 )
+
 const giftOrdersTable = pgTable("gift_orders",{
     // 這邊的 id 是訂單流水編號（ 內部用 ）
     id: serial().primaryKey().notNull(),
@@ -100,9 +101,8 @@ const giftOrdersTable = pgTable("gift_orders",{
 })
 
 
-
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
-const OrderItemsTable = pgTable("order_items", {
+const orderItemsTable = pgTable("order_items", {
   id: serial().primaryKey().notNull(),
   gift_order_id: integer()
     .notNull()
@@ -143,7 +143,7 @@ module.exports = {
   profileTable,
   productsTable,
   giftOrdersTable,
-  OrderItemsTable,
+  orderItemsTable,
   subscriptionPlansTable,
   subscriptionsTable
 };
