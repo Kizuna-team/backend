@@ -1,14 +1,12 @@
-const { Client, Environment } = require("@paypal/paypal-server-sdk");
-require("dotenv").config();
+const paypal = require('@paypal/checkout-server-sdk');
+require('dotenv').config();
 
-const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+// 創建 PayPal 客戶端
+const environment = new paypal.core.SandboxEnvironment(
+  process.env.PAYPAL_CLIENT_ID, 
+  process.env.PAYPAL_CLIENT_SECRET
+);
 
-const paypalClient = new Client({
-  clientCredentialsAuthCredentials: {
-    oAuthClientId: PAYPAL_CLIENT_ID,
-    oAuthClientSecret: PAYPAL_CLIENT_SECRET,
-  },
-  environment: Environment.Sandbox, //測試環境
-});
+const paypalClient = new paypal.core.PayPalHttpClient(environment);
 
 module.exports = paypalClient;

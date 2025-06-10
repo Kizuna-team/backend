@@ -18,6 +18,7 @@ const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes");
 const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
+const paypalRoutes = require('./routes/paymentRoutes');
 
 
 // 以下為即時聊天室新增模組
@@ -48,6 +49,7 @@ app.use("/api/friends", friendsRoutes);
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
+app.use('/paypal', paypalRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
