@@ -1,7 +1,7 @@
-const { Client, Environment } = require("@paypal/paypal-server-sdk")
-require("dotenv").config()
+const { Client, Environment } = require("@paypal/paypal-server-sdk");
+require("dotenv").config();
 
-const { PAYPAL_CLIENT_ID,PAYPAL_CLIENT_SECRET } = process.env
+const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 
 const paypalClient = new Client({
   clientCredentialsAuthCredentials: {
@@ -9,6 +9,6 @@ const paypalClient = new Client({
     oAuthClientSecret: PAYPAL_CLIENT_SECRET,
   },
   environment: Environment.Sandbox, //測試環境
-})
+});
 
-module.exports = paypalClient
+module.exports = paypalClient;
