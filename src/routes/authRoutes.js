@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, refresh, googleAuth, googleAuthCallback } = require("../controllers/authControllers.js");
+const { register, login, refresh, googleAuth, googleCallback } = require("../controllers/authControllers.js");
 
 const router = express.Router();
 
@@ -8,6 +8,6 @@ router.post("/login", login);
 router.post("/refresh", refresh);
 // Google 認證
 router.get("/google", googleAuth);
-router.get("/google/callback",googleAuthCallback);
+router.get("/google/callback", googleCallback);
 
 module.exports = router;

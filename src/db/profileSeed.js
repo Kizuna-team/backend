@@ -40,7 +40,8 @@ async function seed() {
     const seed = profilesSeed[i];
     // console.log(seed);
     return {
-      user_id: user.id,
+      userId: user.id,
+      name: seed.username,
       gender: seed.gender,
       bio: seed.bio,
       age: seed.age,
