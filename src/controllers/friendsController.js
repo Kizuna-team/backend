@@ -19,20 +19,58 @@ async function sendFriendRequest(req, res) {
 
 // 2. 查詢某用戶收到的邀請
 async function getReceivedRequests(req, res) {
-  const { userId } = req.query;
+    const { userId } = req.query;
 
-  try {
-    const result = await db
-      .select()
-      .from(friendRequestsTable)
-      .where(eq(friendRequestsTable.to_id, Number(userId)));
+    try {
+        const result = await db
+            .select({
+                id: friendRequestsTable.id,
+                from_id: friendRequestsTable.from_id,
+                to_id: friendRequestsTable.to_id,
+                created_at: friendRequestsTable.created_at,
+                // 新增 from_username 欄位，它來自 profileTable 的 name 欄位
+                from_username: profileTable.name 
+            })
+            .from(friendRequestsTable)
+            // 將 friendRequestsTable 與 profileTable 進行 JOIN
+            // 條件是 friendRequestsTable 的 from_id 等於 profileTable 的 userId
+            .innerJoin(
+                profileTable,
+                eq(friendRequestsTable.from_id, profileTable.userId) 
+            )
+            .where(eq(friendRequestsTable.to_id, Number(userId)));
 
-    res.json(result);
-  } catch (err) {
-    console.error("查詢邀請失敗", err);
-    res.status(500).json({ error: "伺服器錯誤" });
-  }
+        res.json(result);
+    } catch (err) {
+        console.error("查詢邀請失敗", err);
+        res.status(500).json({ error: "伺服器錯誤" });
+    }
 }
+
+async function rejectFriendRequest(req, res) {
+    // 假設從 URL 參數獲取邀請 ID (例如: DELETE /api/friends/requests/123)
+    const requestId = req.params.id; 
+
+    try {
+        // 先檢查邀請是否存在
+        const [request] = await db
+            .select()
+            .from(friendRequestsTable)
+            .where(eq(friendRequestsTable.id, requestId));
+
+        if (!request) {
+            return res.status(404).json({ error: "邀請不存在" });
+        }
+
+        // 直接刪除該筆邀請紀錄
+        await db.delete(friendRequestsTable).where(eq(friendRequestsTable.id, requestId));
+
+    } catch (err) {
+        console.error("拒絕邀請失敗", err);
+        res.status(500).json({ error: "伺服器錯誤" });
+    }
+}
+
 
 // 3. 同意好友邀請
 async function acceptFriendRequest(req, res) {
@@ -101,4 +139,5 @@ module.exports = {
   getReceivedRequests,
   acceptFriendRequest,
   getFriendsList,
+  rejectFriendRequest
 };
