@@ -1,5 +1,5 @@
 const db = require("../db/index.js");
-const { giftOrdersTable, OrderItemsTable, productsTable } = require("../db/schema.js");
+const { giftOrdersTable, orderItemsTable, productsTable } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
 const { eq, inArray } = require("drizzle-orm");
@@ -80,7 +80,7 @@ async function createOrder(req, res) {
       console.log(itemRows);
 
       // 插入多筆 items
-      await tx.insert(OrderItemsTable).values(itemRows);
+      await tx.insert(orderItemsTable).values(itemRows);
 
       // 呼叫 LINE Pay API 來建立付款連結
       const data = {
