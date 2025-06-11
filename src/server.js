@@ -10,6 +10,7 @@ const activityRoutes = require("./routes/activityRoutes");
 const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes");
 const likeRoutes = require("./routes/likeRoutes.js");
+const userProfileRoutes = require("./routes/userProfileRoutes.js");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -35,6 +36,7 @@ app.use("/activities", activityRoutes);
 app.use("/profile", editProfileRoutes);
 app.use("/photos", editPhotoRoutes);
 app.use("/", likeRoutes);
+app.use("/", userProfileRoutes);
 
 // 啟用 socket.io 聊天室邏輯
 // setupSocket(io);

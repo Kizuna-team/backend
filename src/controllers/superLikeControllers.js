@@ -126,6 +126,7 @@ const createSuperLike = async (req, res) => {
     return res.status(200).json({
       message,
       matched,
+      matchedWith: targetId,
       remainingCount: remainingCount - 1,
     });
   } catch (error) {
