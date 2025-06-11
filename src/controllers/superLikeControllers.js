@@ -134,6 +134,18 @@ const createSuperLike = async (req, res) => {
   }
 };
 
+const superLikeAuthHandler = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const result = await checkSuperLikeAuth(userId);
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("super like 使用權限失敗：", err);
+    res.status(500).json({ message: "伺服器錯誤" });
+  }
+};
+
 module.exports = {
   createSuperLike,
+  superLikeAuthHandler,
 };
