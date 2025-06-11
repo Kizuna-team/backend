@@ -1,6 +1,6 @@
 {
-  "id": "04ce47e4-1488-4141-b3ea-272cf82e8744",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "497b6936-89b2-4191-93d7-92f7da71318a",
+  "prevId": "04ce47e4-1488-4141-b3ea-272cf82e8744",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -203,8 +203,7 @@
         },
         "orientation": {
           "name": "orientation",
-          "type": "orientation_enum",
-          "typeSchema": "public",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -479,17 +478,7 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {
-    "public.orientation_enum": {
-      "name": "orientation_enum",
-      "schema": "public",
-      "values": [
-        "異性戀",
-        "同性戀",
-        "雙性戀"
-      ]
-    }
-  },
+  "enums": {},
   "schemas": {},
   "sequences": {},
   "roles": {},
