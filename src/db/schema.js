@@ -135,6 +135,20 @@ const subscriptionsTable = pgTable("subscriptions", {
   created_at: timestamp().defaultNow().notNull(),
 });
 
+const friendRequestsTable = pgTable("friend_requests", {
+  id: serial("id").primaryKey(),
+  from_id: integer("from_id").notNull(),
+  to_id: integer("to_id").notNull(), 
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+const friendsTable = pgTable("friends", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull(),
+  friend_id: integer("friend_id").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 module.exports = {
   usersTable,
   messagesTable,
@@ -145,5 +159,8 @@ module.exports = {
   giftOrdersTable,
   orderItemsTable,
   subscriptionPlansTable,
-  subscriptionsTable
+  friendRequestsTable,
+  subscriptionsTable,
+  friendRequestsTable,
+  friendsTable
 };

@@ -16,6 +16,7 @@ const ecpayRoutes = require("./routes/ecpay");
 const subPlansRoutes = require("./routes/subPlans");
 const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes");
+const friendsRoutes = require("./routes/friends");
 
 
 // 以下為即時聊天室新增模組
@@ -40,6 +41,7 @@ app.use("/activities", activityRoutes);
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/profile", editProfileRoutes);
 app.use("/photos", editPhotoRoutes);
+app.use("/api/friends", friendsRoutes);
 
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);
