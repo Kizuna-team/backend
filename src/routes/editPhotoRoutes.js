@@ -15,3 +15,7 @@ router.get("/", getPhotos);
 router.delete("/:key", deletePhoto);
 
 module.exports = router;
+
+// 改
+// router.post("/me/photos", authMiddleware, upload.single("image"), uploadImage); // 上傳
+// router.delete("/me/photos/:key", authMiddleware, deletePhoto); // 刪除
