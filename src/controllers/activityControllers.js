@@ -152,7 +152,7 @@ const updateActivity = async (req, res) => {
 
     //有新圖片就上傳，沒有就用原本的
     // 前端可選擇只更新部分欄位
-    let image_url;
+    let image_url = activity.image_url;
     const { title, location, date, description } = req.body;
     if (req.file) {
       image_url = await uploadToS3(req.file);
