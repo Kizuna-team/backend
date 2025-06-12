@@ -5,6 +5,7 @@ const upload = multer();
 
 const {
   getAllActivities,
+  getMyActivities,
   getActivityById,
   createActivity,
   updateActivity,
@@ -17,7 +18,8 @@ const authMiddleware = require("../middleware/auth.js");
 router.get("/", getAllActivities);
 
 // 需要授權的操作
-router.get("/:id", authMiddleware, getActivityById);
+router.get("/my", authMiddleware, getMyActivities);
+router.get('/:id', authMiddleware, getActivityById);
 router.post("/", authMiddleware, upload.single("image"), createActivity);
 router.put("/:id", authMiddleware, upload.single("image"), updateActivity);
 router.delete("/:id", authMiddleware, deleteActivity);
