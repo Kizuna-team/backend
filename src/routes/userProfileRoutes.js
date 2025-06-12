@@ -5,7 +5,7 @@ const {
   getAllProfiles,
 } = require("../controllers/userProfileControllers");
 
-router.get("/me", getProfileById);
-router.get("/:userId", getAllProfiles);
+router.get("/:userId", getProfileById);
+router.get("/", getAllProfiles);
 
 module.exports = router;

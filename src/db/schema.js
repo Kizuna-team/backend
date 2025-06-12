@@ -6,7 +6,6 @@ const {
   timestamp,
   date,
   text,
-  unique,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -38,9 +37,13 @@ const activities = pgTable("activities", {
 //上傳照片
 const photosTable = pgTable("photos", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => usersTable.id)
+    .notNull(),
   image_url: varchar("image_url", { length: 255 }),
   image_key: varchar("image_key", { length: 255 }),
-  uploaded_at: timestamp("uploaded_at").defaultNow(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  sequence: integer("sequence"),
 });
 
 // 使用者個人檔案
