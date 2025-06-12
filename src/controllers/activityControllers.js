@@ -77,6 +77,7 @@ const getMyActivities = async (req, res) => {
       .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .where(eq(activities.created_by_id, userId));
+    console.log("資料庫查詢我的活動結果:", result);
     res.json(result);
   } catch (err) {
     console.error("取得我的活動錯誤：", err);
