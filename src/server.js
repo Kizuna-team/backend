@@ -22,6 +22,7 @@ const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require('./routes/paymentRoutes');
 const setupSocket = require("./controllers/chatControllers_new.js");
+const aiRoutes = require("./routes/ai");
 
 
 // 以下為即時聊天室新增模組
@@ -72,7 +73,8 @@ app.use("/photos/me", editPhotoRoutes);
 app.use("/like/", likeRoutes);
 app.use("/users/profile", userProfileRoutes);
 app.use("/users/photos", userPhotoRoutes);
-app.use("/api/friends", friendsRoutes);
+app.use("/friends", friendsRoutes);
+app.use("/api/chat", aiRoutes);
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
