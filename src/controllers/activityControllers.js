@@ -31,6 +31,7 @@ const uploadToS3 = async (file) => {
   return `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 };
 
+// 取得所有活動
 const getAllActivities = async (req, res) => {
   try {
     const result = await db
@@ -43,9 +44,10 @@ const getAllActivities = async (req, res) => {
         image_url: activities.image_url,
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
-        created_by_username: usersTable.username, // ⭐ 用 join 撈出 username
+        created_by_username: usersTable.username, 
       })
       .from(activities)
+      .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id));
     res.json(result);
   } catch (err) {
@@ -54,9 +56,40 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-const getActivityById = async (req, res) => {
+// 取得我的活動 
+const getMyActivities = async (req, res) => {
+  const userId = req.user.id; // 由 token/middleware 取得
+  console.log("!!!");
+  
   try {
     const result = await db
+      .select({
+        id: activities.id,
+        title: activities.title,
+        date: activities.date,
+        image_url: activities.image_url,
+        location: activities.location,
+        description: activities.description,
+        created_at: activities.created_at,
+        created_by_username: usersTable.username,
+      })
+      .from(activities)
+      .orderBy(activities.id)
+      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
+      .where(eq(activities.created_by_id, userId));
+    res.json(result);
+  } catch (err) {
+    console.error("取得我的活動錯誤：", err);
+    res.status(500).json({ error: "伺服器錯誤" });
+  }
+};
+
+// 查詢單一活動（編輯）
+const getActivityById = async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  try {
+    const [activity] = await db
       .select({
         id: activities.id,
         title: activities.title,
@@ -69,13 +102,19 @@ const getActivityById = async (req, res) => {
         created_by_username: usersTable.username,
       })
       .from(activities)
-      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id));
-    res.json(result);
+      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
+      .where(eq(activities.id, id));
+
+    if (!activity) {
+      return res.status(404).json({ error: "Not found" });
+    }
+    res.json(activity);
   } catch (err) {
-    console.error("取得所有活動錯誤：", err);
+    console.error("取得活動錯誤：", err);
     res.status(500).json({ error: "伺服器錯誤" });
   }
 };
+
 
 const createActivity = async (req, res) => {
   const { title, location, date, description } = req.body;
@@ -112,6 +151,7 @@ const updateActivity = async (req, res) => {
 
     //有新圖片就上傳，沒有就用原本的
     // 前端可選擇只更新部分欄位
+    let image_url;
     const { title, location, date, description } = req.body;
     if (req.file) {
       image_url = await uploadToS3(req.file);
@@ -149,7 +189,7 @@ const deleteActivity = async (req, res) => {
   try {
     const [activity] = await db
       .delete(activities)
-      .where(and(eq(activities.id, id), eq(activities.createdBy, userId)))
+      .where(and(eq(activities.id, id), eq(activities.created_by_id, userId)))
       .returning();
 
     if (!activity) {
@@ -165,6 +205,7 @@ const deleteActivity = async (req, res) => {
 
 module.exports = {
   getAllActivities,
+  getMyActivities,
   getActivityById,
   createActivity,
   updateActivity,
