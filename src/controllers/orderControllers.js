@@ -19,7 +19,7 @@ async function createOrder(req, res) {
   ) {
     return res.status(400).json({ error: "資料格式錯誤" });
   }
-
+  
   try {
     // 用 transaction 保持一致性
     await db.transaction(async (tx) => {
