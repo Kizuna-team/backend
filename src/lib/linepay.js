@@ -2,8 +2,6 @@ import crypto from "crypto"
 import "dotenv/config"
 
 const { LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY } = process.env
-console.log("LINEPAY_CHANNEL_ID:", LINEPAY_CHANNEL_ID)
-console.log("LINEPAY_CHANNEL_SECRET_KEY:", LINEPAY_CHANNEL_SECRET_KEY)
 
 function signKey(secretKey, msg) {
   return crypto
@@ -11,6 +9,7 @@ function signKey(secretKey, msg) {
     .update(msg)
     .digest("base64");
 }
+
 
 async function requestOnlineAPI({
   method,
@@ -27,7 +26,7 @@ async function requestOnlineAPI({
     LINEPAY_CHANNEL_SECRET_KEY,
     LINEPAY_CHANNEL_SECRET_KEY + apiPath + JSON.stringify(data) + nonce
   )
-
+  
   const headers = {
     "X-LINE-ChannelId": LINEPAY_CHANNEL_ID,
     "X-LINE-Authorization": signature,
@@ -46,7 +45,7 @@ async function requestOnlineAPI({
       signal: signal,
     }
   )
-
+  // console.log(response);
   return await response.json()
 }
 
