@@ -4,12 +4,13 @@ const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
-const { eq } = require("drizzle-orm");
+const { eq, and } = require("drizzle-orm");
 
 const uploadImage = async (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).send("沒有圖片");
 
+  const userId = req.user?.id;
   const fileKey = `${Date.now()}-${file.originalname}`;
   const fileStream = fs.createReadStream(file.path);
 
@@ -30,6 +31,7 @@ const uploadImage = async (req, res) => {
     await db.insert(photosTable).values({
       image_url: imageUrl,
       image_key: fileKey,
+      userId,
     });
 
     res.status(201).json({
@@ -44,8 +46,14 @@ const uploadImage = async (req, res) => {
 };
 
 const getPhotos = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).send("缺少使用者身分");
   try {
-    const photos = await db.select().from(photosTable);
+    const photos = await db
+      .select()
+      .from(photosTable)
+      .where(eq(photosTable.userId, userId));
+
     res.json(photos);
   } catch (err) {
     console.error("取得照片失敗", err);
@@ -54,9 +62,22 @@ const getPhotos = async (req, res) => {
 };
 
 const deletePhoto = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).send("缺少使用者身分");
   const { key } = req.params;
 
   try {
+    const [photo] = await db
+      .select()
+      .from(photosTable)
+      .where(
+        and(eq(photosTable.image_key, key), eq(photosTable.userid, userId))
+      );
+
+    if (!photo) {
+      return res.status(403).json({ message: "你無權刪除此圖片" });
+    }
+
     // 1. 刪 S3
     await s3.send(
       new DeleteObjectCommand({

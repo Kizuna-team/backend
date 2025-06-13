@@ -1,8 +1,44 @@
 // 引入service資料夾要查詢使用者的 資料庫函式
 const db = require("../db/index.js");
 const { profileTable } = require("../db/schema");
-const { neq } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
+const { eq, not } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
 const { getProfileByIdFromDB } = require("../services/userProfile");
+// GET (多個配對對象，未加入篩選邏輯)
+// 拿到除了自己之外的所有使用者資料
+const getAllProfiles = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    console.log("userId:", userId);
+    if (!userId) {
+      return res.status(401).json({ message: "未授權操作，請先登入" });
+    }
+
+    const profilesRecord = await db
+      .select({
+        userId: profileTable.userId,
+        name: profileTable.name,
+        // gender: profileTable.gender,
+        // orientation: profileTable.orientation,
+        bio: profileTable.bio,
+        age: profileTable.age,
+        // location: profileTable.location,
+        // zodiac: profileTable.zodiac,
+        // mbti: profileTable.mbti,
+        job: profileTable.job,
+        // interests: profileTable.interests,
+      })
+      .from(profileTable)
+      .where(not(eq(profileTable.userId, userId)));
+
+    console.log("typeof userId:", typeof userId);
+    res
+      .status(200)
+      .json({ message: "取得配對對象成功", users: profilesRecord });
+  } catch (error) {
+    console.error("getAllProfiles failed:", error.message);
+    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+  }
+};
 
 // GET (查看單一使用者資料) /profile/:userId
 // id 是字串，但 DB 欄位是數字
@@ -15,41 +51,6 @@ const getProfileById = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error("getProfileById failed:", error.message);
-    res.status(500).json({ message: "伺服器錯誤", error: error.message });
-  }
-};
-
-// GET (多個配對對象，未加入篩選邏輯)	 /profiles
-// 拿到除了自己之外的所有使用者資料
-const getAllProfiles = async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: "未授權操作，請先登入" });
-    }
-
-    const profilesRecord = await db
-      .select({
-        userId: profileTable.userId,
-        name: profileTable.name,
-        gender: profileTable.gender,
-        orientation: profileTable.orientation,
-        bio: profileTable.bio,
-        age: profileTable.age,
-        location: profileTable.location,
-        zodiac: profileTable.zodiac,
-        mbti: profileTable.mbti,
-        job: profileTable.job,
-        interests: profileTable.interests,
-      })
-      .from(profileTable)
-      .where(neq(profileTable.userId, userId)); //排除自己
-
-    res
-      .status(200)
-      .json({ message: "取得配對對象成功", users: profilesRecord });
-  } catch (error) {
-    console.error("getAllProfiles failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };

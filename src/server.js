@@ -35,7 +35,7 @@ app.use("/activities", activityRoutes);
 // 掛載子路由群組 REST API建議 以資源為單位
 app.use("/profile/me", editProfileRoutes);
 app.use("/photos/me", editPhotoRoutes);
-app.use("/", likeRoutes);
+app.use("/like/", likeRoutes);
 app.use("/users/profile", userProfileRoutes);
 app.use("/users/photos", userPhotoRoutes);
 
