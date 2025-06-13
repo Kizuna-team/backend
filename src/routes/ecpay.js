@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth.js");
 const ecpay = require("ecpay_aio_nodejs");
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
 const dotenv = require("dotenv");
 const db = require("../db/index.js");
 const {
@@ -52,7 +52,6 @@ router.post("/create", authMiddleware, async (req, res) => {
     .select()
     .from(subscriptionPlansTable)
     .where(eq(subscriptionPlansTable.id, planId));
-
 
   const price = plan.price;
   const userId = req.user.id;
@@ -154,8 +153,10 @@ router.post("/notify", async (req, res) => {
       console.log("查詢到的訂單:", order);
 
       const paidAtUTC = order.paid_at;
-      const paidAtTaipei = dayjs(paidAtUTC).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
-      console.log('台灣時間:', paidAtTaipei);
+      const paidAtTaipei = dayjs(paidAtUTC)
+        .tz("Asia/Taipei")
+        .format("YYYY-MM-DD HH:mm:ss");
+      console.log("台灣時間:", paidAtTaipei);
 
       if (!order) return res.status(404).send("0|訂單不存在");
 
@@ -170,7 +171,7 @@ router.post("/notify", async (req, res) => {
       // 3️⃣ 更新訂單狀態
       // 將 PaymentDate 格式轉換為 yyyy-MM-dd HH:mm:ss
       // 注意：ECPay 的 PaymentDate 格式是 yyyy/MM/dd HH:mm:ss
-      const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, '-') : null;
+      const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, "-") : null;
 
       await db
         .update(subscriptionsTable)

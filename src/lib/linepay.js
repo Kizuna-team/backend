@@ -1,15 +1,11 @@
-import crypto from "crypto"
-import "dotenv/config"
+const crypto = require("crypto");
+require("dotenv").config();
 
-const { LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY } = process.env
+const { LINEPAY_CHANNEL_ID, LINEPAY_CHANNEL_SECRET_KEY } = process.env;
 
 function signKey(secretKey, msg) {
-  return crypto
-    .createHmac("sha256", secretKey)
-    .update(msg)
-    .digest("base64");
+  return crypto.createHmac("sha256", secretKey).update(msg).digest("base64");
 }
-
 
 async function requestOnlineAPI({
   method,
@@ -19,19 +15,19 @@ async function requestOnlineAPI({
   data = null,
   signal = null,
 }) {
-  const nonce = crypto.randomUUID()
-  let signature = ""
+  const nonce = crypto.randomUUID();
+  let signature = "";
 
   signature = signKey(
     LINEPAY_CHANNEL_SECRET_KEY,
     LINEPAY_CHANNEL_SECRET_KEY + apiPath + JSON.stringify(data) + nonce
-  )
-  
+  );
+
   const headers = {
     "X-LINE-ChannelId": LINEPAY_CHANNEL_ID,
     "X-LINE-Authorization": signature,
     "X-LINE-Authorization-Nonce": nonce,
-  }
+  };
 
   const response = await fetch(
     `${baseUrl}${apiPath}${queryString !== "" ? "&" + queryString : ""}`,
@@ -44,9 +40,9 @@ async function requestOnlineAPI({
       body: data ? JSON.stringify(data) : null,
       signal: signal,
     }
-  )
+  );
   // console.log(response);
-  return await response.json()
+  return await response.json();
 }
 
-export { requestOnlineAPI }
+module.exports = { requestOnlineAPI };
