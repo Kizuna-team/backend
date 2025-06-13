@@ -2,12 +2,12 @@ const db = require("../db/index.js");
 const { giftOrdersTable, orderItemsTable, productsTable } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
-const { eq, inArray } = require("drizzle-orm");
+const { eq, inArray, sql } = require("drizzle-orm");
 
 
 async function createOrder(req, res) {
   const { sender_id, receiver_id, items } = req.body;
-  
+
   console.log("收到的訂單資料:", req.body);
 
   // 驗證前端送來的訂單資料
@@ -19,7 +19,7 @@ async function createOrder(req, res) {
   ) {
     return res.status(400).json({ error: "資料格式錯誤" });
   }
-  
+
   try {
     // 用 transaction 保持一致性
     await db.transaction(async (tx) => {
@@ -45,15 +45,15 @@ async function createOrder(req, res) {
       });
 
       // 計算總金額
-      const totalAmount = linepayItems.reduce((sum,item)=>{
+      const totalAmount = linepayItems.reduce((sum, item) => {
         return sum += item.price * item.quantity;
       }, 0);
-      
+
       // 產生訂單編號
       const orderId = orderGenerator();
       console.log("產生的訂單編號:", orderId);
 
- 
+
       // 特別說明 returning() 回傳的是一個 array 而我只想要剛剛insert的那筆 所以 解構
       const [giftOrder] = await tx
         .insert(giftOrdersTable)
@@ -144,7 +144,7 @@ async function confirmOrder(req, res) {
   const { transactionId, orderId } = req.query;
 
   try {
-  // 拿著 orderId 到資料庫中抓訂單總金額
+    // 拿著 orderId 到資料庫中抓訂單總金額
     const [order] = await db
       .select()
       .from(giftOrdersTable)
@@ -155,7 +155,7 @@ async function confirmOrder(req, res) {
     }
 
     const orderAmount = order.amount;
-    
+
     const result = await requestOnlineAPI({
       method: "POST",
       apiPath: `/v3/payments/${transactionId}/confirm`,
@@ -177,6 +177,19 @@ async function confirmOrder(req, res) {
           // payment_method: "LINE Pay"
         })
         .where(eq(giftOrdersTable.order_id, orderId));
+
+      // 查詢該筆訂單的商品項目 => 更新對應商品的庫存
+      const orderItems = await db
+        .select()
+        .from(orderItemsTable)
+        .where(eq(orderItemsTable.gift_order_id, order.id));
+
+      // 因為 forEach 沒有支援 await 所以 for loop    
+      for (const item of orderItems) {
+        await db.update(productsTable).set({
+          inventory: sql`${productsTable.inventory}-${item.quantity}`
+        }).where(eq(productsTable.id, item.product_id));
+      }
       res.send("付款成功！感謝您的訂購 🎉");
     } else {
       res.status(400).send("付款確認失敗：" + result.returnMessage);
