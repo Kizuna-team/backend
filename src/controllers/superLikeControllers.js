@@ -2,7 +2,12 @@
 // 先確定沒送過、沒超過限制，再寫入 superLikesTable
 // 最後判斷是否配對成功
 const db = require("../db/index.js");
-const { likesTable, superLikesTable, matchesTable } = require("../db/schema");
+const {
+  likesTable,
+  superLikesTable,
+  matchesTable,
+  profileTable,
+} = require("../db/schema");
 const { checkSuperLikeAuth } = require("../services/superLikeService");
 const { eq, and } = require("drizzle-orm");
 
@@ -104,31 +109,40 @@ const createSuperLike = async (req, res) => {
 
     // 確保較小的 ID 在前面，配對資料庫要避免重複配對 (1, 2) 和 (2, 1)
     if (matched) {
-      const ids = [userId, targetId];
-      const sortedIds = ids.sort((a, b) => a - b);
-      const idA = sortedIds[0];
-      const idB = sortedIds[1];
+      const ids = [userId, targetId].sort((a, b) => a - b);
 
       await db
         .insert(matchesTable)
         .values({
-          matchUserAId: idA,
-          matchUserBId: idB,
+          matchUserAId: ids[0],
+          matchUserBId: ids[1],
           matchedAt: new Date(),
         })
         .onConflictDoNothing(); // 防止重複配對紀錄
+
+      // 插入配對紀錄後，傳回對方完整 profile
+      const [targetProfile] = await db
+        .select()
+        .from(profileTable)
+        .where(eq(profileTable.userId, targetId))
+        .limit(1);
+
+      return res.status(200).json({
+        message: "已成功發送 Super Like 且 配對成功！",
+        matched,
+        matchedWith: targetId,
+        remainingCount: remainingCount - 1,
+        targetProfile,
+      });
+    } else {
+      // 沒有配對成功也要回應
+      return res.status(200).json({
+        message: "已成功發送 Super Like",
+        matched: false,
+        matchedWith: targetId,
+        remainingCount: remainingCount - 1,
+      });
     }
-
-    const message = matched
-      ? "已成功發送 Super Like 且 配對成功！"
-      : "已成功發送 Super Like";
-
-    return res.status(200).json({
-      message,
-      matched,
-      matchedWith: targetId,
-      remainingCount: remainingCount - 1,
-    });
   } catch (error) {
     console.error("createSuperLike failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });

@@ -4,6 +4,7 @@ const {
   likesTable,
   matchesTable,
   superLikesTable,
+  profileTable,
 } = require("../db/schema.js");
 const { eq, and } = require("drizzle-orm");
 
@@ -76,12 +77,19 @@ const createLike = async (req, res) => {
           matchedAt: new Date(),
         })
         .onConflictDoNothing();
+      console.log("✅ 雙方配對成功，回傳 matchedWith:", targetId);
+
+      const [targetProfile] = await db
+        .select()
+        .from(profileTable)
+        .where(eq(profileTable.userId, targetId));
 
       return res.json({
         success: true,
         matched: true,
         matchedWith: targetId,
         message: "雙方配對成功！",
+        targetProfile,
       });
     } else {
       return res.json({
