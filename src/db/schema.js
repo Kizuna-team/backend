@@ -1,3 +1,4 @@
+const { boolean } = require("drizzle-orm/gel-core");
 const {
   pgTable,
   serial,
@@ -6,6 +7,7 @@ const {
   timestamp,
   date,
   text,
+  unique,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -44,6 +46,7 @@ const photosTable = pgTable("photos", {
   image_key: varchar("image_key", { length: 255 }),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
   sequence: integer("sequence"),
+  is_avatar: boolean("is_avatar").default(false), // 讓使用者指定頭像
 });
 
 // 使用者個人檔案

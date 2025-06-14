@@ -5,10 +5,13 @@ const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
 const { eq, and } = require("drizzle-orm");
+const { findCertainPhotos } = require("../services/userPhoto.js");
 
 const uploadImage = async (req, res) => {
   const file = req.file;
-  if (!file) return res.status(400).send("沒有圖片");
+  if (!file) {
+    return res.status(400).json({ message: "沒有圖片" });
+  }
 
   const userId = req.user?.id;
   const fileKey = `${Date.now()}-${file.originalname}`;
@@ -32,6 +35,7 @@ const uploadImage = async (req, res) => {
       image_url: imageUrl,
       image_key: fileKey,
       userId,
+      sequence: null, //一律不指定大頭照可讓使用者選擇切換
     });
 
     res.status(201).json({
@@ -47,23 +51,21 @@ const uploadImage = async (req, res) => {
 
 const getPhotos = async (req, res) => {
   const userId = req.user?.id;
-  if (!userId) return res.status(401).send("缺少使用者身分");
-  try {
-    const photos = await db
-      .select()
-      .from(photosTable)
-      .where(eq(photosTable.userId, userId));
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
 
+  try {
+    const photos = await findCertainPhotos(userId);
     res.json(photos);
   } catch (err) {
     console.error("取得照片失敗", err);
-    res.status(500).send("無法取得照片");
+    res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
 
 const deletePhoto = async (req, res) => {
   const userId = req.user?.id;
-  if (!userId) return res.status(401).send("缺少使用者身分");
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
   const { key } = req.params;
 
   try {
@@ -71,7 +73,7 @@ const deletePhoto = async (req, res) => {
       .select()
       .from(photosTable)
       .where(
-        and(eq(photosTable.image_key, key), eq(photosTable.userid, userId))
+        and(eq(photosTable.image_key, key), eq(photosTable.userId, userId))
       );
 
     if (!photo) {
@@ -92,7 +94,7 @@ const deletePhoto = async (req, res) => {
     res.json({ message: `已刪除：${key}` });
   } catch (err) {
     console.error("刪除失敗", err);
-    res.status(500).send("刪除圖片失敗");
+    res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
 
