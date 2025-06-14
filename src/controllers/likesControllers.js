@@ -87,9 +87,8 @@ const createLike = async (req, res) => {
       return res.json({
         success: true,
         matched: true,
-        matchedWith: targetId,
-        message: "雙方配對成功！",
         targetProfile,
+        message: "雙方配對成功！",
       });
     } else {
       return res.json({

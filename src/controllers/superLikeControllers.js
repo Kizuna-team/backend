@@ -130,16 +130,14 @@ const createSuperLike = async (req, res) => {
       return res.status(200).json({
         message: "已成功發送 Super Like 且 配對成功！",
         matched,
-        matchedWith: targetId,
-        remainingCount: remainingCount - 1,
         targetProfile,
+        remainingCount: remainingCount - 1,
       });
     } else {
       // 沒有配對成功也要回應
       return res.status(200).json({
         message: "已成功發送 Super Like",
         matched: false,
-        matchedWith: targetId,
         remainingCount: remainingCount - 1,
       });
     }
