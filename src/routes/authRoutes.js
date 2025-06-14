@@ -7,7 +7,6 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
 // Google 認證
-router.get("/google", googleAuth);
-router.get("/google/callback", googleCallback);
+router.post("/google", googleAuth);
 
 module.exports = router;
