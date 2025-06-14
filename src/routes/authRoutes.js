@@ -1,13 +1,32 @@
 const express = require("express");
-const { register, login, refresh, googleAuth, googleAuthCallback } = require("../controllers/authControllers.js");
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/refresh", refresh);
-// Google 認證
-router.get("", googleAuth);
-router.get("/callback",googleAuthCallback);
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false }),
+  (req, res) => {
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        email: req.user.email,
+        username: req.user.username,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    const redirectUrl = `http://localhost:5173/oauth-success?token=${token}`;
+    res.redirect(redirectUrl);
+  }
+);
 
 module.exports = router;

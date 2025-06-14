@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const passport = require("./config/passport.js");
+const passport = require("./config/passport");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
@@ -14,8 +14,6 @@ const activityRoutes = require("./routes/activityRoutes");
 // const http = require("http");
 // const { Server } = require("socket.io");
 // const setupSocket = require("./controllers/chatControllers.js");
-
-
 
 dotenv.config();
 
