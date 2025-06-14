@@ -1,33 +1,46 @@
-const { eq, inArray } = require("drizzle-orm");
+const { eq, and } = require("drizzle-orm");
 const { photosTable } = require("../db/schema");
 const db = require("../db");
 
-// 用id 指定撈取自己的某張照片（要登入 自己看自己的）
-const getMyPhotoBySequence = async (userId, sequence) => {
-  const [photo] = await db
-    .select()
-    .from(photosTable)
-    .where(
-      and(eq(photosTable.userId, userId), eq(photosTable.sequence, sequence))
-    )
-    .limit(1);
-  return photo || null;
-};
+// 特定照片查找工具
+const findCertainPhotos = async (userId, options = {}) => {
+  const conditions = [eq(photosTable.userId, userId)];
 
-// 用Sequence 撈取指定的排序照片 （不用登入）
-const getPublicPhotosBySequences = async (targetId, sequences) => {
+  // 只會查詢被標記為頭像的照片
+  if (options.isAvatarOnly) {
+    conditions.push(eq(photosTable.is_avatar, true));
+  }
+
+  // 只會查詢 sequence 欄位的值在這個陣列中的照片
+  if (Array.isArray(options.sequenceIn)) {
+    conditions.push(inArray(photosTable.sequence, options.sequenceIn));
+  }
+
+  // 只有同時滿足所有指定條件才返回
   return await db
     .select()
     .from(photosTable)
-    .where(
-      and(
-        eq(photosTable.userId, targetId),
-        inArray(photosTable.sequence, sequences)
-      )
-    );
+    .where(and(...conditions));
+};
+
+// 設定大頭照 注意key是字串型別
+const setAvatar = async (userId, key) => {
+  // 清除原本大頭貼
+  await db
+    .update(photosTable)
+    .set({
+      is_avatar: false,
+    })
+    .where(eq(photosTable.userId, userId));
+
+  // 設定新大頭貼
+  await db
+    .update(photosTable)
+    .set({ is_avatar: true })
+    .where(and(eq(photosTable.userId, userId), eq(photosTable.image_key, key)));
 };
 
 module.exports = {
-  getMyPhotoBySequence,
-  getPublicPhotosBySequences,
+  findCertainPhotos,
+  setAvatar,
 };

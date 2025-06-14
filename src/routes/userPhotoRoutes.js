@@ -2,11 +2,11 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth.js");
 const {
-  getMyPhoto,
-  getPublicPhotos,
-} = require("../controllers/userPhotosControllers");
+  getMatchPhotos,
+  getAvatarPhoto,
+} = require("../controllers/userProfileControllers");
 
-router.get("/me", authMiddleware, getMyPhoto); // 撈自己的某張
-router.get("/:userId", getPublicPhotos); // 撈多張別人照片
+router.get("/match", authMiddleware, getMatchPhotos);
+router.patch("/avatar", authMiddleware, getAvatarPhoto);
 
 module.exports = router;
