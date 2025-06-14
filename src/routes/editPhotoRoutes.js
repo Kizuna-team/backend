@@ -8,10 +8,12 @@ const {
   uploadImage,
   getPhotos,
   deletePhoto,
+  getMyAvatarPhoto,
 } = require("../controllers/editPhotosControllers.js");
 
-router.post("/", authMiddleware, upload.single("image"), uploadImage);
 router.get("/", authMiddleware, getPhotos);
+router.get("/avatar", authMiddleware, getMyAvatarPhoto);
+router.post("/", authMiddleware, upload.single("image"), uploadImage);
 router.delete("/:key", authMiddleware, deletePhoto);
 
 module.exports = router;
