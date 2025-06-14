@@ -177,9 +177,9 @@ async function confirmOrder(req, res) {
           // payment_method: "LINE Pay"
         })
         .where(eq(giftOrdersTable.order_id, orderId));
-      res.send("付款成功！感謝您的訂購 🎉");
+       res.redirect(`http://localhost:5173/order/confirm?transactionId=${transactionId}&orderId=${orderId}`);
     } else {
-      res.status(400).send("付款確認失敗：" + result.returnMessage);
+      res.redirect(`http://localhost:5173/order/confirm?error=1&message=${encodeURIComponent(result.returnMessage)}`);
     }
   } catch (err) {
     console.error("付款確認錯誤", err);
