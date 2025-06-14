@@ -9,10 +9,12 @@ const {
   getPhotos,
   deletePhoto,
   getMyAvatarPhoto,
+  changeAvatar,
 } = require("../controllers/editPhotosControllers.js");
 
 router.get("/", authMiddleware, getPhotos);
 router.get("/avatar", authMiddleware, getMyAvatarPhoto);
+router.patch("/avatar", authMiddleware, changeAvatar);
 router.post("/", authMiddleware, upload.single("image"), uploadImage);
 router.delete("/:key", authMiddleware, deletePhoto);
 

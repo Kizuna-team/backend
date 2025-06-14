@@ -5,7 +5,20 @@ const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
 const { eq, and } = require("drizzle-orm");
-const { findCertainPhotos } = require("../services/userPhoto.js");
+const { findCertainPhotos, setAvatar } = require("../services/userPhoto.js");
+
+const getMyAvatarPhoto = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
+  try {
+    const [photo] = await findCertainPhotos(userId, { isAvatarOnly: true });
+    res.json(photo || {});
+  } catch (err) {
+    console.error("取得本人大頭貼失敗", err);
+    res.status(500).json({ message: "伺服器錯誤" });
+  }
+};
 
 const uploadImage = async (req, res) => {
   const file = req.file;
@@ -98,8 +111,28 @@ const deletePhoto = async (req, res) => {
   }
 };
 
+const changeAvatar = async (req, res) => {
+  const userId = req.user?.id;
+  const { key } = req.body;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
+  if (!key || typeof key !== "string") {
+    return res.status(400).json({ message: "無效或空的圖片 key" });
+  }
+
+  try {
+    await setAvatar(userId, key); // 執行設定大頭貼
+    res.json({ message: "大頭貼已更新" });
+  } catch (error) {
+    console.error("更新大頭貼失敗", err);
+    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+  }
+};
+
 module.exports = {
   uploadImage,
   getPhotos,
   deletePhoto,
+  getMyAvatarPhoto,
+  changeAvatar,
 };
