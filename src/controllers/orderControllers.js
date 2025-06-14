@@ -8,6 +8,30 @@ const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
 const { eq, inArray } = require("drizzle-orm");
 const frontendUrl = process.env.FRONTEND_URL;
+const { eq, inArray, sql } = require("drizzle-orm");
+
+async function increaseProductSales(orderId) {
+  const items = await db
+    .select({
+      productId: orderItemsTable.product_id,
+      quantity: orderItemsTable.quantity,
+    })
+    .from(orderItemsTable)
+    .where(eq(orderItemsTable.gift_order_id, orderId));
+
+  for (const item of items) {
+    const [product] = await db
+      .select({ sales: productsTable.sales })
+      .from(productsTable)
+      .where(eq(productsTable.id, item.productId));
+    const newSales = (product?.sales || 0) + item.quantity;
+
+    await db
+      .update(productsTable)
+      .set({ sales: newSales })
+      .where(eq(productsTable.id, item.productId));
+  }
+}
 
 async function createOrder(req, res) {
   const { sender_id, receiver_id, items } = req.body;
@@ -200,6 +224,9 @@ async function confirmOrder(req, res) {
       res.redirect(
         `${frontendUrl}/order/confirm?transactionId=${transactionId}&orderId=${orderId}`
       );
+
+      await increaseProductSales(order.id)
+
     } else {
       res.redirect(
         `${frontendUrl}/order/confirm?error=1&message=${encodeURIComponent(
