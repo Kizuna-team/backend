@@ -1,4 +1,3 @@
-// controllers/chatControllers.js
 
 // 存儲房間和用戶資訊
 const rooms = new Map();
@@ -24,7 +23,7 @@ function setupSocket(io) {
       }
       
       // 加入新房間
-      socket.join(roomId.toString());
+      // socket.join(roomId.toString());
       
       // 儲存用戶資訊
       users.set(socket.id, {
