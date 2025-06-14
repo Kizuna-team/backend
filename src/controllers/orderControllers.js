@@ -1,9 +1,13 @@
 const db = require("../db/index.js");
-const { giftOrdersTable, orderItemsTable, productsTable } = require("../db/schema.js");
+const {
+  giftOrdersTable,
+  orderItemsTable,
+  productsTable,
+} = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
-const { eq, inArray, sql } = require("drizzle-orm");
-
+const { eq, inArray } = require("drizzle-orm");
+const frontendUrl = process.env.FRONTEND_URL;
 
 async function createOrder(req, res) {
   const { sender_id, receiver_id, items } = req.body;
@@ -27,11 +31,12 @@ async function createOrder(req, res) {
       // 我只要商品id 來查詢商品資訊
       const productIds = items.map((item) => item.product_id);
       // SELECT * FROM products WHERE id IN (productIds)
-      const products = await tx.select().from(productsTable).where(
-        inArray(productsTable.id, productIds)
-      );
+      const products = await tx
+        .select()
+        .from(productsTable)
+        .where(inArray(productsTable.id, productIds));
 
-      // 組成 LINE PAY 格式 ＋ 計算金額 
+      // 組成 LINE PAY 格式 ＋ 計算金額
       const linepayItems = items.map((item) => {
         // 找到對應的商品資訊
         const product = products.find((p) => p.id === item.product_id);
@@ -53,7 +58,6 @@ async function createOrder(req, res) {
       const orderId = orderGenerator();
       console.log("產生的訂單編號:", orderId);
 
-
       // 特別說明 returning() 回傳的是一個 array 而我只想要剛剛insert的那筆 所以 解構
       const [giftOrder] = await tx
         .insert(giftOrdersTable)
@@ -62,7 +66,7 @@ async function createOrder(req, res) {
           sender_id,
           receiver_id,
           status: "pending",
-          amount: totalAmount
+          amount: totalAmount,
         })
         .returning();
 
@@ -92,19 +96,19 @@ async function createOrder(req, res) {
             id: `package-${gift_order_id}`,
             amount: totalAmount,
             name: "購物車商品包",
-            products: linepayItems
-          }
+            products: linepayItems,
+          },
         ],
         redirectUrls: {
           confirmUrl: "http://localhost:3000/order/confirm",
-          cancelUrl: "http://localhost:3000/order/cancel"
-        }
+          cancelUrl: "http://localhost:3000/order/cancel",
+        },
       };
 
       const response = await requestOnlineAPI({
         method: "POST",
         apiPath: "/v3/payments/request",
-        data
+        data,
       });
 
       if (response.returnCode === "0000") {
@@ -115,20 +119,21 @@ async function createOrder(req, res) {
           success: true,
           paymentUrl: paymentURL,
           gift_order_id,
-          order_id: orderId
+          order_id: orderId,
         });
       } else {
         // 如果 LINE Pay 呼叫失敗 把訂單標為 failed
-        await tx.update(giftOrdersTable)
+        await tx
+          .update(giftOrdersTable)
           .set({
-            status: "failed"
+            status: "failed",
           })
           .where(eq(giftOrdersTable.id, gift_order_id));
 
         res.status(500).json({
           success: false,
           message: "LINE Pay 錯誤",
-          details: response
+          details: response,
         });
       }
       console.log(response);
@@ -139,7 +144,7 @@ async function createOrder(req, res) {
   }
 }
 
-// 確認付款流程 
+// 確認付款流程
 async function confirmOrder(req, res) {
   const { transactionId, orderId } = req.query;
 
@@ -169,7 +174,8 @@ async function confirmOrder(req, res) {
 
     if (result.returnCode === "0000") {
       // 付款成功，更新訂單狀態
-      await db.update(giftOrdersTable)
+      await db
+        .update(giftOrdersTable)
         .set({
           status: "paid",
           transaction_id: transactionId,
@@ -190,17 +196,24 @@ async function confirmOrder(req, res) {
           inventory: sql`${productsTable.inventory}-${item.quantity}`
         }).where(eq(productsTable.id, item.product_id));
       }
-      res.redirect(`http://localhost:5173/order/confirm?transactionId=${transactionId}&orderId=${orderId}`);
+      
+      res.redirect(
+        `${frontendUrl}/order/confirm?transactionId=${transactionId}&orderId=${orderId}`
+      );
     } else {
-      res.redirect(`http://localhost:5173/order/confirm?error=1&message=${encodeURIComponent(result.returnMessage)}`);
+      res.redirect(
+        `${frontendUrl}/order/confirm?error=1&message=${encodeURIComponent(
+          result.returnMessage
+        )}`
+      );
     }
   } catch (err) {
     console.error("付款確認錯誤", err);
     res.status(500).send("伺服器錯誤，請稍後再試！");
   }
-};
+}
 
 module.exports = {
   createOrder,
-  confirmOrder
+  confirmOrder,
 };
