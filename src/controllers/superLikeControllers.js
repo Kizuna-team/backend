@@ -120,18 +120,13 @@ const createSuperLike = async (req, res) => {
         })
         .onConflictDoNothing(); // 防止重複配對紀錄
 
-      // 插入配對紀錄後，傳回對方完整 profile
-      const [targetProfile] = await db
-        .select()
-        .from(profileTable)
-        .where(eq(profileTable.userId, targetId))
-        .limit(1);
-
       return res.status(200).json({
-        message: "已成功發送 Super Like 且 配對成功！",
+        success: true,
         matched,
-        targetProfile,
         remainingCount: remainingCount - 1,
+        message: "已成功發送 Super Like 且 配對成功！",
+        targetProfile,
+        myProfile,
       });
     } else {
       // 沒有配對成功也要回應

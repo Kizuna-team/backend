@@ -5,8 +5,9 @@ const {
   matchesTable,
   superLikesTable,
   profileTable,
+  photosTable,
 } = require("../db/schema.js");
-const { eq, and } = require("drizzle-orm");
+const { eq, and, leftJoin } = require("drizzle-orm");
 
 const createLike = async (req, res) => {
   const userId = req.user?.id;
@@ -79,15 +80,50 @@ const createLike = async (req, res) => {
         .onConflictDoNothing();
       console.log("✅ 雙方配對成功，回傳 matchedWith:", targetId);
 
-      const [targetProfile] = await db
-        .select()
+      // 回傳對方照片與名字
+      const targetProfileQuery = db
+        .select({
+          userId: profileTable.userId,
+          name: profileTable.name,
+          avatarUrl: photosTable.image_url,
+        })
         .from(profileTable)
-        .where(eq(profileTable.userId, targetId));
+        .leftJoin(
+          photosTable,
+          and(
+            eq(profileTable.userId, photosTable.userId),
+            eq(photosTable.is_avatar, true)
+          )
+        )
+        .where(eq(profileTable.userId, targetId))
+        .limit(1);
+
+      // 回傳自己照片與名字
+      const myProfileQuery = db
+        .select({
+          userId: profileTable.userId,
+          name: profileTable.name,
+          avatarUrl: photosTable.image_url,
+        })
+        .from(profileTable)
+        .leftJoin(
+          photosTable,
+          and(
+            eq(profileTable.userId, photosTable.userId),
+            eq(photosTable.is_avatar, true)
+          )
+        )
+        .where(eq(profileTable.userId, userId))
+        .limit(1);
+
+      const [targetProfile] = await targetProfileQuery;
+      const [myProfile] = await myProfileQuery;
 
       return res.json({
         success: true,
         matched: true,
         targetProfile,
+        myProfile,
         message: "雙方配對成功！",
       });
     } else {
