@@ -127,6 +127,18 @@ const orderItemsTable = pgTable("order_items", {
 
 // 喜歡不喜歡
 
+// 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
+const superLikesTable = pgTable("super_likes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  targetId: integer("target_id")
+    .notNull()
+    .references(() => usersTable.id),
+  usedAt: date("used_at", { mode: "date" }).notNull(),
+});
+
 // 訂閱(訂單)資料
 const subscriptionPlansTable = pgTable("subscription_plans", {
   id: serial().primaryKey().notNull(),
@@ -179,4 +191,5 @@ module.exports = {
   subscriptionsTable,
   friendRequestsTable,
   friendsTable,
+  superLikesTable,
 };
