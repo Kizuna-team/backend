@@ -6,7 +6,7 @@ const {
 } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
-const { eq, inArray } = require("drizzle-orm");
+const { eq, inArray, sql } = require("drizzle-orm");
 const frontendUrl = process.env.FRONTEND_URL;
 
 async function createOrder(req, res) {
