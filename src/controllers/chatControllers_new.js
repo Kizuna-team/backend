@@ -23,7 +23,7 @@ function setupSocket(io) {
       }
       
       // 加入新房間
-      // socket.join(roomId.toString());
+       socket.join(roomId.toString());
       
       // 儲存用戶資訊
       users.set(socket.id, {
@@ -83,7 +83,7 @@ function setupSocket(io) {
         socketId: socket.id
       };
       
-      console.log(`📤 廣播訊息到房間 ${roomId}:`, message);
+      console.log(` 廣播訊息到房間 ${roomId}:`, message);
       
       // 發送給房間內的所有用戶（包括發送者）
       io.to(roomId.toString()).emit('chatMessage', message);
@@ -158,10 +158,10 @@ function setupSocket(io) {
     }
   }
 
-  // 定期清理無效連接（可選）
-  setInterval(() => {
-    console.log(`📊 狀態報告 - 總連接數: ${users.size}, 總房間數: ${rooms.size}`);
-  }, 30000); // 每30秒輸出一次狀態
+  // 定期清理無效連接
+  // setInterval(() => {
+  //   console.log(`📊 狀態報告 - 總連接數: ${users.size}, 總房間數: ${rooms.size}`);
+  // }, 30000); 
 }
 
 module.exports = setupSocket;
