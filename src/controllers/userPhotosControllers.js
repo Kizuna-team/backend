@@ -1,5 +1,5 @@
 // 引入service資料夾撈取使用者指定照片
-const { findCertainPhotos, setAvatar } = require("../services/userPhoto.js");
+const { findCertainPhotos } = require("../services/userPhoto.js");
 
 // 撈取某user的大頭照
 const getAvatarPhoto = async (req, res) => {

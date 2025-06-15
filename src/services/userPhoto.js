@@ -1,4 +1,4 @@
-const { eq, and } = require("drizzle-orm");
+const { eq, and, not, inArray } = require("drizzle-orm");
 const { photosTable } = require("../db/schema");
 const db = require("../db");
 
@@ -26,12 +26,21 @@ const findCertainPhotos = async (userId, options = {}) => {
 // 設定大頭照 注意key是字串型別
 const setAvatar = async (userId, key) => {
   // 清除原本大頭貼
-  await db
-    .update(photosTable)
-    .set({
-      is_avatar: false,
-    })
-    .where(eq(photosTable.userId, userId));
+  const oldAvatar = await db
+    .select()
+    .from(photosTable)
+    .where(
+      and(
+        eq(photosTable.userId, userId),
+        eq(photosTable.is_avatar, true),
+        not(eq(photosTable.image_key, key))
+      )
+    );
+
+  if (oldAvatar.length > 0) {
+    const oldIds = oldAvatar.map((item) => item.id);
+    await db.delete(photosTable).where(inArray(photosTable.id, oldIds));
+  }
 
   // 設定新大頭貼
   await db

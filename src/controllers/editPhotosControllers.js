@@ -44,17 +44,21 @@ const uploadImage = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
-    await db.insert(photosTable).values({
-      image_url: imageUrl,
-      image_key: fileKey,
-      userId,
-      sequence: null, //一律不指定大頭照可讓使用者選擇切換
-    });
+    const [newPhoto] = await db
+      .insert(photosTable)
+      .values({
+        image_url: imageUrl,
+        image_key: fileKey,
+        userId,
+        sequence: null, //一律不指定大頭照可讓使用者選擇切換
+      })
+      .returning();
 
     res.status(201).json({
       message: "上傳成功",
       url: imageUrl,
       key: fileKey,
+      sequence: newPhoto.sequence,
     });
   } catch (err) {
     console.error("Upload error:", err);
@@ -71,7 +75,7 @@ const getPhotos = async (req, res) => {
     res.json(photos);
   } catch (err) {
     console.error("取得照片失敗", err);
-    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
   }
 };
 
@@ -107,7 +111,7 @@ const deletePhoto = async (req, res) => {
     res.json({ message: `已刪除：${key}` });
   } catch (err) {
     console.error("刪除失敗", err);
-    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
   }
 };
 
@@ -122,10 +126,11 @@ const changeAvatar = async (req, res) => {
 
   try {
     await setAvatar(userId, key); // 執行設定大頭貼
-    res.json({ message: "大頭貼已更新" });
-  } catch (error) {
+
+    res.json({ message: "大頭貼已更新", setAvatar });
+  } catch (err) {
     console.error("更新大頭貼失敗", err);
-    res.status(500).json({ message: "伺服器錯誤", error: error.message });
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
   }
 };
 

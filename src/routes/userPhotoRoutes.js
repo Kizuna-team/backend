@@ -4,9 +4,9 @@ const authMiddleware = require("../middleware/auth.js");
 const {
   getMatchPhotos,
   getAvatarPhoto,
-} = require("../controllers/userProfileControllers");
+} = require("../controllers/userPhotosControllers");
 
 router.get("/match", authMiddleware, getMatchPhotos);
-router.patch("/avatar", authMiddleware, getAvatarPhoto);
+router.get("/avatar", authMiddleware, getAvatarPhoto);
 
 module.exports = router;

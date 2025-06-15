@@ -135,15 +135,21 @@ const likesTable = pgTable(
 // 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
 const superLikesTable = pgTable("super_likes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  targetId: integer("target_id").notNull(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  targetId: integer("target_id")
+    .notNull()
+    .references(() => usersTable.id),
   usedAt: date("used_at", { mode: "date" }).notNull(),
 });
 
 // 使用者成為訂閱會員紀錄
 const membersTable = pgTable("members", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
   startDate: timestamp("start_date", { withTimezone: true }).notNull(),
   endDate: timestamp("end_date", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }) // 成為會員的日期+時間 = 訂單時間？
