@@ -1,11 +1,13 @@
 const db = require("../db/index.js");
+const { and, eq, inArray } = require("drizzle-orm");
+const { getUserFirstPhoto } = require("../services/userAvatar.js");
+
 const {
   likesTable,
   superLikesTable,
   photosTable,
   profileTable,
 } = require("../db/schema.js");
-const { eq, and } = require("drizzle-orm");
 
 // 查出所有喜歡我的人ID
 const getLikedMeUserIds = async (userId) => {
@@ -56,8 +58,9 @@ const getMyLikedTargetIds = async (userId) => {
   return filteredTargetIds;
 };
 
-// 查出雙方互相有興趣的人ID
-const getMutualUsersIds = async (userId) => {
+// 找出互相喜歡的 userId 清單
+// 找人名單（配對ID清單），查出雙方互相有興趣的人ID
+const getMatchedUserIds = async (userId) => {
   const likedMe = await getLikedMeUserIds(userId);
   const iLiked = await getMyLikedTargetIds(userId);
 
@@ -65,31 +68,55 @@ const getMutualUsersIds = async (userId) => {
 
   // 找雙方互相喜歡的交集，用 Set 做交集比對
   // 從 likedMe 中找出 ID 也在 iLikedSet 裡面的
+  // 篩出「那些對我有好感的人中，我也喜歡他們的人」
   const iLikedSet = new Set(iLiked);
   const matchedUserIds = likedMe.filter((id) => iLikedSet.has(id));
 
   return matchedUserIds;
 };
 
-// 取得互相喜歡的使用者個人檔案的 照片、名字
-// 回傳的每筆資料裡就會同時有使用者名字跟對應照片網址;
-const getMatchedProfiles = async (userIds) => {
+// 根據 userId 撈取基本資料 根據名單去找人資料
+const getMatchedName = async (userIds) => {
+  if (userIds.length === 0) return [];
+
+  // 撈出所有配對使用者的資料和照片（可能多筆）
+  return await db
+    .select({
+      userId: profileTable.userId,
+      name: profileTable.name,
+    })
+    .from(profileTable)
+    .where(inArray(profileTable.userId, userIds));
+};
+
+// 直接抓出名字跟照片 所有配對對象的名稱與大頭貼
+const getMatchedCard = async (userIds) => {
   if (userIds.length === 0) return [];
 
   return await db
     .select({
-      // userId: profileTable.userId,
+      userId: profileTable.userId,
       name: profileTable.name,
-      avatarUrl: photosTable.avatarUrl,
+      avatarUrl: photosTable.image_url,
     })
     .from(profileTable)
-    .leftJoin(photosTable, photosTable.userId, "=", profileTable.userId)
-    .where(inArray(profileTable.userId, matchedUserIds));
+    .leftJoin(
+      photosTable,
+      and(
+        eq(profileTable.userId, photosTable.userId),
+        eq(photosTable.is_avatar, true)
+      )
+    )
+    .where(inArray(profileTable.userId, userIds));
 };
+
+// 封裝頁面直接調用
+const fetchMatchedUsers = async (userId) => {};
 
 module.exports = {
   getLikedMeUserIds, // 喜歡我的
   getMyLikedTargetIds, // 我喜歡的
-  getMutualUsersIds, // 互相喜歡的
-  getMatchedProfiles, //取得互相喜歡的使用者的個人檔案資料
+  getMatchedUserIds, // 互相喜歡的
+  getMatchedName, // 取得互相喜歡的使用者的個人檔案資料
+  getMatchedCard, // 所有配對對象的名稱與大頭貼
 };

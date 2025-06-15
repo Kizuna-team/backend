@@ -2,12 +2,7 @@
 // 先確定沒送過、沒超過限制，再寫入 superLikesTable
 // 最後判斷是否配對成功
 const db = require("../db/index.js");
-const {
-  likesTable,
-  superLikesTable,
-  matchesTable,
-  profileTable,
-} = require("../db/schema");
+const { likesTable, superLikesTable, matchesTable } = require("../db/schema");
 const { checkSuperLikeAuth } = require("../services/superLikeService");
 const { eq, and } = require("drizzle-orm");
 

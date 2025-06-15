@@ -1,5 +1,6 @@
 // 引入service資料夾要查詢使用者的 資料庫函式
 const db = require("../db/index.js");
+
 const { profileTable } = require("../db/schema");
 const { eq, not } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
 const { getProfileByIdFromDB } = require("../services/userProfile");
