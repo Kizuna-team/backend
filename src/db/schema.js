@@ -6,6 +6,7 @@ const {
   timestamp,
   date,
   text,
+  check
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -99,6 +100,10 @@ const giftOrdersTable = pgTable("gift_orders",{
     // 訂單金額
     amount: integer("amount").notNull(),
     created_at: timestamp("created_at").defaultNow()
+}, (table) => {
+  return {
+    inventoryNonNegative: check("inventory_non_negative", sql`${table.inventory} >= 0`)
+  };
 })
 
 
