@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1749460652790,
-      "tag": "0000_clammy_hellfire_club",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1749541981931,
-      "tag": "0001_vengeful_bromley",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1749144209560,
-      "tag": "0004_brave_patch",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1749146109101,
-      "tag": "0005_married_warstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1749275103360,
-      "tag": "0006_good_rhino",
+      "when": 1750012728384,
+      "tag": "0000_flashy_tiger_shark",
       "breakpoints": true
     }
   ]
