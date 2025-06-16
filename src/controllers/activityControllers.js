@@ -58,9 +58,7 @@ const getAllActivities = async (req, res) => {
 
 // 取得我的活動 
 const getMyActivities = async (req, res) => {
-  const userId = req.user.id; // 由 token/middleware 取得
-  console.log("!!!");
-  
+  const userId = req.user.id; // 由 token/middleware 取得  
   try {
     const result = await db
       .select({
@@ -128,7 +126,7 @@ const createActivity = async (req, res) => {
     }
     const [inserted] = await db
       .insert(activities)
-      .values({ title, location, date, description, created_by_id, image_url })
+      .values({ title, location,  date: new Date(date), description, created_by_id, image_url })
       .returning();
     res.status(201).json(inserted);
   } catch (err) {
