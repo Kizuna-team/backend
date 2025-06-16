@@ -40,7 +40,7 @@ app.use("/admin",adminRoutes);
 
 app.use("/profile", editProfileRoutes);
 app.use("/photos", editPhotoRoutes);
-app.use("/api/friends", friendsRoutes);
+app.use("/friends", friendsRoutes);
 
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);

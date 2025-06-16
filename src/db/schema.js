@@ -136,8 +136,8 @@ const friendRequestsTable = pgTable("friend_requests", {
 
 const friendsTable = pgTable("friends", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull(),
-  friend_id: integer("friend_id").notNull(),
+  user_id: integer("user_id").notNull().references(() => usersTable.id),
+  friend_id: integer("friend_id").notNull().references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
 });
 
