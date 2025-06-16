@@ -27,7 +27,6 @@ async function createPayPalOrder(req, res) {
       return res.status(400).json({ error: "資料格式錯誤" });
     }
 
-    // 像 LINE Pay 一樣，從資料庫查詢商品資訊並計算金額
     const productIds = items.map((item) => item.product_id);
     const products = await db
       .select()
@@ -318,12 +317,12 @@ async function paypalCancel(req, res) {
     const { token } = req.query;
     console.log("PayPal 付款被取消:", { token });
     
-    // 跳轉到付款頁面，帶上取消參數
-    res.redirect(`http://localhost:5173/payment?cancelled=true`);
+    // 跳轉回商品頁面
+    res.redirect(`http://localhost:5173/product`);
     
   } catch (err) {
     console.error("PayPal 取消頁面處理錯誤:", err);
-    res.redirect(`http://localhost:5173/payment?error=cancel_failed`);
+    res.redirect(`http://localhost:5173/product`);
   }
 }
 
