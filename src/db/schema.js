@@ -7,7 +7,10 @@ const {
   date,
   text,
   check,
+  sql,
 } = require("drizzle-orm/pg-core");
+
+
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
 // 0605 修改 username 長度 因為google登入也要存資料
