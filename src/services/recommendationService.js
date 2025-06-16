@@ -29,6 +29,13 @@ async function getAdvancedRecommendedProfiles({
   limit = 20,
   offset = 0,
 }) {
+
+  limit = parseInt(limit);
+  offset = parseInt(offset);
+
+  if (Number.isNaN(limit)) limit = 20;
+  if (Number.isNaN(offset)) offset = 0;
+
   const activeSince = new Date();
   activeSince.setDate(activeSince.getDate() - activeWithinDays);
 
@@ -44,7 +51,7 @@ async function getAdvancedRecommendedProfiles({
         gte(profileTable.last_active_at, activeSince)
       )
     )
-    .limit(20) // 撈 20 筆做排序
+    .limit(limit) 
     .offset(offset);
 
   // 排序邏輯
@@ -55,7 +62,7 @@ async function getAdvancedRecommendedProfiles({
       // (現在時間 - 對方最後登入時間) / 一天的毫秒數 1000 * 60 * 60 * 24
       (Date.now() - new Date(profile.last_active_at).getTime()) /
       (86400000);
-    // 今天有登入 0 天 => 分數 7 分
+    // 今天有登入，差距 0 天 => 分數 7 分
     const recentActiveScore = Math.max(0, 7 - daysSinceActive);
 
     const finalScore = interestScore * 3 + recentActiveScore * 2;
