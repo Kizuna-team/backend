@@ -17,11 +17,12 @@ CREATE TABLE "messages" (
 CREATE TABLE "activities" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"title" varchar(255) NOT NULL,
-	"location" varchar(255),
+	"location" varchar(255) NOT NULL,
 	"date" date NOT NULL,
-	"description" text,
-	"created_by" varchar(255),
-	"createdAt" timestamp DEFAULT now()
+	"description" text NOT NULL,
+	"created_by_id" integer NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"image_url" varchar(255)
 );
 --> statement-breakpoint
 CREATE TABLE "photos" (
@@ -84,6 +85,13 @@ CREATE TABLE "subscription_plans" (
 	"description" varchar(255) DEFAULT '尚未填寫描述'
 );
 --> statement-breakpoint
+CREATE TABLE "friend_requests" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"from_id" integer NOT NULL,
+	"to_id" integer NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
 CREATE TABLE "subscriptions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" integer NOT NULL,
@@ -96,7 +104,15 @@ CREATE TABLE "subscriptions" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "friends" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" integer NOT NULL,
+	"friend_id" integer NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_subscription_plan_subscription_plans_id_fk" FOREIGN KEY ("subscription_plan") REFERENCES "public"."subscription_plans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "activities" ADD CONSTRAINT "activities_created_by_id_users_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "gift_orders" ADD CONSTRAINT "gift_orders_sender_id_users_id_fk" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "gift_orders" ADD CONSTRAINT "gift_orders_receiver_id_users_id_fk" FOREIGN KEY ("receiver_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
