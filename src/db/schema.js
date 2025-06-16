@@ -34,9 +34,11 @@ const activities = pgTable("activities", {
   location: varchar("location", { length: 255 }).notNull(),
   date: date("date").notNull(),
   description: text("description").notNull(),
-  created_by_id: integer("created_by_id").notNull().references(() => usersTable.id),
+  created_by_id: integer("created_by_id")
+    .notNull()
+    .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
-  image_url: varchar('image_url', { length: 255 }),
+  image_url: varchar("image_url", { length: 255 }),
 });
 //上傳照片
 const photosTable = pgTable("photos", {
@@ -87,25 +89,24 @@ const productsTable = pgTable("products", {
 
 // 訂單表( 1筆 = 一次送禮行為 )
 
-const giftOrdersTable = pgTable("gift_orders",{
-    // 這邊的 id 是訂單流水編號（ 內部用 ）
-    id: serial().primaryKey().notNull(),
-    // 對外公告的訂單編號
-    order_id: varchar( "order_id" , { length: 40 }).notNull().unique(),
-    sender_id: integer().notNull().references(()=>usersTable.id),
-    receiver_id: integer().notNull().references(()=>usersTable.id),
-    status: varchar("status", { length: 20 }).default("pending"),
-    // LINE Pay transactionId
-    transaction_id: varchar("transaction_id", { length: 100 }),
-    // 訂單金額
-    amount: integer("amount").notNull(),
-    created_at: timestamp("created_at").defaultNow()
-}, (table) => {
-  return {
-    inventoryNonNegative: check("inventory_non_negative", sql`${table.inventory} >= 0`)
-  };
-})
-
+const giftOrdersTable = pgTable("gift_orders", {
+  // 這邊的 id 是訂單流水編號（ 內部用 ）
+  id: serial().primaryKey().notNull(),
+  // 對外公告的訂單編號
+  order_id: varchar("order_id", { length: 40 }).notNull().unique(),
+  sender_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  receiver_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  status: varchar("status", { length: 20 }).default("pending"),
+  // LINE Pay transactionId
+  transaction_id: varchar("transaction_id", { length: 100 }),
+  // 訂單金額
+  amount: integer("amount").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
 const orderItemsTable = pgTable("order_items", {
@@ -137,14 +138,14 @@ const subscriptionsTable = pgTable("subscriptions", {
   status: varchar({ length: 20 }).notNull(), // 狀態：pending, paid
   merchanttradeno: varchar({ length: 30 }).notNull(), // 綠界自訂編號（不能重複）
   trade_no: varchar({ length: 30 }), // 綠界平台回傳的交易編號
-  paid_at: timestamp(), 
+  paid_at: timestamp(),
   created_at: timestamp().defaultNow().notNull(),
 });
 
 const friendRequestsTable = pgTable("friend_requests", {
   id: serial("id").primaryKey(),
   from_id: integer("from_id").notNull(),
-  to_id: integer("to_id").notNull(), 
+  to_id: integer("to_id").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -165,8 +166,7 @@ module.exports = {
   giftOrdersTable,
   orderItemsTable,
   subscriptionPlansTable,
-  friendRequestsTable,
   subscriptionsTable,
   friendRequestsTable,
-  friendsTable
+  friendsTable,
 };
