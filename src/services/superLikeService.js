@@ -1,20 +1,19 @@
 const db = require("../db/index.js");
 const { superLikesTable } = require("../db/schema.js");
 const { isValidMember } = require("./memberService.js");
-const { eq, and } = require("drizzle-orm");
+const { eq, and, gte, lt } = require("drizzle-orm");
 
 // 使用者已經用了幾次 Super Like
 const getSuperLikeCounts = async (userId) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // 重要：時間歸零，才會正確比對 date 欄位
-  console.log("✅ today 是不是 Date：", today instanceof Date); // 應該是 true
-  console.log("✅ today", today.toISOString()); // 應該印出像 2025-06-15T00:00:00.000Z
+  console.log("Today 的型別:", typeof today);
   const counts = await db
     .select()
     .from(superLikesTable)
     .where(
       and(eq(superLikesTable.userId, userId), eq(superLikesTable.usedAt, today))
     );
+
   return counts.length;
 };
 
