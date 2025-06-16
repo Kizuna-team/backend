@@ -102,28 +102,6 @@ function refresh(req, res) {
   }
 }
 
-// // step1 : 導向 Google 登入頁
-// function googleAuth(req, res) {
-//   return passport.authenticate("google", { scope: ["email", "profile"] })(
-//     req,
-//     res
-//   );
-// }
-
-// // step2: Google 認證完後 回到這邊
-// function googleAuthCallback(req, res, next) {
-//   passport.authenticate("google", { session: false }, (err, user) => {
-//     if (err) return next(err);
-//     if (!user) return res.redirect("/auth/google"); // 沒登入成功就導回去
-
-//     // 登入成功：把 user 資料傳到前端
-//     const userData = encodeURIComponent(JSON.stringify(user));
-//     // 重新導向哪裡
-//     res.redirect(`http://localhost:5173/profile?user=${userData}`);
-//   })(req, res, next);
-// }
-
-
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, HOST } = process.env;
 
 const client = new OAuth2Client({
@@ -132,48 +110,29 @@ const client = new OAuth2Client({
   redirectUri: `${HOST}/callback`,
 });
 
-// 產生 Google 授權 URL
-async function googleAuth(req, res) {
-  const authorizeUrl = client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-    ],
-  });
-  res.redirect(authorizeUrl);
-}
-
-// callback route
-async function googleCallback(req, res) {
-  const { code } = req.query;
+async function googleLogin(req, res) {
+  const { credential } = req.body;
 
   try {
-    // 用授權碼換取 token
-    const { tokens } = await client.getToken(code);
-    console.log('Google tokens:', tokens);
-    client.setCredentials(tokens);
-
-    // 取得用戶資訊
-    const userInfo = await client.request({
-      url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
     });
 
-    const { email, sub: googleId, name, picture } = userInfo.data;
+    const payload = ticket.getPayload();
+    const { email } = payload;
 
-    // 查 usersTable 是否已有 user
     let user = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.username, email)); // 假設 username 用 email
+      .where(eq(usersTable.username, email));
 
     if (user.length === 0) {
-      // 沒有 → 自動創建 user
       const newUser = await db
         .insert(usersTable)
         .values({
           username: email,
-          password: '', // 第三方登入不用密碼
+          password: '',
           raw_password: '',
         })
         .returning();
@@ -181,36 +140,35 @@ async function googleCallback(req, res) {
       user = newUser;
     }
 
-    // 產生 JWT
     const accessToken = jwt.sign(
-      {
+      { id: user[0].id, username: user[0].username },
+      JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { id: user[0].id },
+      REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
         id: user[0].id,
         username: user[0].username,
       },
-      JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: user[0].id },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    // 回傳 token + user
-    res.redirect(
-      `http://localhost:5173/profile?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${user[0].id}&username=${user[0].username}`
-    );
+    });
   } catch (error) {
-    console.error(error);
-    res.status(400).send('Error fetching Google user info');
+    console.error("Google One Tap 登入失敗", error);
+    res.status(400).json({ message: "Google 登入失敗" });
   }
 }
+
 
 module.exports = {
   register,
   login,
   refresh,
-  googleAuth,
-  googleCallback,
+  googleLogin,
 };
