@@ -1,8 +1,8 @@
 // 引入service資料夾要查詢使用者的 資料庫函式
 const db = require("../db/index.js");
 
-const { profileTable } = require("../db/schema");
-const { eq, not } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
+const { profileTable, photosTable } = require("../db/schema");
+const { eq, not, and, inArray } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
 const { getProfileByIdFromDB } = require("../services/userProfile");
 // GET (多個配對對象，未加入篩選邏輯)
 // 拿到除了自己之外的所有使用者資料
@@ -32,9 +32,41 @@ const getAllProfiles = async (req, res) => {
       .where(not(eq(profileTable.userId, userId)));
 
     console.log("typeof userId:", typeof userId);
-    res
-      .status(200)
-      .json({ message: "取得配對對象成功", users: profilesRecord });
+    // 再把所有使用者 id 抓出來
+    const targetUserIds = profilesRecord.map((user) => user.userId);
+
+    // 撈出這些人的前三張照片
+    const photoRecords = await db
+      .select()
+      .from(photosTable)
+      .where(
+        and(
+          inArray(photosTable.userId, targetUserIds),
+          inArray(photosTable.sequence, [1, 2, 3])
+        )
+      );
+
+    // 把照片按 userId 分組
+    const photoMap = {};
+    for (const photo of photoRecords) {
+      const uid = photo.userId;
+      if (!photoMap[uid]) photoMap[uid] = [];
+      photoMap[uid].push({
+        image_url: photo.image_url,
+        sequence: photo.sequence,
+      });
+    }
+
+    // 組合每個使用者 + 照片
+    const usersWithPhotos = profilesRecord.map((user) => ({
+      ...user,
+      photos: photoMap[user.userId] || [], // 沒照片就給 []
+    }));
+
+    res.status(200).json({
+      message: "取得配對對象成功",
+      users: usersWithPhotos,
+    });
   } catch (error) {
     console.error("getAllProfiles failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
