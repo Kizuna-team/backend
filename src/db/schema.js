@@ -100,10 +100,6 @@ const giftOrdersTable = pgTable("gift_orders",{
     // 訂單金額
     amount: integer("amount").notNull(),
     created_at: timestamp("created_at").defaultNow()
-}, (table) => {
-  return {
-    inventoryNonNegative: check("inventory_non_negative", sql`${table.inventory} >= 0`)
-  };
 })
 
 
@@ -167,6 +163,5 @@ module.exports = {
   subscriptionPlansTable,
   friendRequestsTable,
   subscriptionsTable,
-  friendRequestsTable,
   friendsTable
 };
