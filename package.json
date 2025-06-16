@@ -5,18 +5,17 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "debug": "nodemon --inspect src/server.js",
+    "debug": "nodemon --inspect-brk src/server.js",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "seed": "node src/db/seed.js",
     "seed:activity": "node src/db/activitySeed.js",
-    "clear":"node src/db/clearActivities.js",
+    "clear": "node src/db/clearActivities.js",
     "push": "drizzle-kit push",
     "dev:match": "node src/db/profileSeed.js",
     "seed:profiles": "node src/db/profileSeed.js",
     "seed:products": "node src/db/productSeed.js",
-    "lint": "eslint . --fix",
-    "debug":"nodemon --inspect-brk src/server.js"
+    "lint": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -45,7 +44,7 @@
     "dayjs": "^1.11.13",
     "dayjs-plugin-utc": "^0.1.2",
     "dotenv": "^16.5.0",
-    "drizzle-kit": "^0.31.1",
+    "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.43.1",
     "ecpay_aio_nodejs": "^1.2.2",
     "express": "^5.1.0",
