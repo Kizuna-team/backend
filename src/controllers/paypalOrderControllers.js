@@ -114,7 +114,6 @@ async function capturePayPalOrder(req, res) {
 
     // 檢查付款是否成功
     if (capture.result.status === "COMPLETED") {
-      // 檢查並取出 PayPal 儲存的資料
       let sender_id, receiver_id, items;
       
       // 修正：從正確的路徑取得 custom_id
@@ -214,7 +213,6 @@ async function paypalSuccess(req, res) {
       return res.redirect(`http://localhost:5173/payment?error=missing_token`);
     }
 
-    // 直接在這裡處理訂單確認，不用 HTTP 請求
     try {
       // 確認付款的請求要帶訂單ID
       const request = new paypal.orders.OrdersCaptureRequest(token);
