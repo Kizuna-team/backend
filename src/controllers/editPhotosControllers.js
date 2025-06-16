@@ -4,7 +4,7 @@ const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
-const { eq, and } = require("drizzle-orm");
+const { eq, and, sql } = require("drizzle-orm");
 const { findCertainPhotos, setAvatar } = require("../services/userPhoto.js");
 
 const getMyAvatarPhoto = async (req, res) => {
@@ -44,13 +44,22 @@ const uploadImage = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
+    // 自動給予 sequence
+    const [{ maxSeq }] = await db
+      .select({ maxSeq: sql`MAX(sequence)` })
+      .from(photosTable)
+      .where(eq(photosTable.userId, userId));
+
+    const sequence = (maxSeq || 0) + 1; // 一個預設值 0
+
     const [newPhoto] = await db
       .insert(photosTable)
       .values({
         image_url: imageUrl,
         image_key: fileKey,
         userId,
-        sequence: null, //一律不指定大頭照可讓使用者選擇切換
+        sequence,
+        is_avatar: false, // 每張上傳的照片一律都不是大頭貼
       })
       .returning();
 
