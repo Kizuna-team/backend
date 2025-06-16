@@ -31,7 +31,7 @@ const options = {
 
 const createOrder = new ecpay(options);
 
-// ✅ ecpay 時間格式為 yyyy/MM/dd HH:mm:ss
+// ecpay 時間格式為 yyyy/MM/dd HH:mm:ss
 function getTimeString() {
   const date = new Date();
   const yyyy = date.getFullYear();
@@ -44,7 +44,7 @@ function getTimeString() {
 }
 
 // console.log(new Date().toString()); //檢查時區
-// ✅ 建立訂單（付款表單）
+// 建立訂單（付款表單）
 router.post("/create", authMiddleware, async (req, res) => {
   const { planId } = req.body;
 
@@ -92,49 +92,6 @@ router.post("/create", authMiddleware, async (req, res) => {
     console.error("❌ 建立訂單失敗", error);
     res.status(500).json({ message: "訂單建立失敗", reason: error.message });
   }
-  // try {
-  //   // 將訂單編號先存入資料庫
-  //   // 這裡的訂單狀態先設為 pending，等付款成功後再更新為 paid
-  //   await db.insert(subscriptionsTable).values({
-  //     user_id: userId,
-  //     plan: plan.name,
-  //     price: plan.price,
-  //     status: "pending",
-  //     merchanttradeno: MerchantTradeNo,
-  //     created_at: new Date(),
-  //   });
-
-  //   const notifyUrl = process.env.ECPAY_NOTIFY_URL;
-  //   // test
-  //   console.log({
-  //     MerchantTradeNo: MerchantTradeNo,
-  //     MerchantTradeDate: getTimeString(),
-  //     TotalAmount: price.toString(),
-  //     TradeDesc: "Kizuna 交友訂閱",
-  //     ItemName: `${plan.name}會員訂閱 x1`,
-  //     ReturnURL: notifyUrl,
-  //     ClientBackURL: "http://localhost:5173/member",
-  //     PaymentType: "aio",
-  //     EncryptType: 1,
-  //   });
-
-  //   const form = createOrder.payment_client.aio_check_out_all({
-  //     MerchantTradeNo, // Ecpay 官方要求M要大寫！！
-  //     MerchantTradeDate: getTimeString(),
-  //     TotalAmount: price.toString(),
-  //     TradeDesc: "Kizuna 交友訂閱",
-  //     ItemName: `${plan.name}會員訂閱 x1`,
-  //     ReturnURL: notifyUrl,
-  //     ClientBackURL: "http://localhost:5173/member",
-  //     PaymentType: "aio",
-  //     EncryptType: 1,
-  //   });
-
-  //   res.send(form); // ✅ form 是完整 HTML 字串
-  // } catch (error) {
-  //   console.error("❌ 建立訂單失敗", error);
-  //   res.status(500).json({ message: "訂單建立失敗", reason: error.message });
-  // }
 });
 
 // 綠界付款完成後會post回來（付款成功回傳）=> 更新資料庫訂閱狀態
@@ -144,7 +101,7 @@ router.post("/notify", async (req, res) => {
 
   if (RtnCode === "1") {
     try {
-      // 1️⃣ 查訂單
+      // 查訂單
       const [order] = await db
         .select()
         .from(subscriptionsTable)
@@ -160,7 +117,7 @@ router.post("/notify", async (req, res) => {
 
       if (!order) return res.status(404).send("0|訂單不存在");
 
-      // 2️⃣ 查對應的方案 id（根據 plan name）
+      // 查對應的方案 id（根據 plan name）
       const [matchedPlan] = await db
         .select()
         .from(subscriptionPlansTable)
@@ -168,7 +125,7 @@ router.post("/notify", async (req, res) => {
 
       if (!matchedPlan) return res.status(404).send("0|方案不存在");
 
-      // 3️⃣ 更新訂單狀態
+      // 更新訂單狀態
       // 將 PaymentDate 格式轉換為 yyyy-MM-dd HH:mm:ss
       // 注意：ECPay 的 PaymentDate 格式是 yyyy/MM/dd HH:mm:ss
       const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, "-") : null;
@@ -182,7 +139,7 @@ router.post("/notify", async (req, res) => {
         })
         .where(eq(subscriptionsTable.merchanttradeno, MerchantTradeNo));
 
-      // 4️⃣ 更新會員目前方案（要設的是 plan.id）
+      // 更新會員目前方案（要設的是 plan.id）
       await db
         .update(usersTable)
         .set({ subscription_plan: matchedPlan.id })

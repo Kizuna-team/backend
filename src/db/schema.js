@@ -6,7 +6,6 @@ const {
   timestamp,
   date,
   text,
-  check,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -19,7 +18,7 @@ const usersTable = pgTable("users", {
   subscription_plan: integer().references(() => subscriptionPlansTable.id), // 預設掛免費方案（id = 1）付費是2
 });
 
-// 保存訊息的表格
+// 保存聊天訊息的表格
 const messagesTable = pgTable("messages", {
   id: serial().primaryKey().notNull(),
   room_id: integer().notNull(),
@@ -48,12 +47,6 @@ const photosTable = pgTable("photos", {
 
 // 使用者個人檔案
 // 以 userId 當作唯一識別
-// const orientationEnum = pgEnum("orientation_enum", [
-//   "異性戀",
-//   "同性戀",
-//   "雙性戀",
-// ]);
-// 使用者個人簡介(地區、興趣)
 const profileTable = pgTable("profiles", {
   userId: integer("user_id")
     .primaryKey()
@@ -86,7 +79,6 @@ const productsTable = pgTable("products", {
 });
 
 // 訂單表( 1筆 = 一次送禮行為 )
-
 const giftOrdersTable = pgTable("gift_orders",{
     // 這邊的 id 是訂單流水編號（ 內部用 ）
     id: serial().primaryKey().notNull(),
@@ -115,9 +107,7 @@ const orderItemsTable = pgTable("order_items", {
   quantity: integer().notNull(),
 });
 
-// 喜歡不喜歡
-
-// 訂閱(訂單)資料
+// 訂閱( 訂單 )資料
 const subscriptionPlansTable = pgTable("subscription_plans", {
   id: serial().primaryKey().notNull(),
   name: varchar({ length: 50 }).notNull(),

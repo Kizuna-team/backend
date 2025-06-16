@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-// const passport = require("./config/passport.js");
 const dotenv = require("dotenv");
 const dayjs = require("dayjs");
 const authRoutes = require("./routes/authRoutes");
@@ -20,7 +19,6 @@ const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require('./routes/paymentRoutes');
 
-
 // 以下為即時聊天室新增模組
 // const http = require("http");
 // const { Server } = require("socket.io");
@@ -33,7 +31,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 掛載 API router
 app.use("/auth", authRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/order", orderRoutes);
@@ -41,7 +38,6 @@ app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
 app.use("/admin",adminRoutes);
 
-// 掛載子路由群組 REST API建議 以資源為單位
 app.use("/profile", editProfileRoutes);
 app.use("/photos", editPhotoRoutes);
 app.use("/api/friends", friendsRoutes);
@@ -86,7 +82,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       .limit(1);
 
     // 判斷會員資格是否過期
-    // 判斷是否過期（測試用 1 分鐘）
+    // 判斷是否過期（測試用 2 分鐘）
     if (latestPaidOrder?.paid_at) {
       const paidAt = dayjs(latestPaidOrder.paid_at).tz("Asia/Taipei");
       const now = dayjs().tz("Asia/Taipei");
@@ -150,12 +146,6 @@ app.get("/api/me", authMiddleware, async (req, res) => {
 
 // 啟用 socket.io 聊天室邏輯
 // setupSocket(io);
-
-// 錯誤處理中間件（建議加入）
-app.use((err, req, res, next) => {
-  console.error("伺服器錯誤:", err.stack);
-  res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
-});
 
 app.listen(3000, () =>
   console.log("✅ Server running on http://localhost:3000")
