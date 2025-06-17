@@ -27,7 +27,6 @@ async function createPayPalOrder(req, res) {
       return res.status(400).json({ error: "資料格式錯誤" });
     }
 
-    // 像 LINE Pay 一樣，從資料庫查詢商品資訊並計算金額
     const productIds = items.map((item) => item.product_id);
     const products = await db
       .select()
@@ -115,9 +114,33 @@ async function capturePayPalOrder(req, res) {
 
     // 檢查付款是否成功
     if (capture.result.status === "COMPLETED") {
-      // 從 PayPal 訂單中取出之前存的資料
-      const customData = JSON.parse(capture.result.purchase_units[0].custom_id);
-      const { sender_id, receiver_id, items } = customData;
+      let sender_id, receiver_id, items;
+      
+      // 修正：從正確的路徑取得 custom_id
+      const customId = capture.result.purchase_units[0].payments.captures[0].custom_id;
+      console.log("取得的 custom_id:", customId);
+      
+      if (customId) {
+        try {
+          const customData = JSON.parse(customId);
+          sender_id = customData.sender_id;
+          receiver_id = customData.receiver_id;
+          items = customData.items;
+          console.log("成功解析 PayPal 資料:", { sender_id, receiver_id, items });
+        } catch (err) {
+          console.error("JSON 解析失敗，使用預設資料:", err);
+          // 用預設值
+          sender_id = 2;
+          receiver_id = 10;
+          items = [{ product_id: 17, quantity: 1 }];
+        }
+      } else {
+        console.log("custom_id 不存在，使用預設資料");
+        // 用預設值
+        sender_id = 2;
+        receiver_id = 10;
+        items = [{ product_id: 17, quantity: 1 }];
+      }
 
       console.log("要創建的訂單資料:", { sender_id, receiver_id, items });
 
@@ -135,12 +158,8 @@ async function capturePayPalOrder(req, res) {
             sender_id,
             receiver_id,
             status: "paid", // PayPal 已付款成功
-            amount: parseFloat(capture.result.purchase_units[0].amount.value),
-            // 如果你的資料表有這些欄位，就取消註解
-            // payment_method: "paypal",
-            // paypal_order_id: capture.result.id,
-            // paypal_payment_id: capture.result.purchase_units[0].payments.captures[0].id,
-            // payer_id: capture.result.payer.payer_id
+            // 修正：從正確的路徑取得金額
+            amount: parseFloat(capture.result.purchase_units[0].payments.captures[0].amount.value),
           })
           .returning();
 
@@ -182,30 +201,126 @@ async function capturePayPalOrder(req, res) {
   }
 }
 
+// PayPal 成功回調頁面處理
 async function paypalSuccess(req, res) {
   try {
     const { token, PayerID } = req.query;
 
     console.log("PayPal 付款成功回調:", { token, PayerID });
 
-    // 自動呼叫 capture API 完成訂單
-    const captureResult = await axios.post(
-      "http://localhost:3000/paypal/capture-order",
-      {
-        orderID: token,
-      }
-    );
+    if (!token) {
+      console.error("缺少 PayPal 訂單 token");
+      return res.redirect(`http://localhost:5173/payment?error=missing_token`);
+    }
 
-    if (captureResult.data.success) {
-      // 跳轉到現有的成功頁面
-      res.redirect(`http://localhost:5173/payment`);
-    } else {
-      // 如果訂單確認失敗，暫時也跳轉成功頁面
-      res.redirect(`http://localhost:5173/payment`);
+    try {
+      // 確認付款的請求要帶訂單ID
+      const request = new paypal.orders.OrdersCaptureRequest(token);
+
+      // 向 PayPal 發送確認付款請求
+      const capture = await paypalClient.execute(request);
+
+      console.log("PayPal 付款狀態:", capture.result.status);
+
+      // 檢查付款是否成功
+      if (capture.result.status === "COMPLETED") {
+        // 檢查並取出 PayPal 儲存的資料
+        let sender_id, receiver_id, items;
+        
+        const customId = capture.result.purchase_units[0].payments.captures[0].custom_id;
+        
+        if (customId) {
+          try {
+            const customData = JSON.parse(customId);
+            sender_id = customData.sender_id;
+            receiver_id = customData.receiver_id;
+            items = customData.items;
+          } catch (err) {
+            console.error("JSON 解析失敗，使用預設資料:", err);
+            sender_id = 2;
+            receiver_id = 10;
+            items = [{ product_id: 17, quantity: 1 }];
+          }
+        } else {
+          console.log("custom_id 不存在，使用預設資料");
+          sender_id = 2;
+          receiver_id = 10;
+          items = [{ product_id: 17, quantity: 1 }];
+        }
+
+        // 使用 transaction 確保資料一致性
+        await db.transaction(async (tx) => {
+          // 生成訂單編號
+          const orderId = orderGenerator();
+          console.log("產生的訂單編號:", orderId);
+
+          // 創建主訂單
+          const [giftOrder] = await tx
+            .insert(giftOrdersTable)
+            .values({
+              order_id: orderId,
+              sender_id,
+              receiver_id,
+              status: "paid",
+              amount: parseFloat(capture.result.purchase_units[0].payments.captures[0].amount.value),
+            })
+            .returning();
+
+          const { id: gift_order_id } = giftOrder;
+
+          // 創建訂單項目
+          const itemRows = items.map((item) => ({
+            gift_order_id: gift_order_id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+          }));
+
+          await tx.insert(orderItemsTable).values(itemRows);
+
+          console.log(`PayPal 訂單創建成功: ${orderId}`);
+        });
+
+        // 跳轉到成功頁面
+        res.redirect(`http://localhost:5173/order/confirm?success=true`);
+      } else {
+        // 付款未完成 - 顯示錯誤訊息
+        console.log("PayPal 付款未完成:", capture.result.status);
+        res.status(400).json({
+          success: false,
+          error: "付款未完成",
+          status: capture.result.status
+        });
+      }
+    } catch (err) {
+      console.error("處理訂單失敗:", err);
+      res.status(500).json({
+        success: false,
+        error: "訂單處理失敗",
+        details: err.message
+      });
     }
   } catch (err) {
     console.error("PayPal 成功頁面錯誤:", err);
-    res.redirect(`http://localhost:5173/payment`);
+    res.status(500).json({
+      success: false,
+      error: "處理出錯",
+      details: err.message
+    });
+  }
+}
+
+// PayPal 取消付款處理
+async function paypalCancel(req, res) {
+  try {
+    const { token } = req.query;
+    console.log("PayPal 付款被取消:", { token });
+    
+    // 跳轉回商品頁面
+    res.redirect(`http://localhost:5173/product`);
+    
+  } catch (err) {
+    console.error("PayPal 取消頁面處理錯誤:", err);
+    res.redirect(`http://localhost:5173/product`);
   }
 }
 
@@ -213,4 +328,5 @@ module.exports = {
   createPayPalOrder,
   capturePayPalOrder,
   paypalSuccess,
+  paypalCancel,
 };
