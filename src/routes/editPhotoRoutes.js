@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middleware/auth.js");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 
@@ -8,10 +8,14 @@ const {
   uploadImage,
   getPhotos,
   deletePhoto,
+  getMyAvatarPhoto,
+  changeAvatar,
 } = require("../controllers/editPhotosControllers.js");
 
-router.post("/", upload.single("image"), uploadImage);
-router.get("/", getPhotos);
-router.delete("/:key", deletePhoto);
+router.get("/", authMiddleware, getPhotos);
+router.get("/avatar", authMiddleware, getMyAvatarPhoto);
+router.patch("/avatar", authMiddleware, changeAvatar);
+router.post("/", authMiddleware, upload.single("image"), uploadImage);
+router.delete("/:key", authMiddleware, deletePhoto);
 
 module.exports = router; 

@@ -6,6 +6,8 @@ const {
   timestamp,
   date,
   text,
+  unique,
+  boolean,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -32,16 +34,23 @@ const activities = pgTable("activities", {
   location: varchar("location", { length: 255 }).notNull(),
   date: timestamp("date").notNull(),
   description: text("description").notNull(),
-  created_by_id: integer("created_by_id").notNull().references(() => usersTable.id),
+  created_by_id: integer("created_by_id")
+    .notNull()
+    .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
-  image_url: varchar('image_url', { length: 255 }),
+  image_url: varchar("image_url", { length: 255 }),
 });
 //上傳照片
 const photosTable = pgTable("photos", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => usersTable.id)
+    .notNull(),
   image_url: varchar("image_url", { length: 255 }),
   image_key: varchar("image_key", { length: 255 }),
-  uploaded_at: timestamp("uploaded_at").defaultNow(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  sequence: integer("sequence"),
+  is_avatar: boolean("is_avatar").default(false), // 讓使用者指定頭像
 });
 
 // 使用者個人檔案
@@ -78,21 +87,24 @@ const productsTable = pgTable("products", {
 });
 
 // 訂單表( 1筆 = 一次送禮行為 )
-const giftOrdersTable = pgTable("gift_orders",{
-    // 這邊的 id 是訂單流水編號（ 內部用 ）
-    id: serial().primaryKey().notNull(),
-    // 對外公告的訂單編號
-    order_id: varchar( "order_id" , { length: 40 }).notNull().unique(),
-    sender_id: integer().notNull().references(()=>usersTable.id),
-    receiver_id: integer().notNull().references(()=>usersTable.id),
-    status: varchar("status", { length: 20 }).default("pending"),
-    // LINE Pay transactionId
-    transaction_id: varchar("transaction_id", { length: 100 }),
-    // 訂單金額
-    amount: integer("amount").notNull(),
-    created_at: timestamp("created_at").defaultNow()
-})
-
+const giftOrdersTable = pgTable("gift_orders", {
+  // 這邊的 id 是訂單流水編號（ 內部用 ）
+  id: serial().primaryKey().notNull(),
+  // 對外公告的訂單編號
+  order_id: varchar("order_id", { length: 40 }).notNull().unique(),
+  sender_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  receiver_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  status: varchar("status", { length: 20 }).default("pending"),
+  // LINE Pay transactionId
+  transaction_id: varchar("transaction_id", { length: 100 }),
+  // 訂單金額
+  amount: integer("amount").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
 const orderItemsTable = pgTable("order_items", {
@@ -106,6 +118,49 @@ const orderItemsTable = pgTable("order_items", {
   quantity: integer().notNull(),
 });
 
+// 紀錄使用者對另一個使用者的喜歡與不喜歡狀態;
+const likesTable = pgTable(
+  "likes",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    targetId: integer("target_id")
+      .notNull()
+      .references(() => usersTable.id),
+    status: integer("status").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (likes) => ({
+    uniqueLike: unique().on(likes.userId, likes.targetId),
+  })
+);
+
+// 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
+const superLikesTable = pgTable("super_likes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  targetId: integer("target_id")
+    .notNull()
+    .references(() => usersTable.id),
+  usedAt: date("used_at", { mode: "date" }).notNull(),
+});
+
+// 雙向配對成功紀錄，可以直接查表撈取雙方資料
+// 在插入資料時用程式邏輯保證 matchUserAId < matchUserBId
+const matchesTable = pgTable("matches", {
+  id: serial("id").primaryKey(),
+  matchUserAId: integer("match_user_a_id")
+    .notNull()
+    .references(() => usersTable.id),
+  matchUserBId: integer("match_user_b_id")
+    .notNull()
+    .references(() => usersTable.id),
+  matchedAt: timestamp("matched_at").defaultNow().notNull(),
+});
+
 // 訂閱( 訂單 )資料
 const subscriptionPlansTable = pgTable("subscription_plans", {
   id: serial().primaryKey().notNull(),
@@ -116,20 +171,24 @@ const subscriptionPlansTable = pgTable("subscription_plans", {
 
 const subscriptionsTable = pgTable("subscriptions", {
   id: serial().primaryKey().notNull(),
-  user_id: integer().notNull(),
+  user_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
   plan: varchar({ length: 20 }).notNull(),
   price: integer().notNull(),
   status: varchar({ length: 20 }).notNull(), // 狀態：pending, paid
   merchanttradeno: varchar({ length: 30 }).notNull(), // 綠界自訂編號（不能重複）
   trade_no: varchar({ length: 30 }), // 綠界平台回傳的交易編號
-  paid_at: timestamp(), 
+  paid_at: timestamp(),
   created_at: timestamp().defaultNow().notNull(),
+  start_date: timestamp("start_date", { withTimezone: true }).notNull(),
+  end_date: timestamp("end_date", { withTimezone: true }).notNull(),
 });
 
 const friendRequestsTable = pgTable("friend_requests", {
   id: serial("id").primaryKey(),
   from_id: integer("from_id").notNull(),
-  to_id: integer("to_id").notNull(), 
+  to_id: integer("to_id").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -149,8 +208,11 @@ module.exports = {
   productsTable,
   giftOrdersTable,
   orderItemsTable,
+  likesTable,
+  superLikesTable,
+  matchesTable,
   subscriptionPlansTable,
   friendRequestsTable,
   subscriptionsTable,
-  friendsTable
+  friendsTable,
 };

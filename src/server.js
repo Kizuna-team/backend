@@ -9,15 +9,22 @@ const productRoutes = require("./routes/productRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const authMiddleware = require("./middleware/auth.js");
 const db = require("./db/index.js");
-const { usersTable, subscriptionsTable, subscriptionPlansTable } = require("./db/schema.js");
+const {
+  usersTable,
+  subscriptionsTable,
+  subscriptionPlansTable,
+} = require("./db/schema.js");
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay");
 const subPlansRoutes = require("./routes/subPlans");
 const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes");
+const likeRoutes = require("./routes/likeRoutes.js");
+const userProfileRoutes = require("./routes/userProfileRoutes.js");
+const userPhotoRoutes = require("./routes/userPhotoRoutes.js");
 const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
-const paypalRoutes = require('./routes/paymentRoutes');
+const paypalRoutes = require("./routes/paymentRoutes");
 
 // 以下為即時聊天室新增模組
 // const http = require("http");
@@ -36,16 +43,19 @@ app.use("/recommendations", recommendationRoutes);
 app.use("/order", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
-app.use("/admin",adminRoutes);
+app.use("/admin", adminRoutes);
 
-app.use("/profile", editProfileRoutes);
-app.use("/photos", editPhotoRoutes);
+// 掛載子路由群組 REST API建議 以資源為單位
+app.use("/profile/me", editProfileRoutes);
+app.use("/photos/me", editPhotoRoutes);
+app.use("/like/", likeRoutes);
+app.use("/users/profile", userProfileRoutes);
+app.use("/users/photos", userPhotoRoutes);
 app.use("/api/friends", friendsRoutes);
-
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
-app.use('/paypal', paypalRoutes);
+app.use("/paypal", paypalRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {

@@ -4,12 +4,29 @@ const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
-const { eq } = require("drizzle-orm");
+const { eq, and, sql } = require("drizzle-orm");
+const { findCertainPhotos, setAvatar } = require("../services/userPhoto.js");
+
+const getMyAvatarPhoto = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
+  try {
+    const [photo] = await findCertainPhotos(userId, { isAvatarOnly: true });
+    res.json(photo || {});
+  } catch (err) {
+    console.error("取得本人大頭貼失敗", err);
+    res.status(500).json({ message: "伺服器錯誤" });
+  }
+};
 
 const uploadImage = async (req, res) => {
   const file = req.file;
-  if (!file) return res.status(400).send("沒有圖片");
+  if (!file) {
+    return res.status(400).json({ message: "沒有圖片" });
+  }
 
+  const userId = req.user?.id;
   const fileKey = `${Date.now()}-${file.originalname}`;
   const fileStream = fs.createReadStream(file.path);
 
@@ -27,15 +44,30 @@ const uploadImage = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
-    await db.insert(photosTable).values({
-      image_url: imageUrl,
-      image_key: fileKey,
-    });
+    // 自動給予 sequence
+    const [{ maxSeq }] = await db
+      .select({ maxSeq: sql`MAX(sequence)` })
+      .from(photosTable)
+      .where(eq(photosTable.userId, userId));
+
+    const sequence = (maxSeq || 0) + 1; // 一個預設值 0
+
+    const [newPhoto] = await db
+      .insert(photosTable)
+      .values({
+        image_url: imageUrl,
+        image_key: fileKey,
+        userId,
+        sequence,
+        is_avatar: false, // 每張上傳的照片一律都不是大頭貼
+      })
+      .returning();
 
     res.status(201).json({
       message: "上傳成功",
       url: imageUrl,
       key: fileKey,
+      sequence: newPhoto.sequence,
     });
   } catch (err) {
     console.error("Upload error:", err);
@@ -44,19 +76,36 @@ const uploadImage = async (req, res) => {
 };
 
 const getPhotos = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
   try {
-    const photos = await db.select().from(photosTable);
+    const photos = await findCertainPhotos(userId);
     res.json(photos);
   } catch (err) {
     console.error("取得照片失敗", err);
-    res.status(500).send("無法取得照片");
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
   }
 };
 
 const deletePhoto = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
   const { key } = req.params;
 
   try {
+    const [photo] = await db
+      .select()
+      .from(photosTable)
+      .where(
+        and(eq(photosTable.image_key, key), eq(photosTable.userId, userId))
+      );
+
+    if (!photo) {
+      return res.status(403).json({ message: "你無權刪除此圖片" });
+    }
+
     // 1. 刪 S3
     await s3.send(
       new DeleteObjectCommand({
@@ -71,7 +120,26 @@ const deletePhoto = async (req, res) => {
     res.json({ message: `已刪除：${key}` });
   } catch (err) {
     console.error("刪除失敗", err);
-    res.status(500).send("刪除圖片失敗");
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
+  }
+};
+
+const changeAvatar = async (req, res) => {
+  const userId = req.user?.id;
+  const { key } = req.body;
+  if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
+
+  if (!key || typeof key !== "string") {
+    return res.status(400).json({ message: "無效或空的圖片 key" });
+  }
+
+  try {
+    await setAvatar(userId, key); // 執行設定大頭貼
+
+    res.json({ message: "大頭貼已更新", setAvatar });
+  } catch (err) {
+    console.error("更新大頭貼失敗", err);
+    res.status(500).json({ message: "伺服器錯誤", error: err.message });
   }
 };
 
@@ -79,4 +147,6 @@ module.exports = {
   uploadImage,
   getPhotos,
   deletePhoto,
+  getMyAvatarPhoto,
+  changeAvatar,
 };

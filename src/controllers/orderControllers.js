@@ -74,7 +74,7 @@ async function createOrder(req, res) {
 
       // 計算總金額
       const totalAmount = linepayItems.reduce((sum, item) => {
-        return sum += item.price * item.quantity;
+        return (sum += item.price * item.quantity);
       }, 0);
 
       // 產生訂單編號
@@ -213,19 +213,21 @@ async function confirmOrder(req, res) {
         .from(orderItemsTable)
         .where(eq(orderItemsTable.gift_order_id, order.id));
 
-      // 因為 forEach 沒有支援 await 所以 for loop    
+      // 因為 forEach 沒有支援 await 所以 for loop
       for (const item of orderItems) {
-        await db.update(productsTable).set({
-          inventory: sql`${productsTable.inventory}-${item.quantity}`
-        }).where(eq(productsTable.id, item.product_id));
+        await db
+          .update(productsTable)
+          .set({
+            inventory: sql`${productsTable.inventory}-${item.quantity}`,
+          })
+          .where(eq(productsTable.id, item.product_id));
       }
-      
+
       res.redirect(
         `${frontendUrl}/order/confirm?transactionId=${transactionId}&orderId=${orderId}`
       );
 
-      await increaseProductSales(order.id)
-
+      await increaseProductSales(order.id);
     } else {
       res.redirect(
         `${frontendUrl}/order/confirm?error=1&message=${encodeURIComponent(
