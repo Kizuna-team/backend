@@ -23,6 +23,7 @@ const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require('./routes/paymentRoutes');
 const setupSocket = require("./controllers/chatControllers_new.js");
 
+
 // 以下為即時聊天室新增模組
 const http = require("http");
 const { Server } = require("socket.io");
@@ -76,6 +77,7 @@ app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
+app.use("/get/profile", profileRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
