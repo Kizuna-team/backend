@@ -23,7 +23,6 @@ async function seed() {
     rawPasswords.map(async (pw, i) => ({
       username: `user${i + 1}`,
       password: await bcrypt.hash(pw, 10),
-      raw_password: pw,
     }))
   );
 
@@ -40,7 +39,8 @@ async function seed() {
     const seed = profilesSeed[i];
     // console.log(seed);
     return {
-      user_id: user.id,
+      userId: user.id,
+      name: seed.username,
       gender: seed.gender,
       bio: seed.bio,
       age: seed.age,

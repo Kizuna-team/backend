@@ -1,4 +1,3 @@
-const { boolean } = require("drizzle-orm/gel-core");
 const {
   pgTable,
   serial,
@@ -8,17 +7,19 @@ const {
   date,
   text,
   unique,
+  boolean,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
+// 0605 修改 username 長度 因為google登入也要存資料
 const usersTable = pgTable("users", {
   id: serial().primaryKey().notNull(),
-  username: varchar({ length: 20 }).notNull(),
+  username: varchar({ length: 50 }).notNull(),
   password: varchar({ length: 255 }).notNull(),
-  raw_password: varchar({ length: 20 }).notNull(),
+  subscription_plan: integer().references(() => subscriptionPlansTable.id), // 預設掛免費方案（id = 1）付費是2
 });
 
-// 保存訊息的表格
+// 保存聊天訊息的表格
 const messagesTable = pgTable("messages", {
   id: serial().primaryKey().notNull(),
   room_id: integer().notNull(),
@@ -30,11 +31,14 @@ const messagesTable = pgTable("messages", {
 const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
-  location: varchar("location", { length: 255 }),
-  date: date("date").notNull(),
-  description: text("description"),
-  createdBy: varchar("created_by", { length: 255 }),
-  createdAt: timestamp("createdAt").defaultNow(),
+  location: varchar("location", { length: 255 }).notNull(),
+  date: timestamp("date").notNull(),
+  description: text("description").notNull(),
+  created_by_id: integer("created_by_id")
+    .notNull()
+    .references(() => usersTable.id),
+  created_at: timestamp("created_at").defaultNow(),
+  image_url: varchar("image_url", { length: 255 }),
 });
 //上傳照片
 const photosTable = pgTable("photos", {
@@ -51,12 +55,6 @@ const photosTable = pgTable("photos", {
 
 // 使用者個人檔案
 // 以 userId 當作唯一識別
-// const orientationEnum = pgEnum("orientation_enum", [
-//   "異性戀",
-//   "同性戀",
-//   "雙性戀",
-// ]);
-// 使用者個人簡介(地區、興趣)
 const profileTable = pgTable("profiles", {
   userId: integer("user_id")
     .primaryKey()
@@ -90,16 +88,22 @@ const productsTable = pgTable("products", {
 
 // 訂單表( 1筆 = 一次送禮行為 )
 const giftOrdersTable = pgTable("gift_orders", {
-  // 這邊的 id 是訂單流水編號
+  // 這邊的 id 是訂單流水編號（ 內部用 ）
   id: serial().primaryKey().notNull(),
+  // 對外公告的訂單編號
+  order_id: varchar("order_id", { length: 40 }).notNull().unique(),
   sender_id: integer()
     .notNull()
     .references(() => usersTable.id),
   receiver_id: integer()
     .notNull()
     .references(() => usersTable.id),
-  // status:
-  created_at: timestamp().defaultNow(),
+  status: varchar("status", { length: 20 }).default("pending"),
+  // LINE Pay transactionId
+  transaction_id: varchar("transaction_id", { length: 100 }),
+  // 訂單金額
+  amount: integer("amount").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 // 訂單明細( 1筆 = 一個商品 + 買的數量)
@@ -144,19 +148,6 @@ const superLikesTable = pgTable("super_likes", {
   usedAt: date("used_at", { mode: "date" }).notNull(),
 });
 
-// 使用者成為訂閱會員紀錄
-const membersTable = pgTable("members", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => usersTable.id),
-  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
-  endDate: timestamp("end_date", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }) // 成為會員的日期+時間 = 訂單時間？
-    .defaultNow()
-    .notNull(),
-});
-
 // 雙向配對成功紀錄，可以直接查表撈取雙方資料
 // 在插入資料時用程式邏輯保證 matchUserAId < matchUserBId
 const matchesTable = pgTable("matches", {
@@ -170,13 +161,43 @@ const matchesTable = pgTable("matches", {
   matchedAt: timestamp("matched_at").defaultNow().notNull(),
 });
 
-// 避免重複配對
-// const uniqueMatch = unique("matches_unique").on(
-//   matchesTable.matchUserAId,
-//   matchesTable.matchUserBId
-// );
-// 排序訊息、最新配對在最上面
-// const matchedAtIdx = index("matched_at_index").on(matchesTable.matchedAt);
+// 訂閱( 訂單 )資料
+const subscriptionPlansTable = pgTable("subscription_plans", {
+  id: serial().primaryKey().notNull(),
+  name: varchar({ length: 50 }).notNull(),
+  price: integer().notNull(),
+  description: varchar({ length: 255 }).default("尚未填寫描述"),
+});
+
+const subscriptionsTable = pgTable("subscriptions", {
+  id: serial().primaryKey().notNull(),
+  user_id: integer()
+    .notNull()
+    .references(() => usersTable.id),
+  plan: varchar({ length: 20 }).notNull(),
+  price: integer().notNull(),
+  status: varchar({ length: 20 }).notNull(), // 狀態：pending, paid
+  merchanttradeno: varchar({ length: 30 }).notNull(), // 綠界自訂編號（不能重複）
+  trade_no: varchar({ length: 30 }), // 綠界平台回傳的交易編號
+  paid_at: timestamp(),
+  created_at: timestamp().defaultNow().notNull(),
+  start_date: timestamp("start_date", { withTimezone: true }).notNull(),
+  end_date: timestamp("end_date", { withTimezone: true }).notNull(),
+});
+
+const friendRequestsTable = pgTable("friend_requests", {
+  id: serial("id").primaryKey(),
+  from_id: integer("from_id").notNull(),
+  to_id: integer("to_id").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+const friendsTable = pgTable("friends", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull(),
+  friend_id: integer("friend_id").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
 
 module.exports = {
   usersTable,
@@ -189,6 +210,9 @@ module.exports = {
   orderItemsTable,
   likesTable,
   superLikesTable,
-  membersTable,
   matchesTable,
+  subscriptionPlansTable,
+  friendRequestsTable,
+  subscriptionsTable,
+  friendsTable,
 };

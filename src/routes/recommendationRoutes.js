@@ -1,4 +1,3 @@
-// src/routes/recommendationRoutes.js
 const express = require("express");
 const { getRecommendations } = require("../controllers/recommendControllers");
 

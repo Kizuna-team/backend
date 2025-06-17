@@ -3,21 +3,22 @@ const { usersTable } = require("../db/schema.js");
 const { eq } = require("drizzle-orm");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const passport = require("passport");
 const dotenv = require("dotenv");
-dotenv.config();
+const { OAuth2Client } = require('google-auth-library');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+require('dotenv').config();
+
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 // debug
-console.log(`JWT_SECRET: ${JWT_SECRET}`);
-console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
+// console.log(`JWT_SECRET: ${JWT_SECRET}`);
+// console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
+
 
 async function register(req, res) {
   const { username, password } = req.body;
-  // const username = req.body.username;
+
   const hashed = await bcrypt.hash(password, 10);
-  // 正式環境要拿掉raw_password欄位
+
   try {
     // 註冊的帳號不能重複 所以先檢查 username 是否已經存在
     const checkUser = await db
@@ -34,8 +35,6 @@ async function register(req, res) {
     await db.insert(usersTable).values({
       username: username,
       password: hashed,
-      // 測試用 正式環境會移除
-      raw_password: password,
     });
     res.json({ message: "註冊成功" });
   } catch (error) {
@@ -63,7 +62,7 @@ async function login(req, res) {
       const accessToken = jwt.sign(
         { id: user.id, username: user.username },
         JWT_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
       // console.log("印出accessToken : ",accessToken);
       const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, {
@@ -101,31 +100,72 @@ function refresh(req, res) {
   }
 }
 
-// step1 : 導向 Google 登入頁
-function googleAuth(req, res) {
-  return passport.authenticate("google", { scope: ["email", "profile"] })(
-    req,
-    res
-  );
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, HOST } = process.env;
+
+const client = new OAuth2Client({
+  clientId: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  redirectUri: `${HOST}/callback`,
+});
+
+async function googleLogin(req, res) {
+  const { credential } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email } = payload;
+
+    let user = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, email));
+
+    if (user.length === 0) {
+      const newUser = await db
+        .insert(usersTable)
+        .values({
+          username: email,
+          password: '',
+        })
+        .returning();
+
+      user = newUser;
+    }
+
+    const accessToken = jwt.sign(
+      { id: user[0].id, username: user[0].username },
+      JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { id: user[0].id },
+      REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        id: user[0].id,
+        username: user[0].username,
+      },
+    });
+  } catch (error) {
+    console.error("Google One Tap 登入失敗", error);
+    res.status(400).json({ message: "Google 登入失敗" });
+  }
 }
 
-// step2: Google 認證完後 回到這邊
-function googleAuthCallback(req, res, next) {
-  passport.authenticate("google", { session: false }, (err, user) => {
-    if (err) return next(err);
-    if (!user) return res.redirect("/auth/google"); // 沒登入成功就導回去
-
-    // 登入成功：把 user 資料傳到前端
-    const userData = encodeURIComponent(JSON.stringify(user));
-    // 重新導向哪裡
-    res.redirect(`http://localhost:5173/profile?user=${userData}`);
-  })(req, res, next);
-}
 
 module.exports = {
   register,
   login,
   refresh,
-  googleAuth,
-  googleAuthCallback,
+  googleLogin,
 };

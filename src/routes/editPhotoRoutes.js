@@ -18,4 +18,4 @@ router.patch("/avatar", authMiddleware, changeAvatar);
 router.post("/", authMiddleware, upload.single("image"), uploadImage);
 router.delete("/:key", authMiddleware, deletePhoto);
 
-module.exports = router;
+module.exports = router; 
