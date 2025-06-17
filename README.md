@@ -4,6 +4,7 @@
 >「Kizuna（絆）」在日語中意為「羈絆」，
 >象徵人與人之間的連結，
 >本專案希望透過科技促進彼此間的真誠交流。
+<img width="1432" alt="首頁截圖" src="https://github.com/user-attachments/assets/79822415-1685-49cc-8ae8-3f856d398222" />
 
 本專案為 kizuna 交友網站的後端系統，負責處理使用者資料、配對邏輯、金流、聊天室、活動揪團等功能。  
 採用 Node.js + Express 架構，搭配 Drizzle 操作 PostgreSQL 資料庫，
@@ -13,8 +14,6 @@
 ## 使用技術
 
   * `Express`
-  * `Passport`
-  * `Google-Auth-Library`
   * `PostgreSQL`
   * `Socket.IO`
   
@@ -31,17 +30,7 @@ npm install
 ```
 ### 3. 建立 .env 環境變數檔案
 ```
-請在專案根目錄建立 `.env` 檔案，並設定以下變數：
-JWT_SECRET=
-REFRESH_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-DATABASE_URL=
-
-AWS_REGION=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-S3_BUCKET_NAME=
+請參照 .env.template設定環境變數
 ```
 
 ### 4. 啟動伺服器
