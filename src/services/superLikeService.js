@@ -1,12 +1,11 @@
 const db = require("../db/index.js");
 const { superLikesTable } = require("../db/schema.js");
 const { isValidMember } = require("./memberService.js");
-const { eq, and, gte, lt } = require("drizzle-orm");
+const { eq, and } = require("drizzle-orm");
 
 // 使用者已經用了幾次 Super Like
 const getSuperLikeCounts = async (userId) => {
   const today = new Date();
-  console.log("Today 的型別:", typeof today);
   const counts = await db
     .select()
     .from(superLikesTable)

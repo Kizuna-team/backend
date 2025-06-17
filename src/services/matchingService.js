@@ -110,9 +110,6 @@ const getMatchedCard = async (userIds) => {
     .where(inArray(profileTable.userId, userIds));
 };
 
-// 封裝頁面直接調用
-const fetchMatchedUsers = async (userId) => {};
-
 module.exports = {
   getLikedMeUserIds, // 喜歡我的
   getMyLikedTargetIds, // 我喜歡的
