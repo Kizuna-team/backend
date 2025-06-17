@@ -16,9 +16,9 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 async function register(req, res) {
   const { username, password } = req.body;
-  // const username = req.body.username;
+
   const hashed = await bcrypt.hash(password, 10);
-  // 正式環境要拿掉raw_password欄位
+
   try {
     // 註冊的帳號不能重複 所以先檢查 username 是否已經存在
     const checkUser = await db
@@ -35,8 +35,6 @@ async function register(req, res) {
     await db.insert(usersTable).values({
       username: username,
       password: hashed,
-      // 測試用 正式環境會移除
-      raw_password: password,
     });
     res.json({ message: "註冊成功" });
   } catch (error) {
@@ -133,7 +131,6 @@ async function googleLogin(req, res) {
         .values({
           username: email,
           password: '',
-          raw_password: '',
         })
         .returning();
 

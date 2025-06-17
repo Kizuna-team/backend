@@ -23,7 +23,6 @@ async function seed() {
     rawPasswords.map(async (pw, i) => ({
       username: `user${i + 1}`,
       password: await bcrypt.hash(pw, 10),
-      raw_password: pw,
     }))
   );
 
