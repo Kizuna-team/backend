@@ -26,18 +26,19 @@ async function getAdvancedRecommendedProfiles({
   location,
   activeWithinDays = 7,
   myInterests = [],
-  limit = 20,
+  limit = 3,
   offset = 0,
 }) {
 
   limit = parseInt(limit);
   offset = parseInt(offset);
 
-  if (Number.isNaN(limit)) limit = 20;
+  if (Number.isNaN(limit)) limit = 5;
   if (Number.isNaN(offset)) offset = 0;
 
   const activeSince = new Date();
   activeSince.setDate(activeSince.getDate() - activeWithinDays);
+  console.log("查詢條件:", { preferredGender, ageRange, location, activeSince, limit, offset });
 
   // 撈出符合條件的 profile
   const rawProfiles = await db
@@ -47,13 +48,14 @@ async function getAdvancedRecommendedProfiles({
       and(
         eq(profileTable.gender, preferredGender),
         between(profileTable.age, ageRange[0], ageRange[1]),
-        eq(profileTable.location, location),
+        // eq(profileTable.location, location),
         gte(profileTable.last_active_at, activeSince)
       )
     )
     .limit(limit) 
     .offset(offset);
-
+    const limitedRawProfiles = rawProfiles.slice(0, limit);
+    console.log("rawProfiles 數量:", limitedRawProfiles.length, "資料:", limitedRawProfiles);
   // 排序邏輯
   const scoredProfiles = rawProfiles.map((profile) => {
     const interestScore = computeInterestScore(myInterests, profile.interests);
@@ -81,7 +83,7 @@ async function getAdvancedRecommendedProfiles({
     .sort((a, b) => b.finalScore - a.finalScore)
     // 我們從中取 30 筆
     .slice(0, limit);
-
+  console.log("sortedProfiles 數量:", sortedProfiles.length, "資料:", sortedProfiles);
   return sortedProfiles;
 }
 

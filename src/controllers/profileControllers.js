@@ -12,7 +12,7 @@ async function getProfileByUserId(req, res) {
     const profileRow = await db
       .select()
       .from(profileTable)
-      .where(eq(profileTable.user_id, userId))
+      .where(eq(profileTable.userId, userId))
       .limit(1);
 
     if (profileRow.length === 0) {

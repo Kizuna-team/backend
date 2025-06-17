@@ -61,8 +61,11 @@ const profileTable = pgTable("profiles", {
   zodiac: varchar("zodiac", { length: 15 }),
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 15 }),
-  interests: varchar({ length: 15 }).array().notNull(),
+  interests: varchar({ length: 15 }).notNull(),
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  preferredGender: varchar("preferred_gender", { length: 15 }),
+  ageMin: integer("age_min").notNull(),
+  ageMax: integer("age_max").notNull(),
 });
 
 // 網站中有販售的商品表格
