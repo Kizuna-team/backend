@@ -23,10 +23,10 @@ const getAllProfiles = async (req, res) => {
         bio: profileTable.bio,
         age: profileTable.age,
         // location: profileTable.location,
-        // zodiac: profileTable.zodiac,
-        // mbti: profileTable.mbti,
+        zodiac: profileTable.zodiac,
+        mbti: profileTable.mbti,
         job: profileTable.job,
-        // interests: profileTable.interests,
+        interests: profileTable.interests,
       })
       .from(profileTable)
       .where(not(eq(profileTable.userId, userId)));
