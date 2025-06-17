@@ -14,7 +14,6 @@ const usersTable = pgTable("users", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 50 }).notNull(),
   password: varchar({ length: 255 }).notNull(),
-  raw_password: varchar({ length: 20 }).notNull(),
   subscription_plan: integer().references(() => subscriptionPlansTable.id), // 預設掛免費方案（id = 1）付費是2
 });
 
