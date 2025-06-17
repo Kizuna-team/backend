@@ -45,7 +45,7 @@ const setAvatar = async (userId, key) => {
   // 設定新大頭貼
   await db
     .update(photosTable)
-    .set({ is_avatar: true })
+    .set({ is_avatar: true, sequence: null })
     .where(and(eq(photosTable.userId, userId), eq(photosTable.image_key, key)));
 };
 

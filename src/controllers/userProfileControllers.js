@@ -4,6 +4,8 @@ const db = require("../db/index.js");
 const { profileTable, photosTable } = require("../db/schema");
 const { eq, not, and, inArray } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
 const { getProfileByIdFromDB } = require("../services/userProfile");
+const { findCertainPhotos } = require("../services/userPhoto");
+
 // GET (多個配對對象，未加入篩選邏輯)
 // 拿到除了自己之外的所有使用者資料
 const getAllProfiles = async (req, res) => {
@@ -18,15 +20,15 @@ const getAllProfiles = async (req, res) => {
       .select({
         userId: profileTable.userId,
         name: profileTable.name,
-        // gender: profileTable.gender,
-        // orientation: profileTable.orientation,
         bio: profileTable.bio,
         age: profileTable.age,
-        // location: profileTable.location,
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
         interests: profileTable.interests,
+        // location: profileTable.location,
+        // gender: profileTable.gender,
+        // orientation: profileTable.orientation,
       })
       .from(profileTable)
       .where(not(eq(profileTable.userId, userId)));
@@ -36,25 +38,22 @@ const getAllProfiles = async (req, res) => {
     const targetUserIds = profilesRecord.map((user) => user.userId);
 
     // 撈出這些人的前三張照片
-    const photoRecords = await db
-      .select()
-      .from(photosTable)
-      .where(
-        and(
-          inArray(photosTable.userId, targetUserIds),
-          inArray(photosTable.sequence, [1, 2, 3])
-        )
-      );
+    const photoRecords = await Promise.all(
+      targetUserIds.map((uid) =>
+        findCertainPhotos(uid, { sequenceIn: [1, 2, 3] }).then((photos) => ({
+          userId: uid,
+          photos: photos.map((p) => ({
+            image_url: p.image_url,
+            sequence: p.sequence,
+          })),
+        }))
+      )
+    );
 
-    // 把照片按 userId 分組
+    // 把照片按 userId 分組 { userId: [...photos] }
     const photoMap = {};
     for (const photo of photoRecords) {
-      const uid = photo.userId;
-      if (!photoMap[uid]) photoMap[uid] = [];
-      photoMap[uid].push({
-        image_url: photo.image_url,
-        sequence: photo.sequence,
-      });
+      photoMap[photo.userId] = photo.photos;
     }
 
     // 組合每個使用者 + 照片
@@ -62,6 +61,16 @@ const getAllProfiles = async (req, res) => {
       ...user,
       photos: photoMap[user.userId] || [], // 沒照片就給 []
     }));
+
+    console.log("都撈到什麼？", usersWithPhotos);
+    console.log("都撈到什麼？", usersWithPhotos);
+
+    usersWithPhotos.forEach((user) => {
+      console.log(`👤 使用者 ${user.userId} 的照片：`);
+      user.photos.forEach((photo, index) => {
+        console.log(`  📸 第 ${index + 1} 張:`, photo);
+      });
+    });
 
     res.status(200).json({
       message: "取得配對對象成功",
