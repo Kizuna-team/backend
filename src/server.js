@@ -9,7 +9,7 @@ const productRoutes = require("./routes/productRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const authMiddleware = require("./middleware/auth.js");
 const db = require("./db/index.js");
-const { usersTable, subscriptionsTable, subscriptionPlansTable, chatRoomsTable, friendshipsTable } = require("./db/schema.js");
+const { usersTable, subscriptionsTable, subscriptionPlansTable, friendshipsTable, messagesTable } = require("./db/schema.js");
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay");
 const subPlansRoutes = require("./routes/subPlans");
@@ -20,7 +20,8 @@ const userProfileRoutes = require("./routes/userProfileRoutes.js");
 const userPhotoRoutes = require("./routes/userPhotoRoutes.js");
 const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
-const paypalRoutes = require("./routes/paymentRoutes");
+const paypalRoutes = require('./routes/paymentRoutes');
+const setupSocket = require("./controllers/chatControllers_new.js");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -47,54 +48,10 @@ io.on("connection", (socket) => {
   console.log("User connected:", username);
   
   socket.username = username;
-  // 加入聊天室
-  // socket.on("joinRoom", async (roomId) => {
-  //   try {
-  //     const userId = socket.user.id;
-      
-  //     // 驗證用戶是否有權限進入這個房間
-  //     const [room] = await db
-  //       .select()
-  //       .from(chatRoomsTable)
-  //       .where(eq(chatRoomsTable.id, roomId))
-  //       .limit(1);
-      
-  //     if (!room || ![room.user1_id, room.user2_id].includes(userId)) {
-  //       return socket.emit("joinError", "Unauthorized room access");
-  //     }
-      
-  //     await socket.join(roomId);
-  //     console.log(`User ${userId} joined room ${roomId}`);
-  //   } catch (error) {
-  //     console.error("Error joining room:", error);
-  //     socket.emit("joinError", "Failed to join room");
-  //   }
-  // });
-
-// 處理聊天訊息
-  // socket.on("chatMessage", async ({ roomId, content }) => {
-  //   try {
-  //     const senderId = socket.user.id;
-  //     const message = await insertMessage(roomId, senderId, content);
-      
-  //     // 發送訊息給房間內的所有用戶
-  //     io.to(roomId).emit("newMessage", message);
-  //   } catch (error) {
-  //     console.error("Error sending message:", error);
-  //     socket.emit("error", "Failed to send message");
-  //   }
-  // });
-  
-  // 用戶斷線
-  // socket.on("disconnect", () => {
-  //   console.log("User disconnected:", socket.user.username);
-  // });
 
   socket.on("connect_error", (err) => {
     console.error("連線失敗", err.message);
   });
-
-
 });
 
 
@@ -221,11 +178,11 @@ app.get("/friends", authMiddleware, async (req, res) => {
   try {
     // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
-
+    console.log(currentUserId);
     // 查詢好友列表（好友名稱 + 聊天室 roomId）
     const friends = await db
       .select({
-        friendId: friendshipsTable.user_id,
+        friendId: friendshipsTable.friend_id,
         friendName: usersTable.username,
         roomId: friendshipsTable.room_id,
       })
@@ -240,8 +197,53 @@ app.get("/friends", authMiddleware, async (req, res) => {
   }
 });
 
+// 取得聊天訊息
+app.post("/messages", authMiddleware, async (req, res) => {
+  const { roomId, content } = req.body;
+  const senderId = req.user.id;
+
+  try {
+    const [inserted] = await db
+      .insert(messagesTable)
+      .values({
+        room_id: roomId,
+        sender_id: senderId,
+        content: content,
+      })
+      .returning();
+    console.log(inserted);
+    res.status(201).json({ message: inserted });
+  } catch (error) {
+    console.error("❌ 發送訊息失敗", error);
+    res.status(500).json({ message: "發送訊息失敗" });
+  }
+});
+
+app.get("/messages/:roomId", authMiddleware, async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    const messages = await db
+      .select({
+        id: messagesTable.id,
+        room_id: messagesTable.room_id,
+        sender_id: messagesTable.sender_id,
+        content: messagesTable.content,
+        created_at: messagesTable.created_at,
+      })
+      .from(messagesTable)
+      .where(eq(messagesTable.room_id, roomId))
+      .orderBy(messagesTable.created_at);
+
+    res.json({ messages });
+  } catch (error) {
+    console.error("❌ 取得聊天室訊息失敗:", error);
+    res.status(500).json({ message: "取得聊天室訊息失敗" });
+  }
+});
+
 // 啟用 socket.io 聊天室邏輯
-// setupSocket(io);
+setupSocket(io);
 
 server.listen(3000, () =>
   console.log("✅ Server running on http://localhost:3000")
