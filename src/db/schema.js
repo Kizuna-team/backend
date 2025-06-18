@@ -19,15 +19,6 @@ const usersTable = pgTable("users", {
   subscription_plan: integer().references(() => subscriptionPlansTable.id), // 預設掛免費方案（id = 1）付費是2
 });
 
-// 保存聊天訊息的表格
-const messagesTable = pgTable("messages", {
-  id: serial().primaryKey().notNull(),
-  room_id: integer().notNull(),
-  sender_id: integer().notNull(),
-  content: varchar({ length: 255 }).notNull(),
-  created_at: timestamp().defaultNow().notNull(),
-});
-
 const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -192,11 +183,28 @@ const friendRequestsTable = pgTable("friend_requests", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-const friendsTable = pgTable("friends", {
+const friendshipsTable = pgTable("friendships", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").notNull(),
   friend_id: integer("friend_id").notNull(),
+  // 預計成為好友後 自動用uuid生成房間ID
+  room_id: varchar("room_id", { length: 255 }),
   created_at: timestamp("created_at").defaultNow(),
+});
+
+const chatRoomsTable = pgTable("chat_rooms", {
+  id: serial("id").primaryKey(),
+  user1_id: integer("user1_id").references(() => usersTable.id),
+  user2_id: integer("user2_id").references(() => usersTable.id)
+});
+
+// 保存聊天訊息的表格
+const messagesTable = pgTable("messages", {
+  id: serial().primaryKey().notNull(),
+  room_id: integer("room_id").references(()=>chatRoomTable.id),
+  sender_id: integer("sender_id").references(()=>usersTable.id),
+  content: varchar({ length: 255 }).notNull(),
+  created_at: timestamp().defaultNow(),
 });
 
 module.exports = {
@@ -214,5 +222,6 @@ module.exports = {
   subscriptionPlansTable,
   friendRequestsTable,
   subscriptionsTable,
-  friendsTable,
+  friendshipsTable,
+  chatRoomsTable,
 };
