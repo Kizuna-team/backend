@@ -201,7 +201,7 @@ const chatRoomsTable = pgTable("chat_rooms", {
 // 保存聊天訊息的表格
 const messagesTable = pgTable("messages", {
   id: serial().primaryKey().notNull(),
-  room_id: integer("room_id").references(()=>chatRoomTable.id),
+  room_id: text("room_id"),
   sender_id: integer("sender_id").references(()=>usersTable.id),
   content: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow(),
