@@ -8,6 +8,7 @@ const {
   text,
   unique,
   boolean,
+  primaryKey
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -51,20 +52,16 @@ const profileTable = pgTable("profiles", {
     .primaryKey()
     .notNull()
     .references(() => usersTable.id),
-  name: varchar("name", { length: 15 }).notNull(),
+  name: varchar("name", { length: 30 }).notNull(),
   gender: varchar("gender", { length: 8 }).notNull(),
   orientation: integer("orientation").notNull(),
   bio: varchar({ length: 255 }),
   age: integer("age").notNull(),
-  location: varchar("location", { length: 31 }).notNull(),
-  zodiac: varchar("zodiac", { length: 15 }),
+  location: varchar("location", { length: 30 }).notNull(),
+  zodiac: varchar("zodiac", { length: 30 }),
   mbti: varchar("mbti", { length: 5 }),
-  job: varchar("job", { length: 15 }),
-  interests: varchar({ length: 15 }).notNull(),
+  job: varchar("job", { length: 50 }),
   last_active_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
-  preferredGender: varchar("preferred_gender", { length: 15 }),
-  ageMin: integer("age_min").notNull(),
-  ageMax: integer("age_max").notNull(),
 });
 
 // 網站中有販售的商品表格
@@ -208,6 +205,31 @@ const messagesTable = pgTable("messages", {
   sender_id: integer("sender_id").references(()=>usersTable.id),
   content: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow(),
+}),
+const interestsTable = pgTable("interests", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+});
+
+const userInterestsTable = pgTable("user_interests", {
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  interestId: integer("interest_id").notNull().references(() => interestsTable.id),
+}, (table) => {
+  return {
+    pk: primaryKey(table.userId, table.interestId),
+  };
+});
+
+const userPreferencesTable = pgTable("user_preferences", {
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  musicMatch: varchar("music_match", { length: 100 }).notNull(),
+  introvertOrExtrovert: varchar("introvert_or_extrovert", { length: 20 }).notNull(),
+  pet: varchar("pet", { length: 30 }).notNull(),
+  wakeUpTime: varchar("wake_up_time", { length: 20 }).notNull(),  
+  ageMin: integer("age_min").notNull(),
+  ageMax: integer("age_max").notNull(),
 });
 
 module.exports = {
@@ -227,4 +249,7 @@ module.exports = {
   subscriptionsTable,
   friendshipsTable,
   chatRoomsTable,
+  interestsTable,
+  userInterestsTable,
+  userPreferencesTable
 };
