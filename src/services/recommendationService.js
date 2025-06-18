@@ -1,93 +1,65 @@
-// src/services/recommendationService.js
+const { eq, and, gte, lte, inArray, ne, or } = require("drizzle-orm");
 const db = require("../db/index.js");
-const { profileTable } = require("../db/schema.js");
-const { eq, and, between, gte } = require("drizzle-orm");
+const {
+  profileTable,
+  userInterestsTable,
+  userPreferencesTable,
+} = require("../db/schema.js");
 
-// 計算興趣交集分數
-function computeInterestScore(myInterests, targetInterests) {
-  const set1 = new Set(myInterests);
-  const set2 = new Set(targetInterests);
+async function getRecommendationsLogic(userId) {
+  const myProfileResult = await db
+    .select()
+    .from(profileTable)
+    .where(eq(profileTable.userId, userId));
+  const myPrefResult = await db
+    .select()
+    .from(userPreferencesTable)
+    .where(eq(userPreferencesTable.userId, userId));
+  const myInterests = await db
+    .select({ interestId: userInterestsTable.interestId })
+    .from(userInterestsTable)
+    .where(eq(userInterestsTable.userId, userId));
 
-  let intersectionCount = 0;
-  set2.forEach((interest) => {
-    if (set1.has(interest)) {
-      intersectionCount++;
-    }
-  });
+  const myProfile = myProfileResult[0];
+  const myPref = myPrefResult[0];
 
-  return intersectionCount;
-}
+  if (!myProfile || !myPref) return []; //是不是要回傳些什麼
 
-// 推薦邏輯 以後這些資料應該要從前端的網址中拿
-async function getAdvancedRecommendedProfiles({
-  userOrientation,
-  preferredGender,
-  ageRange = [20, 35],
-  location,
-  activeWithinDays = 7,
-  myInterests = [],
-  limit = 3,
-  offset = 0,
-}) {
+  const myInterestIds = myInterests.map((i) => i.interestId);
 
-  limit = parseInt(limit);
-  offset = parseInt(offset);
+  const sharedInterestUserIdsRaw = await db
+    .select({ userId: userInterestsTable.userId })
+    .from(userInterestsTable)
+    .where(inArray(userInterestsTable.interestId, myInterestIds));
 
-  if (Number.isNaN(limit)) limit = 5;
-  if (Number.isNaN(offset)) offset = 0;
+  const sharedInterestUserIds = [
+    ...new Set(
+      sharedInterestUserIdsRaw
+        .map((u) => u.userId)
+        .filter((id) => id !== userId)
+    ),
+  ];
 
-  const activeSince = new Date();
-  activeSince.setDate(activeSince.getDate() - activeWithinDays);
-  console.log("查詢條件:", { preferredGender, ageRange, location, activeSince, limit, offset });
+  if (sharedInterestUserIds.length === 0) return []; //是不是要回傳些什麼
 
-  // 撈出符合條件的 profile
-  const rawProfiles = await db
+  const matches = await db
     .select()
     .from(profileTable)
     .where(
       and(
-        eq(profileTable.gender, preferredGender),
-        between(profileTable.age, ageRange[0], ageRange[1]),
-        // eq(profileTable.location, location),
-        gte(profileTable.last_active_at, activeSince)
+        inArray(profileTable.userId, sharedInterestUserIds),
+        ne(profileTable.userId, userId),
+        or(
+          eq(myPref.preferredGender, "any"), //如果我偏好 any，什麼性別都可以
+          eq(profileTable.gender, myPref.preferredGender)
+        ),
+        gte(profileTable.age, myPref.ageMin), // gte >=
+        lte(profileTable.age, myPref.ageMax) // lte <=
       )
     )
-    .limit(limit) 
-    .offset(offset);
-    const limitedRawProfiles = rawProfiles.slice(0, limit);
-    console.log("rawProfiles 數量:", limitedRawProfiles.length, "資料:", limitedRawProfiles);
-  // 排序邏輯
-  const scoredProfiles = rawProfiles.map((profile) => {
-    const interestScore = computeInterestScore(myInterests, profile.interests);
-    // 距離今天有多久沒登入了
-    const daysSinceActive =
-      // (現在時間 - 對方最後登入時間) / 一天的毫秒數 1000 * 60 * 60 * 24
-      (Date.now() - new Date(profile.last_active_at).getTime()) /
-      (86400000);
-    // 今天有登入，差距 0 天 => 分數 7 分
-    const recentActiveScore = Math.max(0, 7 - daysSinceActive);
+    .limit(20);
 
-    const finalScore = interestScore * 3 + recentActiveScore * 2;
-
-    return {
-      ...profile,
-      interestScore,
-      recentActiveScore,
-      finalScore,
-    };
-  });
-
-  // 依 finalScore 排序
-  const sortedProfiles = scoredProfiles
-    // 這樣 會依 finalScore 由大到小排序  
-    .sort((a, b) => b.finalScore - a.finalScore)
-    // 我們從中取 30 筆
-    .slice(0, limit);
-  console.log("sortedProfiles 數量:", sortedProfiles.length, "資料:", sortedProfiles);
-  return sortedProfiles;
+  return matches;
 }
 
-module.exports = {
-  getAdvancedRecommendedProfiles,
-};
-
+module.exports = { getRecommendationsLogic };
