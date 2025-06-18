@@ -169,7 +169,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ 無法取得會員資料", error);
+    console.error("無法取得會員資料", error);
     res.status(500).json({ message: "取得會員資料失敗" });
   }
 });
@@ -192,7 +192,7 @@ app.get("/friends", authMiddleware, async (req, res) => {
 
     res.json({ friends });
   } catch (error) {
-    console.error("❌ 無法取得好友列表", error);
+    console.error("無法取得好友列表", error);
     res.status(500).json({ message: "取得好友列表失敗" });
   }
 });
@@ -214,7 +214,7 @@ app.post("/messages", authMiddleware, async (req, res) => {
     console.log(inserted);
     res.status(201).json({ message: inserted });
   } catch (error) {
-    console.error("❌ 發送訊息失敗", error);
+    console.error("發送訊息失敗", error);
     res.status(500).json({ message: "發送訊息失敗" });
   }
 });
@@ -237,7 +237,7 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
 
     res.json({ messages });
   } catch (error) {
-    console.error("❌ 取得聊天室訊息失敗:", error);
+    console.error("取得聊天室訊息失敗:", error);
     res.status(500).json({ message: "取得聊天室訊息失敗" });
   }
 });
