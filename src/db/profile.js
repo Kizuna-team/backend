@@ -1,0 +1,104 @@
+const { Faker, zh_TW } = require("@faker-js/faker");
+const faker = new Faker({ locale: [zh_TW] });
+
+const zodiacSigns = [
+  "白羊座",
+  "金牛座",
+  "雙子座",
+  "巨蟹座",
+  "獅子座",
+  "處女座",
+  "天秤座",
+  "天蠍座",
+  "射手座",
+  "魔羯座",
+  "水瓶座",
+  "雙魚座",
+];
+
+const mbtiTypes = [
+  "INTJ",
+  "INTP",
+  "ENTJ",
+  "ENTP",
+  "INFJ",
+  "INFP",
+  "ENFJ",
+  "ENFP",
+  "ISTJ",
+  "ISFJ",
+  "ESTJ",
+  "ESFJ",
+  "ISTP",
+  "ISFP",
+  "ESTP",
+  "ESFP",
+];
+
+const taiwanLocations = [
+  '台北市', '新北市', '桃園市', '台中市', '台南市', '高雄市',
+  '基隆市', '新竹市', '嘉義市',
+  '新竹縣', '苗栗縣', '彰化縣', '南投縣', '雲林縣', '嘉義縣',
+  '屏東縣', '宜蘭縣', '花蓮縣', '台東縣', '澎湖縣', '金門縣', '連江縣'
+];
+
+const bios = [
+  "喜歡閱讀和探索新世界。",
+  "熱愛音樂，尤其是現場演唱會。",
+  "喜歡旅行，體驗不同的文化。",
+  "平常喜歡運動，保持健康生活。",
+  "喜歡嘗試各種美食，烹飪也是我的興趣。",
+  "享受與朋友相聚的時光。",
+  "熱愛大自然，常去登山和露營。",
+  "喜歡看電影和追劇，放鬆心情。",
+  "擅長攝影，喜歡捕捉生活中的美好瞬間。",
+  "喜歡動物，尤其是狗和貓。",
+  "對藝術充滿熱情，喜歡繪畫和手作。",
+  "喜歡學習新事物，保持好奇心。",
+  "喜歡安靜的時光，也享受熱鬧的聚會。",
+  "熱愛跑步和健身，保持活力。",
+  "喜歡閱讀心理學和自我成長相關書籍。",
+  "有幽默感，喜歡和朋友分享笑話。",
+  "喜歡計畫未來，也享受當下的生活。",
+  "喜歡音樂節和各種現場表演。",
+  "對科技和新趨勢很感興趣。",
+  "喜歡幫助別人，志願服務是我的興趣之一。",
+];
+
+const jobs = [
+  "工程師",
+  "設計師",
+  "老師",
+  "醫生",
+  "藝術家",
+  "記者",
+  "廚師",
+  "律師",
+  "會計師",
+  "作家",
+  "軟體開發員",
+  "產品經理",
+  "行銷專員",
+  "客服人員",
+  "翻譯",
+  "攝影師",
+  "音樂家",
+  "建築師",
+  "數據分析師",
+  "人力資源專員",
+];
+
+const fakeProfiles = Array.from({ length: 500 }, () => ({
+  name: faker.person.firstName(),
+  gender: faker.helpers.arrayElement(["男", "女"]),
+  orientation: faker.helpers.arrayElement([1, 2]), // 1=異性戀, 2=同性戀
+  bio: faker.helpers.arrayElement(bios),
+  age: faker.number.int({ min: 18, max: 40 }),
+  location: faker.helpers.arrayElement(taiwanLocations),
+  zodiac: faker.helpers.arrayElement(zodiacSigns),
+  mbti: faker.helpers.arrayElement(mbtiTypes),
+  job: faker.helpers.arrayElement(jobs),
+  last_active_at: faker.date.recent(30),
+}));
+
+module.exports = fakeProfiles;
