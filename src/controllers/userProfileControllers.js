@@ -25,7 +25,7 @@ const getAllProfiles = async (req, res) => {
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
-        interests: profileTable.interests,
+        // interests: profileTable.interests,
         // location: profileTable.location,
         // gender: profileTable.gender,
         // orientation: profileTable.orientation,
