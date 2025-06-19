@@ -186,8 +186,8 @@ const friendRequestsTable = pgTable("friend_requests", {
 
 const friendshipsTable = pgTable("friendships", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull(),
-  friend_id: integer("friend_id").notNull(),
+  user_id: integer("user_id").notNull().references(() => usersTable.id),
+  friend_id: integer("friend_id").notNull().references(() => usersTable.id),
   // 預計成為好友後 自動用uuid生成房間ID
   room_id: varchar("room_id", { length: 255 }),
   created_at: timestamp("created_at").defaultNow(),
