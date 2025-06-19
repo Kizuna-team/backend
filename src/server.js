@@ -33,6 +33,8 @@ const { getRoomMessages } = require("./lib/getRoomMessages.js");
 const matchesRoutes = require("./routes/matchesRoutes.js");
 const userFilterRoutes = require("./routes/userFilterRoutes.js");
 
+const { swaggerUi, specs } = require('./swagger.js');
+
 // 以下為即時聊天室新增模組
 const http = require("http");
 const { Server } = require("socket.io");
@@ -90,6 +92,20 @@ app.use("/paypal", paypalRoutes);
 app.use("/matches", matchesRoutes);
 app.use("/user-filter", userFilterRoutes);
 
+/**
+ * @swagger
+ * /api/me:
+ *   get:
+ *     summary: 取得當前使用者資料
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得使用者資料
+ *       500:
+ *         description: 取得會員資料失敗
+ */
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
     //把使用者資料抓出來（基本資訊 + 訂閱方案名稱）
@@ -224,6 +240,12 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
 
 // 啟用 socket.io 聊天室邏輯
 setupSocket(io);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Kizuna 交友平台 API 文件"
+}));
 
 server.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
