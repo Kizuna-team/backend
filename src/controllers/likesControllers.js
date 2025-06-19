@@ -20,8 +20,6 @@ const createLike = async (req, res) => {
   }
   const { targetId, status } = req.body;
   try {
-    console.log("🚨 準備插入資料:", { userId, targetId, status });
-
     // 查詢super like、like 是否也有按過的紀錄
     const mySuperLikesRecord = await db
       .select()
@@ -78,7 +76,7 @@ const createLike = async (req, res) => {
           matchedAt: new Date(),
         })
         .onConflictDoNothing();
-      console.log("✅ 雙方配對成功，回傳 matchedWith:", targetId);
+      console.log("雙方配對成功，回傳 matchedWith:", targetId);
 
       // 回傳對方照片與名字
       const targetProfileQuery = db
@@ -124,12 +122,12 @@ const createLike = async (req, res) => {
       if (targetProfile) targetProfile.avatarUrl ||= defaultUrl;
       if (myProfile) myProfile.avatarUrl ||= defaultUrl;
 
-      console.log("🎯 targetProfile", targetProfile);
-      console.log("👤 myProfile", myProfile);
+      console.log("targetProfile", targetProfile);
+      console.log("myProfile", myProfile);
 
-      console.log("🔍 targetProfileQuery 是什麼？", targetProfileQuery);
+      console.log(" targetProfileQuery 是什麼？", targetProfileQuery);
       console.log(
-        "✅ 查詢結果 targetProfile：",
+        "查詢結果 targetProfile：",
         await targetProfileQuery.execute()
       );
       return res.json({
