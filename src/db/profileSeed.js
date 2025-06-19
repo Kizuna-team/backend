@@ -31,7 +31,6 @@ async function seed() {
     .insert(usersTable)
     .values(userData)
     .returning({ id: usersTable.id });
-  console.log(`✅成功建立 ${insertedUsers.length} 筆 users`);
 
   const profileData = insertedUsers.map((user, i) => {
     const seed = profilesSeed[i];
@@ -51,21 +50,18 @@ async function seed() {
   });
 
   await db.insert(profileTable).values(profileData);
-  console.log(`✅ 假資料已成功寫入 profileTable (${profileData.length})`);
 
   const interestsData = generateFakeInterests();
   await db.insert(interestsTable).values(interestsData);
-  console.log(`✅ 假資料已成功寫入 interestsTable (${interestsData.length})`);
 
   const insertedInterests = await db.select().from(interestsTable);
   const userInterestsData = generateUserInterests(
     insertedUsers,
     insertedInterests
   );
+
   await db.insert(userInterestsTable).values(userInterestsData);
-  console.log(
-    `✅ 假資料已成功寫入 user_interests (${userInterestsData.length})`
-  );
+
 
   //userPreference表
   for (let userId = 1; userId <= 100; userId++) {
@@ -76,5 +72,5 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error("❌ 寫入資料時發生錯誤:", err);
+  console.error("寫入資料時發生錯誤:", err);
 });
