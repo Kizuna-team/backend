@@ -51,6 +51,7 @@ const photosTable = pgTable("photos", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
   sequence: integer("sequence"),
   is_avatar: boolean("is_avatar").default(false), // 讓使用者指定頭像
+  source: varchar("source", { length: 20 }).default("user"), // 預設隨機大頭照
 });
 
 // 使用者個人檔案

@@ -3,16 +3,15 @@ const { usersTable } = require("../db/schema.js");
 const { eq } = require("drizzle-orm");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const dotenv = require("dotenv");
-const { OAuth2Client } = require('google-auth-library');
+const { OAuth2Client } = require("google-auth-library");
+const { assignAvatar } = require("../services/userPhoto.js");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 // debug
 // console.log(`JWT_SECRET: ${JWT_SECRET}`);
 // console.log(`REFRESH_SECRET: ${REFRESH_SECRET}`);
-
 
 async function register(req, res) {
   const { username, password } = req.body;
@@ -32,10 +31,14 @@ async function register(req, res) {
     }
 
     // 有通過檢查才真的把這位使用者帳號密碼加入資料庫
-    await db.insert(usersTable).values({
-      username: username,
-      password: hashed,
-    });
+    const [newUser] = await db
+      .insert(usersTable)
+      .values({ username: username, password: hashed })
+      .returning();
+
+    // 註冊完立即給予預設大頭照
+    await assignAvatar(newUser.id);
+
     res.json({ message: "註冊成功" });
   } catch (error) {
     res.status(400).json({
@@ -100,7 +103,8 @@ function refresh(req, res) {
   }
 }
 
-const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, HOST } = process.env;
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, HOST } =
+  process.env;
 
 const client = new OAuth2Client({
   clientId: GOOGLE_CLIENT_ID,
@@ -130,7 +134,7 @@ async function googleLogin(req, res) {
         .insert(usersTable)
         .values({
           username: email,
-          password: '',
+          password: "",
         })
         .returning();
 
@@ -142,11 +146,9 @@ async function googleLogin(req, res) {
       JWT_SECRET,
       { expiresIn: "15m" }
     );
-    const refreshToken = jwt.sign(
-      { id: user[0].id },
-      REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+    const refreshToken = jwt.sign({ id: user[0].id }, REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.json({
       accessToken,
@@ -161,7 +163,6 @@ async function googleLogin(req, res) {
     res.status(400).json({ message: "Google 登入失敗" });
   }
 }
-
 
 module.exports = {
   register,
