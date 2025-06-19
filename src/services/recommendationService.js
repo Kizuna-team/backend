@@ -24,7 +24,7 @@ async function getRecommendedUsers(userId) {
 
   const currentUser = currentUserResult[0];
   if (!currentUser) {
-    throw new Error(`User preference not found for userId ${userId}`); 
+    throw new Error(`無法找到使用者 ${userId}`); 
   }
 
   const otherUsers = await db
@@ -38,7 +38,7 @@ async function getRecommendedUsers(userId) {
     profileAgeMap.set(profile.userId, profile.age);
   });
 
-  const currentUserInterests = await getUserInterests(userId); //[2,3,5]
+  const currentUserInterests = await getUserInterests(userId);
 
   const recommendations = await Promise.all(
     otherUsers.map(async (other) => {
