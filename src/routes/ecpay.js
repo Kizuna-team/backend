@@ -47,6 +47,15 @@ function getTimeString() {
 
 // console.log(new Date().toString()); //檢查時區
 // 建立訂單（付款表單）
+/**
+ * @swagger
+ * /api/ecpay/create:
+ *   post:
+ *     summary: 建立綠界付款訂單
+ *     tags: [ECPay Payment]
+ *     security:
+ *       - bearerAuth: []
+ */
 router.post("/create", authMiddleware, async (req, res) => {
   const { planId } = req.body;
 
@@ -97,6 +106,13 @@ router.post("/create", authMiddleware, async (req, res) => {
 });
 
 // 綠界付款完成後會post回來（付款成功回傳）=> 更新資料庫訂閱狀態
+/**
+ * @swagger
+ * /api/ecpay/notify:
+ *   post:
+ *     summary: 綠界付款完成回調
+ *     tags: [ECPay Payment]
+ */
 router.post("/notify", async (req, res) => {
   console.log("收到綠界回傳的訂單編號 付款狀態等資訊 :", req.body);
   const { MerchantTradeNo, RtnCode, PaymentDate, TradeNo } = req.body;
