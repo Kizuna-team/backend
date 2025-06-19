@@ -9,7 +9,13 @@ const productRoutes = require("./routes/productRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const authMiddleware = require("./middleware/auth.js");
 const db = require("./db/index.js");
-const { usersTable, subscriptionsTable, subscriptionPlansTable, friendshipsTable, messagesTable } = require("./db/schema.js");
+const {
+  usersTable,
+  subscriptionsTable,
+  subscriptionPlansTable,
+  friendshipsTable,
+  messagesTable,
+} = require("./db/schema.js");
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay");
 const subPlansRoutes = require("./routes/subPlans");
@@ -20,10 +26,9 @@ const userProfileRoutes = require("./routes/userProfileRoutes.js");
 const userPhotoRoutes = require("./routes/userPhotoRoutes.js");
 const friendsRoutes = require("./routes/friends");
 const adminRoutes = require("./routes/adminRoutes.js");
-const paypalRoutes = require('./routes/paymentRoutes');
+const paypalRoutes = require("./routes/paymentRoutes");
 const setupSocket = require("./controllers/chatControllers_new.js");
 const aiRoutes = require("./routes/ai");
-
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -40,22 +45,21 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
-})
+    methods: ["GET", "POST"],
+  },
+});
 
 // Socket.IO 連接邏輯
 io.on("connection", (socket) => {
   const username = socket.user?.username || `User-${socket.id}`;
   console.log("User connected:", username);
-  
+
   socket.username = username;
 
   socket.on("connect_error", (err) => {
     console.error("連線失敗", err.message);
   });
 });
-
 
 app.use(cors());
 app.use(express.json());
