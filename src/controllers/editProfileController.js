@@ -1,9 +1,8 @@
-// const pool = require("../config/db.js");
 const db = require("../db/index.js");
 const { profileTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 
-// Get取得使用者個人資料
+
 const getProfile = async (req, res) => {
   console.log("getProfile req.user:", req.user);
   try {
@@ -24,7 +23,6 @@ const getProfile = async (req, res) => {
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
-        interests: profileTable.interests,
       })
       .from(profileTable)
       .where(eq(profileTable.userId, userId));
@@ -46,7 +44,6 @@ const getProfile = async (req, res) => {
           zodiac: "",
           mbti: "",
           job: "",
-          interests: [],
         },
       });
     }
@@ -58,7 +55,7 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Post建立使用者個人資料
+
 
 const createProfile = async (req, res) => {
   try {
@@ -88,7 +85,6 @@ const createProfile = async (req, res) => {
       mbti,
       job,
       orientation,
-      interests,
     } = req.body || {};
 
     // 沒有使用者資料才新增
@@ -105,9 +101,8 @@ const createProfile = async (req, res) => {
         mbti: mbti || "",
         job: job || "",
         orientation: orientation || 2, // 沒填就預設男女都可以
-        interests: interests || [],
       })
-      .returning(); // 回傳新增的資料
+      .returning(); 
 
     const createdProfile = newData[0];
 
@@ -118,7 +113,7 @@ const createProfile = async (req, res) => {
   }
 };
 
-// 修改使用者個人資料
+
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -136,24 +131,14 @@ const updateProfile = async (req, res) => {
       "zodiac",
       "mbti",
       "job",
-      "interests",
     ];
 
-    // 待更新的欄位
     const updateData = {};
 
-    // 只更新有送的欄位
-    // interests 如果是空陣列也要保留更新
     fields.forEach((field) => {
       // 只更新有被送出的欄位 等同於 req.body[field] !== undefined
-      if (Object.hasOwn(req.body, field)) {
-        if (field === "interests") {
-          updateData[field] = Array.isArray(req.body[field])
-            ? req.body[field]
-            : [];
-        } else {
-          updateData[field] = req.body[field];
-        }
+      if (Object.hasOwn(req.body, field)) {    
+          updateData[field] = req.body[field];      
       }
     });
 
@@ -161,7 +146,7 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "未提供任何更新資料" });
     }
 
-    // 執行資料庫更新
+  
     const updateResult = await db
       .update(profileTable)
       .set(updateData)

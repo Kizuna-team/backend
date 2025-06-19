@@ -206,7 +206,8 @@ const messagesTable = pgTable("messages", {
   sender_id: integer("sender_id").references(()=>usersTable.id),
   content: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow(),
-}),
+});
+
 const interestsTable = pgTable("interests", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 50 }).notNull().unique(),
