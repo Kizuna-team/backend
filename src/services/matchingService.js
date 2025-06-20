@@ -1,6 +1,5 @@
 const db = require("../db/index.js");
 const { and, eq, inArray } = require("drizzle-orm");
-const { getUserFirstPhoto } = require("../services/userAvatar.js");
 
 const {
   likesTable,

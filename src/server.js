@@ -29,7 +29,11 @@ const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require("./routes/paymentRoutes");
 const setupSocket = require("./controllers/chatControllers_new.js");
 const aiRoutes = require("./routes/ai");
+<<<<<<< HEAD
 const { getRoomMessages } = require("./lib/getRoomMessages.js");
+=======
+const matchesRoutes = require("./routes/matchesRoutes.js");
+>>>>>>> f29d1a0 (feat: matching logic and modified schema column)
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -85,6 +89,7 @@ app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
+app.use("/matches", matchesRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
@@ -187,7 +192,7 @@ app.get("/friendLists", authMiddleware, async (req, res) => {
   try {
     // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
-    // console.log("現在登入房間的使用者:",currentUserId);
+    console.log("現在登入房間的使用者:", currentUserId);
     // 查詢好友列表（好友名稱 + 聊天室 roomId）
     const friends = await db
       .select({
