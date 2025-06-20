@@ -23,7 +23,7 @@ function setupSocket(io) {
       }
 
       // 加入新房間
-      socket.join(roomId.toString());
+      socket.join(roomId);
 
       // 儲存用戶資訊
       users.set(socket.id, {
