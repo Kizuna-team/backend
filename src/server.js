@@ -181,11 +181,11 @@ app.get("/api/me", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/friends", authMiddleware, async (req, res) => {
+app.get("/friendLists", authMiddleware, async (req, res) => {
   try {
     // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
-    console.log(currentUserId);
+    console.log("現在登入房間的使用者:",currentUserId);
     // 查詢好友列表（好友名稱 + 聊天室 roomId）
     const friends = await db
       .select({
