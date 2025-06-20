@@ -2,8 +2,9 @@
   "name": "2025-kizuna-backend",
   "version": "1.0.0",
   "description": "kizuna(backend)",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "debug": "nodemon --inspect-brk src/server.js",
     "generate": "drizzle-kit generate",
