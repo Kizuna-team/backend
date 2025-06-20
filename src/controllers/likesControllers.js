@@ -116,20 +116,12 @@ const createLike = async (req, res) => {
 
       const [targetProfile] = await targetProfileQuery;
       const [myProfile] = await myProfileQuery;
-      const defaultUrl =
-        "https://waapple.org/wp-content/uploads/2021/06/Untitled-design-20-e1745534545813-658x677.png";
+      // const defaultUrl =
+      //   "https://waapple.org/wp-content/uploads/2021/06/Untitled-design-20-e1745534545813-658x677.png";
 
-      if (targetProfile) targetProfile.avatarUrl ||= defaultUrl;
-      if (myProfile) myProfile.avatarUrl ||= defaultUrl;
+      // if (targetProfile) targetProfile.avatarUrl ||= defaultUrl;
+      // if (myProfile) myProfile.avatarUrl ||= defaultUrl;
 
-      console.log("targetProfile", targetProfile);
-      console.log("myProfile", myProfile);
-
-      console.log(" targetProfileQuery 是什麼？", targetProfileQuery);
-      console.log(
-        "查詢結果 targetProfile：",
-        await targetProfileQuery.execute()
-      );
       return res.json({
         success: true,
         matched: true,

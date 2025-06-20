@@ -8,7 +8,7 @@ const {
   text,
   unique,
   boolean,
-  primaryKey
+  primaryKey,
 } = require("drizzle-orm/pg-core");
 
 // 使用者(註冊登入)表格 和個人介面的資料分開
@@ -123,9 +123,9 @@ const likesTable = pgTable(
     status: integer("status").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (likes) => ({
-    uniqueLike: unique().on(likes.userId, likes.targetId),
-  })
+  (likes) => [
+    unique("unique_user_target_like").on(likes.userId, likes.targetId),
+  ]
 );
 
 // 紀錄 Super Like的使用紀錄，限制使用次數 1次 | 付費 5次
@@ -186,8 +186,12 @@ const friendRequestsTable = pgTable("friend_requests", {
 
 const friendshipsTable = pgTable("friendships", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull().references(() => usersTable.id),
-  friend_id: integer("friend_id").notNull().references(() => usersTable.id),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  friend_id: integer("friend_id")
+    .notNull()
+    .references(() => usersTable.id),
   // 預計成為好友後 自動用uuid生成房間ID
   room_id: varchar("room_id", { length: 255 }),
   created_at: timestamp("created_at").defaultNow(),
@@ -196,14 +200,14 @@ const friendshipsTable = pgTable("friendships", {
 const chatRoomsTable = pgTable("chat_rooms", {
   id: serial("id").primaryKey(),
   user1_id: integer("user1_id").references(() => usersTable.id),
-  user2_id: integer("user2_id").references(() => usersTable.id)
+  user2_id: integer("user2_id").references(() => usersTable.id),
 });
 
 // 保存聊天訊息的表格
 const messagesTable = pgTable("messages", {
   id: serial().primaryKey().notNull(),
   room_id: text("room_id"),
-  sender_id: integer("sender_id").references(()=>usersTable.id),
+  sender_id: integer("sender_id").references(() => usersTable.id),
   content: varchar({ length: 255 }).notNull(),
   type: varchar("type", { length: 20 }).default("text").notNull(), // "text" 或 "sticker"
   sticker_url: varchar("sticker_url", { length: 255 }), // 貼圖圖片路徑（可為 null）
@@ -216,47 +220,62 @@ const interestsTable = pgTable("interests", {
   name: varchar("name", { length: 50 }).notNull().unique(),
 });
 
-const userInterestsTable = pgTable("user_interests", {
-  userId: integer("user_id").notNull().references(() => usersTable.id),
-  interestId: integer("interest_id").notNull().references(() => interestsTable.id),
-}, (table) => {
-  return {
-    pk: primaryKey(table.userId, table.interestId),
-  };
-});
+const userInterestsTable = pgTable(
+  "user_interests",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    interestId: integer("interest_id")
+      .notNull()
+      .references(() => interestsTable.id),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.userId, table.interestId] }),
+    };
+  }
+);
 
 const userPreferencesTable = pgTable("user_preferences", {
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id),
   musicMatch: varchar("music_match", { length: 100 }).notNull(),
-  introvertOrExtrovert: varchar("introvert_or_extrovert", { length: 20 }).notNull(),
+  introvertOrExtrovert: varchar("introvert_or_extrovert", {
+    length: 20,
+  }).notNull(),
   pet: varchar("pet", { length: 30 }).notNull(),
-  wakeUpTime: varchar("wake_up_time", { length: 20 }).notNull(),  
+  wakeUpTime: varchar("wake_up_time", { length: 20 }).notNull(),
   ageMin: integer("age_min").notNull(),
   ageMax: integer("age_max").notNull(),
 });
-
-const aiMemoriesTable = pgTable("ai_memories",{
+const aiMemoriesTable = pgTable("ai_memories", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => usersTable.id),
-  role: varchar("role", { length: 10}).notNull(),
-  content: text("content").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-})
-
-const userAttendActivityTable = pgTable("user_attend_activity", {
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id),
-  activityId: integer("activity_id")
-    .notNull()
-    .references(() => activities.id),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.userId, table.activityId] }),
-  };
+  role: varchar("role", { length: 10 }).notNull(),
+  content: text("content").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
 });
+
+const userAttendActivityTable = pgTable(
+  "user_attend_activity",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.userId, table.activityId] }),
+    };
+  }
+);
 
 module.exports = {
   usersTable,
@@ -279,5 +298,5 @@ module.exports = {
   userInterestsTable,
   userPreferencesTable,
   aiMemoriesTable,
-  userAttendActivityTable
+  userAttendActivityTable,
 };
