@@ -1,4 +1,4 @@
-const db = require("../db/index.js"); // 連線 Drizzle 的實例
+const db = require("../db/index.js"); 
 const { messagesTable, usersTable, friendsTable } = require("../db/schema.js");
 
 // 存儲房間和用戶資訊
@@ -13,13 +13,10 @@ function setupSocket(io) {
     socket.on("joinRoom", (data) => {
       const { roomId, userId, userName } = data;
 
-      console.log(`用戶 ${userName} (${userId}) 嘗試加入房間 ${roomId}`);
-
       // 離開之前的房間
       const previousUser = users.get(socket.id);
       if (previousUser?.roomId) {
         socket.leave(previousUser.roomId.toString());
-        console.log(`用戶離開之前的房間: ${previousUser.roomId}`);
       }
 
       // 加入新房間
@@ -39,9 +36,6 @@ function setupSocket(io) {
       }
       rooms.get(roomId).add(socket.id);
 
-      console.log(`用戶 ${userName} 成功加入房間 ${roomId}`);
-      console.log(`房間 ${roomId} 目前有 ${rooms.get(roomId).size} 位用戶`);
-
       // 通知房間內其他用戶有新用戶加入
       socket.to(roomId.toString()).emit("userJoined", {
         userId,
@@ -60,22 +54,16 @@ function setupSocket(io) {
 
     // 處理離開房間
     socket.on("leaveRoom", (data) => {
-      const { roomId, userId } = data;
+      const { roomId } = data;
       const user = users.get(socket.id);
 
       if (user && user.roomId === roomId) {
-        console.log(`用戶 ${user.userName} 主動離開房間 ${roomId}`);
-
         handleUserLeave(socket, user);
       }
     });
 
     socket.on("chatMessage", async (data) => {
       const { roomId, senderId, senderName, content, timestamp } = data;
-
-      console.log(
-        `房間 ${roomId} 收到來自 ${senderName} 的訊息: ${content}`
-      );
 
       // 驗證用戶是否在房間中
       const user = users.get(socket.id);
@@ -134,29 +122,28 @@ function setupSocket(io) {
     });
   });
 
-  // 輔助函數：處理用戶離開
+  // 處理用戶離開 避免消耗不必要的記憶體空間
   function handleUserLeave(socket, user) {
     const { roomId, userId, userName } = user;
 
     // 從房間中移除用戶
     socket.leave(roomId.toString());
 
-
     // 刪除用戶資訊
     users.delete(socket.id);
 
-    // 通知房間內其他用戶
-    socket.to(roomId.toString()).emit("userLeft", {
-      userId,
-      userName,
-      message: `${userName} 離開了聊天室`,
-      timestamp: new Date().toISOString(),
-    });
-
-    console.log(`用戶 ${userName} 已離開房間 ${roomId}`);
-    if (rooms.has(roomId)) {
-      console.log(`房間 ${roomId} 目前有 ${rooms.get(roomId).size} 位用戶`);
+    // 從房間 Map 移除這位 socket.id
+    const room = rooms.get(roomId);
+    if(room){
+      room.delete(socket.id);
     }
+      // 如果房間沒人了 就移除房間
+      if(room.size === 0){
+        room.delete(roomId);
+      }else{
+        console.log(`房間 ${roomId} 目前剩下 ${room.size} 位用戶`)
+      }
+    
   }
 }
 
