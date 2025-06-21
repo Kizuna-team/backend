@@ -5,14 +5,14 @@ const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
 const { eq, and, sql } = require("drizzle-orm");
-const { findCertainPhotos, setAvatar } = require("../services/userPhoto.js");
+const { findSpecifiedPhotos, setAvatar } = require("../services/userPhoto.js");
 
 const getMyAvatarPhoto = async (req, res) => {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
 
   try {
-    const [photo] = await findCertainPhotos(userId, { isAvatarOnly: true });
+    const [photo] = await findSpecifiedPhotos(userId, { isAvatarOnly: true });
     res.json(photo || {});
   } catch (err) {
     console.error("取得本人大頭貼失敗", err);
@@ -44,13 +44,11 @@ const uploadImage = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
-    // 自動給予 sequence
-    const [{ maxSeq }] = await db
-      .select({ maxSeq: sql`MAX(sequence)` })
-      .from(photosTable)
-      .where(eq(photosTable.userId, userId));
+    const sequence = Number(req.body.sequence);
 
-    const sequence = (maxSeq || 0) + 1; // 一個預設值 0
+    if (!sequence || sequence < 1) {
+      return res.status(400).json({ message: "缺少或無效的 sequence 編號" });
+    }
 
     const [newPhoto] = await db
       .insert(photosTable)
@@ -80,7 +78,7 @@ const getPhotos = async (req, res) => {
   if (!userId) return res.status(401).json({ message: "未授權操作，請先登入" });
 
   try {
-    const photos = await findCertainPhotos(userId);
+    const photos = await findSpecifiedPhotos(userId);
     res.json(photos);
   } catch (err) {
     console.error("取得照片失敗", err);
