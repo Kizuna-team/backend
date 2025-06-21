@@ -82,7 +82,7 @@ router.post("/create", authMiddleware, async (req, res) => {
       TradeDesc: "Kizuna 交友訂閱",
       ItemName: `${plan.name}會員訂閱 x1`,
       ReturnURL: notifyUrl,
-      ClientBackURL: "http://localhost:5173/member",
+      ClientBackURL: `${FRONTEND_URL}/member`,
       PaymentType: "aio",
       EncryptType: 1,
     });

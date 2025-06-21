@@ -123,8 +123,8 @@ async function createOrder(req, res) {
           },
         ],
         redirectUrls: {
-          confirmUrl: "http://localhost:3000/order/confirm",
-          cancelUrl: "http://localhost:3000/order/cancel",
+          confirmUrl: `${BACKEND_URL}/order/confirm`,
+          cancelUrl: `${BACKEND_URL}/order/cancel`,
         },
       };
 

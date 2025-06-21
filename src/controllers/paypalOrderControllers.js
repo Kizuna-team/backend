@@ -63,8 +63,8 @@ async function createPayPalOrder(req, res) {
       ],
       // 設定付款流程
       application_context: {
-        return_url: "http://localhost:3000/paypal/success", // 付款成功後跳轉
-        cancel_url: "http://localhost:3000/paypal/cancel", // 取消付款後跳轉
+        return_url: `${BACKEND_URL}paypal/success`, // 付款成功後跳轉
+        cancel_url: `${BACKEND_URL}/paypal/cancel`, // 取消付款後跳轉
         user_action: "PAY_NOW", // 顯示 "Pay Now" 按鈕
         brand_name: "Gift Shop", // 你的商店名稱
         shipping_preference: "NO_SHIPPING", // 不需要運送地址
@@ -210,7 +210,7 @@ async function paypalSuccess(req, res) {
 
     if (!token) {
       console.error("缺少 PayPal 訂單 token");
-      return res.redirect(`http://localhost:5173/payment?error=missing_token`);
+      return res.redirect(`${FRONTEND_URL}/payment?error=missing_token`);
     }
 
     try {
@@ -281,7 +281,7 @@ async function paypalSuccess(req, res) {
         });
 
         // 跳轉到成功頁面
-        res.redirect(`http://localhost:5173/order/confirm?success=true`);
+        res.redirect(`${FRONTEND_URL}/order/confirm?success=true`);
       } else {
         // 付款未完成 - 顯示錯誤訊息
         console.log("PayPal 付款未完成:", capture.result.status);
@@ -316,11 +316,11 @@ async function paypalCancel(req, res) {
     console.log("PayPal 付款被取消:", { token });
     
     // 跳轉回商品頁面
-    res.redirect(`http://localhost:5173/product`);
+    res.redirect(`${FRONTEND_URL}/product`);
     
   } catch (err) {
     console.error("PayPal 取消頁面處理錯誤:", err);
-    res.redirect(`http://localhost:5173/product`);
+    res.redirect(`${FRONTEND_URL}/product`);
   }
 }
 
