@@ -1,10 +1,10 @@
 const db = require("../db");
 const { photosTable } = require("../db/schema");
-const { eq, and, not, inArray } = require("drizzle-orm");
+const { eq, and, not, inArray, gte, lte } = require("drizzle-orm");
 const { getRandomAvatar } = require("../lib/defaultAvatars.js");
 
 // 特定照片查找工具
-const findCertainPhotos = async (userId, options = {}) => {
+const findSpecifiedPhotos = async (userId, options = {}) => {
   const conditions = [eq(photosTable.userId, userId)];
 
   // 只會查詢被標記為頭像的照片
@@ -15,6 +15,19 @@ const findCertainPhotos = async (userId, options = {}) => {
   // 只會查詢 sequence 欄位的值在這個陣列中的照片
   if (Array.isArray(options.sequenceIn)) {
     conditions.push(inArray(photosTable.sequence, options.sequenceIn));
+  }
+
+  // 支援 sequence 在某範圍內1~6
+
+  // 支援 sequence 在某範圍內（例如 1~6）
+  if (
+    Array.isArray(options.sequenceRange) &&
+    options.sequenceRange.length === 2
+  ) {
+    const [min, max] = options.sequenceRange;
+    conditions.push(
+      and(gte(photosTable.sequence, min), lte(photosTable.sequence, max))
+    );
   }
 
   // 只有同時滿足所有指定條件才返回
@@ -46,7 +59,7 @@ const setAvatar = async (userId, key) => {
   // 設定新大頭貼
   await db
     .update(photosTable)
-    .set({ is_avatar: true, sequence: null })
+    .set({ is_avatar: true, sequence: -1 })
     .where(and(eq(photosTable.userId, userId), eq(photosTable.image_key, key)));
 };
 
@@ -64,7 +77,7 @@ const assignAvatar = async (userId) => {
 };
 
 module.exports = {
-  findCertainPhotos,
+  findSpecifiedPhotos,
   setAvatar,
   assignAvatar,
 };

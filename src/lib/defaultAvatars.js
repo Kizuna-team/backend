@@ -1,6 +1,7 @@
-const baseUrl =
-  "https://yqhbvdkbakmudxifztqt.supabase.co/storage/v1/object/public";
-const bucket = "kizuna-avatar";
+require("dotenv").config();
+
+const baseUrl = process.env.SUPABASE_PUBLIC_URL;
+const bucket = process.env.SUPABASE_AVATAR_BUCKET;
 
 const defaultAvatarList = (count = 10) => {
   // 沒有指定每個元素值
