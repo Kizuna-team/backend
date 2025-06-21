@@ -5,16 +5,25 @@ const { profileTable, photosTable } = require("../db/schema");
 const { eq, not } = require("drizzle-orm"); // 引入 neq 用於不等於判斷
 const { getProfileByIdFromDB } = require("../services/userProfile");
 const { findSpecifiedPhotos } = require("../services/userPhoto");
+const { getRecommendedUsers } = require("../services/recommendationService");
 
-// GET (多個配對對象，未加入篩選邏輯)
+// GET 加入篩選邏輯的配對對象
 // 拿到除了自己之外的所有使用者資料
-const getAllProfiles = async (req, res) => {
+const getSortedProfiles = async (req, res) => {
   try {
     const userId = req.user?.id;
     console.log("userId:", userId);
     if (!userId) {
       return res.status(401).json({ message: "未授權操作，請先登入" });
     }
+
+    // 取得推薦排序清單
+    const recommendedUsers = await getRecommendedUsers(userId);
+    console.log("推薦對象筆數：", recommendedUsers.length);
+    console.log(
+      "推薦清單：",
+      recommendedUsers.map((u) => u.userId)
+    );
 
     const profilesRecord = await db
       .select({
@@ -25,11 +34,22 @@ const getAllProfiles = async (req, res) => {
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
+        // location: profileTable.location,
       })
       .from(profileTable)
       .where(not(eq(profileTable.userId, userId))); // 排除自己
 
     console.log("typeof userId:", typeof userId);
+    const profileMap = new Map();
+    profilesRecord.forEach((p) => profileMap.set(p.userId, p));
+
+    // 根據推薦順序排列
+    const sortedProfiles = recommendedUsers
+      .map((u) => profileMap.get(u.userId))
+      .filter(Boolean); // 避免找不到 profile 時出錯
+
+    // 撈照片（用排序後的 userId）
+    const targetSortedIds = sortedProfiles.map((user) => user.userId);
 
     // 抓出所有 id 抓出來
     const targetUserIds = profilesRecord.map((target) => target.userId);
@@ -65,15 +85,15 @@ const getAllProfiles = async (req, res) => {
     }
 
     // 組合每個使用者 + 照片
-    const usersWithPhotos = profilesRecord.map((user) => ({
+    const usersWithPhotos = sortedProfiles.map((user) => ({
       ...user,
-      photos: photoMap[user.userId] || [], // 沒照片就給 []
+      photos: photoMap[user.userId] || [],
     }));
 
     usersWithPhotos.forEach((user) => {
-      console.log(`👤 使用者 ${user.userId} 的照片：`);
+      console.log(` 使用者 ${user.userId} 的照片：`);
       user.photos.forEach((photo, index) => {
-        console.log(`  📸 第 ${index + 1} 張:`, photo);
+        console.log(`   第 ${index + 1} 張:`, photo);
       });
     });
 
@@ -104,5 +124,5 @@ const getProfileById = async (req, res) => {
 
 module.exports = {
   getProfileById,
-  getAllProfiles,
+  getSortedProfiles,
 };
