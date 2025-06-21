@@ -29,6 +29,7 @@ const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require("./routes/paymentRoutes");
 const setupSocket = require("./controllers/chatControllers_new.js");
 const aiRoutes = require("./routes/ai");
+const { getRoomMessages } = require("./lib/getRoomMessages.js");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -79,7 +80,7 @@ app.use("/like/", likeRoutes);
 app.use("/users/profile", userProfileRoutes);
 app.use("/users/photos", userPhotoRoutes);
 app.use("/friends", friendsRoutes);
-app.use("/api/chat", aiRoutes);
+app.use("/chat", aiRoutes);
 app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
@@ -209,18 +210,7 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
   const { roomId } = req.params;
 
   try {
-    const messages = await db
-      .select({
-        id: messagesTable.id,
-        room_id: messagesTable.room_id,
-        sender_id: messagesTable.sender_id,
-        content: messagesTable.content,
-        created_at: messagesTable.created_at,
-      })
-      .from(messagesTable)
-      .where(eq(messagesTable.room_id, roomId))
-      .orderBy(messagesTable.created_at);
-
+    const messages = await getRoomMessages(roomId);
     res.json({ messages });
   } catch (error) {
     console.error("取得聊天室訊息失敗:", error);
