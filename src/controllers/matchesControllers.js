@@ -1,6 +1,6 @@
 // 取得互相喜歡的使用者profiles/photos資料API
 const db = require("../db/index.js");
-const { eq, and } = require("drizzle-orm");
+const { eq, and, or } = require("drizzle-orm");
 const { v4: uuidv4 } = require("uuid");
 const { friendshipsTable } = require("../db/schema.js");
 const { getMatchedCard } = require("../services/matchingService.js");
