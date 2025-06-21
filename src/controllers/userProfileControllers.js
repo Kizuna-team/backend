@@ -32,17 +32,17 @@ const getAllProfiles = async (req, res) => {
     console.log("typeof userId:", typeof userId);
 
     // 抓出所有 id 抓出來
-    const targetUserIds = profilesRecord.map((user) => user.userId);
+    const targetUserIds = profilesRecord.map((target) => target.userId);
 
     // 從 sequence 1~6 中挑出最前面3張
     const photoRecords = await Promise.all(
-      targetUserIds.map(async (uid) => {
-        const lifePhotos = await findSpecifiedPhotos(uid, {
+      targetUserIds.map(async (targetId) => {
+        const lifePhotos = await findSpecifiedPhotos(targetId, {
           sequenceRange: [1, 6],
         });
 
         // 只挑最小的三張（1~6）中的前3張
-        const topRowPhotos = lifePhotos
+        const top3Photos = lifePhotos
           .filter((p) => p.sequence !== null) // 防止 sequence 是 null
           .sort((a, b) => a.sequence - b.sequence)
           .slice(0, 3)
@@ -52,8 +52,8 @@ const getAllProfiles = async (req, res) => {
           }));
 
         return {
-          userId: uid,
-          photos: topRowPhotos,
+          userId: targetId,
+          photos: top3Photos,
         };
       })
     );
