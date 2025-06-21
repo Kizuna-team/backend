@@ -38,6 +38,7 @@ const { Server } = require("socket.io");
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT;
 
 // 聊天室
 const server = http.createServer(app);
@@ -252,6 +253,6 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
 // 啟用 socket.io 聊天室邏輯
 setupSocket(io);
 
-server.listen(3000, () =>
-  console.log("✅ Server running on http://localhost:3000")
+server.listen(PORT, () =>
+  console.log(`✅ Server running on http://localhost:${PORT}`)
 );
