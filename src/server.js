@@ -186,7 +186,7 @@ app.get("/friendLists", authMiddleware, async (req, res) => {
   try {
     // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
-    console.log("現在登入房間的使用者:",currentUserId);
+    // console.log("現在登入房間的使用者:",currentUserId);
     // 查詢好友列表（好友名稱 + 聊天室 roomId）
     const friends = await db
       .select({
@@ -202,28 +202,6 @@ app.get("/friendLists", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("無法取得好友列表", error);
     res.status(500).json({ message: "取得好友列表失敗" });
-  }
-});
-
-// 取得聊天訊息
-app.post("/messages", authMiddleware, async (req, res) => {
-  const { roomId, content } = req.body;
-  const senderId = req.user.id;
-
-  try {
-    const [inserted] = await db
-      .insert(messagesTable)
-      .values({
-        room_id: roomId,
-        sender_id: senderId,
-        content: content,
-      })
-      .returning();
-    console.log(inserted);
-    res.status(201).json({ message: inserted });
-  } catch (error) {
-    console.error("發送訊息失敗", error);
-    res.status(500).json({ message: "發送訊息失敗" });
   }
 });
 
