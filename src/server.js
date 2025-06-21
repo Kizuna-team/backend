@@ -29,11 +29,8 @@ const adminRoutes = require("./routes/adminRoutes.js");
 const paypalRoutes = require("./routes/paymentRoutes");
 const setupSocket = require("./controllers/chatControllers_new.js");
 const aiRoutes = require("./routes/ai");
-<<<<<<< HEAD
 const { getRoomMessages } = require("./lib/getRoomMessages.js");
-=======
 const matchesRoutes = require("./routes/matchesRoutes.js");
->>>>>>> f29d1a0 (feat: matching logic and modified schema column)
 
 // 以下為即時聊天室新增模組
 const http = require("http");
