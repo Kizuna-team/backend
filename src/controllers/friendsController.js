@@ -1,6 +1,6 @@
 const db = require("../db");
-const { friendRequestsTable, friendshipsTable, profileTable}= require("../db/schema");
-const { eq, or } = require("drizzle-orm");
+const { friendRequestsTable, friendshipsTable, profileTable, usersTable}= require("../db/schema");
+const { eq } = require("drizzle-orm");
 
 // 1. 發送交友邀請
 async function sendFriendRequest(req, res) {
@@ -105,27 +105,25 @@ async function acceptFriendRequest(req, res) {
 
 async function getFriendsList(req, res) {
   const userId = Number(req.query.userId);
-  console.log(" userId =", userId);
 
   if (!userId) {
     return res.status(400).json({ error: "請提供有效的 userId" });
   }
 
+  // 好友的名字改成從 usersTable 抓就好了
   try {
     const rawFriends = await db
       .select({
         friend_id: friendshipsTable.friend_id,
-        friend_name: profileTable.name,
+        friend_name: usersTable.username,
       })
       .from(friendshipsTable)
       .innerJoin(
-        profileTable,
-        eq(friendshipsTable.friend_id, profileTable.userId)
+        usersTable,
+        eq(friendshipsTable.friend_id, usersTable.id)
       )
       .where(eq(friendshipsTable.user_id, userId));
-
-    console.log("成功", rawFriends);
-
+    
     res.json(rawFriends);
   } catch (err) {
     console.error("失敗", err);
