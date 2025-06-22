@@ -1,9 +1,6 @@
 const db = require("../db/index.js");
 const { eq, and } = require("drizzle-orm");
-const {
-  activities,
-  userAttendActivityTable,
-} = require("../db/schema.js");
+const { activities, userAttendActivityTable } = require("../db/schema.js");
 
 const getActivityById = async (activityId) => {
   return await db
@@ -21,15 +18,35 @@ const getJoinedActivitiesByUserId = async (userId) => {
       description: activities.description,
     })
     .from(userAttendActivityTable)
-    .innerJoin(activities, eq(userAttendActivityTable.activityId, activities.id))
+    .innerJoin(
+      activities,
+      eq(userAttendActivityTable.activityId, activities.id)
+    )
     .where(eq(userAttendActivityTable.userId, userId));
 };
 
 const joinActivity = async (userId, activityId) => {
-  return await db.insert(userAttendActivityTable).values({
-    userId: userId, 
-    activityId: activityId, 
+  const existing = await db
+    .select()
+    .from(userAttendActivityTable)
+    .where(
+      and(
+        eq(userAttendActivityTable.userId, userId),
+        eq(userAttendActivityTable.activityId, activityId)
+      )
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    return { success: false, message: "使用者已經加入過此活動" };
+  }
+
+  await db.insert(userAttendActivityTable).values({
+    userId,
+    activityId,
   });
+
+  return { success: true, message: "成功加入活動" };
 };
 
 const cancelJoinActivity = async (userId, activityId) => {
@@ -47,5 +64,5 @@ module.exports = {
   getActivityById,
   joinActivity,
   cancelJoinActivity,
-  getJoinedActivitiesByUserId
+  getJoinedActivitiesByUserId,
 };

@@ -7,7 +7,7 @@ const {
   getJoinedActivitiesByUserId,
   joinActivity,
   cancelJoinActivity,
-} = require('../services/activityService');
+} = require("../services/activityService");
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -49,7 +49,7 @@ const getAllActivities = async (req, res) => {
         image_url: activities.image_url,
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
-        created_by_username: usersTable.username, 
+        created_by_username: usersTable.username,
       })
       .from(activities)
       .orderBy(activities.id)
@@ -61,9 +61,9 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// 取得我創建的活動 
+// 取得我創建的活動
 const getMyActivities = async (req, res) => {
-  // const userId = req.user.id; // 由 token/middleware 取得  
+  const userId = req.user.id; // 由 token/middleware 取得
   try {
     const result = await db
       .select({
@@ -119,10 +119,9 @@ const getActivityById = async (req, res) => {
   }
 };
 
-
 const createActivity = async (req, res) => {
   const { title, location, date, description } = req.body;
-  // const created_by_id = req.user.id;
+  const created_by_id = req.user.id;
   let image_url = "";
 
   try {
@@ -131,7 +130,14 @@ const createActivity = async (req, res) => {
     }
     const [inserted] = await db
       .insert(activities)
-      .values({ title, location,  date: new Date(date), description, created_by_id, image_url })
+      .values({
+        title,
+        location,
+        date: new Date(date),
+        description,
+        created_by_id,
+        image_url,
+      })
       .returning();
     res.status(201).json(inserted);
   } catch (err) {
@@ -142,7 +148,7 @@ const createActivity = async (req, res) => {
 
 const updateActivity = async (req, res) => {
   const id = parseInt(req.params.id);
-  // const userId = req.user.id;
+  const userId = req.user.id;
 
   try {
     // 查原本的活動
@@ -188,7 +194,7 @@ const updateActivity = async (req, res) => {
 
 const deleteActivity = async (req, res) => {
   const id = parseInt(req.params.id);
-  // const userId = req.user.id;
+  const userId = req.user.id;
 
   try {
     const [activity] = await db
@@ -223,11 +229,17 @@ const postJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
     const activityId = Number(req.params.id);
-    await joinActivity(userId, activityId);
-    res.json({ message: '已加入活動' });
+
+    const result = await joinActivity(userId, activityId);
+
+    if (!result.success) {
+      return res.status(409).json({ message: result.message });
+    }
+
+    return res.status(201).json({ message: result.message });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: '伺服器錯誤' });
+    res.status(500).json({ error: "伺服器錯誤" });
   }
 };
 
@@ -236,10 +248,10 @@ const deleteJoinActivity = async (req, res) => {
     const userId = req.user.id;
     const activityId = Number(req.params.id);
     await cancelJoinActivity(userId, activityId);
-    res.json({ message: '已取消活動' });
+    res.json({ message: "已取消活動" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: '伺服器錯誤' });
+    res.status(500).json({ error: "伺服器錯誤" });
   }
 };
 
