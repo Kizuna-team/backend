@@ -84,7 +84,7 @@ router.post("/create", authMiddleware, async (req, res) => {
       TradeDesc: "Kizuna 交友訂閱",
       ItemName: `${plan.name}會員訂閱 x1`,
       ReturnURL: notifyUrl,
-      ClientBackURL: `${FRONTEND_URL}/subscribe`,
+      ClientBackURL: `${FRONTEND_URL}/subscription`,
       PaymentType: "aio",
       EncryptType: 1,
     });
