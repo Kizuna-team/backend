@@ -31,6 +31,7 @@ const setupSocket = require("./controllers/chatControllers_new.js");
 const aiRoutes = require("./routes/ai");
 const { getRoomMessages } = require("./lib/getRoomMessages.js");
 const matchesRoutes = require("./routes/matchesRoutes.js");
+const userFilterRoutes = require("./routes/userFilterRoutes.js");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -87,6 +88,7 @@ app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
 app.use("/matches", matchesRoutes);
+app.use("/user-filter", userFilterRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
