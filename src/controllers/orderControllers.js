@@ -9,6 +9,8 @@ const { requestOnlineAPI } = require("../lib/linepay.js");
 const frontendUrl = process.env.FRONTEND_URL;
 const { eq, inArray, sql } = require("drizzle-orm");
 
+const BACKEND_URL = process.env.BACKEND_URL;
+
 async function increaseProductSales(orderId) {
   const items = await db
     .select({
