@@ -9,6 +9,9 @@ async function getRoomMessages(roomId) {
       room_id: messagesTable.room_id,
       sender_id: messagesTable.sender_id,
       content: messagesTable.content,
+      type: messagesTable.type, // 訊息類型
+      sticker_url: messagesTable.sticker_url, //貼圖 URL
+      sticker_emoji: messagesTable.sticker_emoji, // 貼圖 emoji
       created_at: messagesTable.created_at,
     })
     .from(messagesTable)

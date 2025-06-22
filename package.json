@@ -14,8 +14,7 @@
     "dev:match": "node src/db/profileSeed.js",
     "seed:profiles": "node src/db/profileSeed.js",
     "seed:products": "node src/db/productSeed.js",
-    "lint": "eslint . --fix",
-    "debug":"nodemon --inspect-brk src/server.js"
+    "lint": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -37,15 +36,15 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.817.0",
-    "@paypal/checkout-server-sdk": "^1.0.3",
     "@google/generative-ai": "^0.24.1",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dayjs-plugin-utc": "^0.1.2",
     "dotenv": "^16.5.0",
-    "drizzle-kit": "^0.18.1",
+    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "ecpay_aio_nodejs": "^1.2.2",
     "express": "^5.1.0",
