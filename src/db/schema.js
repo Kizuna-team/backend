@@ -94,6 +94,7 @@ const giftOrdersTable = pgTable("gift_orders", {
   // LINE Pay transactionId
   transaction_id: varchar("transaction_id", { length: 100 }),
   // 訂單金額
+  message: text("message"),
   amount: integer("amount").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 });

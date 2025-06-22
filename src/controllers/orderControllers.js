@@ -3,11 +3,13 @@ const {
   giftOrdersTable,
   orderItemsTable,
   productsTable,
+  profileTable,
 } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
 const frontendUrl = process.env.FRONTEND_URL;
-const { eq, inArray, sql } = require("drizzle-orm");
+const backendUrl = process.env.BACKEND_URL;
+const { eq, inArray, sql, desc  } = require("drizzle-orm");
 
 async function increaseProductSales(orderId) {
   const items = await db
@@ -33,7 +35,7 @@ async function increaseProductSales(orderId) {
 }
 
 async function createOrder(req, res) {
-  const { sender_id, receiver_id, items } = req.body;
+  const { sender_id, receiver_id, items , message} = req.body;
 
   console.log("收到的訂單資料:", req.body);
 
@@ -90,6 +92,7 @@ async function createOrder(req, res) {
           receiver_id,
           status: "pending",
           amount: totalAmount,
+          message,
         })
         .returning();
 
@@ -123,8 +126,8 @@ async function createOrder(req, res) {
           },
         ],
         redirectUrls: {
-          confirmUrl: `${BACKEND_URL}/order/confirm`,
-          cancelUrl: `${BACKEND_URL}/order/cancel`,
+          confirmUrl: `${backendUrl}/order/confirm`,
+          cancelUrl: `${backendUrl}/order/cancel`,
         },
       };
 
@@ -241,7 +244,48 @@ async function confirmOrder(req, res) {
   }
 }
 
+const getReceivedGifts = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const receivedGifts = await db
+      .select({
+        id: giftOrdersTable.id,
+        orderId: giftOrdersTable.order_id,
+        message: giftOrdersTable.message,
+        amount: giftOrdersTable.amount,
+        createdAt: giftOrdersTable.created_at,
+        senderName: profileTable.name,
+      })
+      .from(giftOrdersTable)
+      .where(eq(giftOrdersTable.receiver_id, userId))
+      .leftJoin(profileTable, eq(giftOrdersTable.sender_id, profileTable.userId))
+      .orderBy(desc(giftOrdersTable.created_at));
+
+
+
+        const fullGifts = await Promise.all(
+      receivedGifts.map(async (gift) => {
+        const items = await db
+          .select({
+            productName: productsTable.name,
+            quantity: orderItemsTable.quantity,
+          })
+          .from(orderItemsTable)
+          .innerJoin(productsTable, eq(productsTable.id, orderItemsTable.product_id))
+          .where(eq(orderItemsTable.gift_order_id, gift.id));
+
+        return { ...gift, items };
+      })
+    );
+    res.json({ success: true, data: fullGifts });
+  } catch (err) {
+    console.error("取得收到的禮物失敗：", err);
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
+};
 module.exports = {
   createOrder,
   confirmOrder,
+  getReceivedGifts,
 };

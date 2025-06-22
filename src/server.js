@@ -85,6 +85,7 @@ app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
+app.use("/order", orderRoutes);
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
