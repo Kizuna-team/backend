@@ -22,7 +22,8 @@ const getMatchPhotos = async (req, res) => {
 
   try {
     const photos = await findSpecifiedPhotos(userId, { sequenceIn: [1, 2, 3] });
-    const randomPhotos = allPhotos.sort(() => 0.5 - Math.random());
+    // 只抓指定的三張照片，但每次打亂配對池的顯示照片順序
+    const randomPhotos = photos.sort(() => 0.5 - Math.random());
 
     // 取前3張（如果不足3張，就取有的）
     const selected = randomPhotos.slice(0, 3);
