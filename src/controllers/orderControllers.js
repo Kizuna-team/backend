@@ -1,5 +1,6 @@
 const db = require("../db/index.js");
 const {
+  usersTable,
   giftOrdersTable,
   orderItemsTable,
   productsTable,
@@ -243,7 +244,60 @@ async function confirmOrder(req, res) {
   }
 }
 
+async function getMyOrders(req, res) {
+  const userId = parseInt(req.query.userId);
+
+  try {
+    // 1：查出所有該用戶送出的訂單（ 收件者是誰也要知道 ）
+    const orders = await db
+      .select({
+        id: giftOrdersTable.id,
+        orderId: giftOrdersTable.order_id,
+        createdAt: giftOrdersTable.created_at,
+        status: giftOrdersTable.status,
+        amount: giftOrdersTable.amount,
+        receiverName: usersTable.username,
+      })
+      .from(giftOrdersTable)
+      // 用 innerJoin 取得 收件人的名字
+      .innerJoin(usersTable, eq(giftOrdersTable.receiver_id, usersTable.id))
+      .where(eq(giftOrdersTable.sender_id, userId));
+
+    // 2：查出這些訂單的明細
+    const orderIds = orders.map((order) => order.id);
+    const orderItems = await db
+      .select({
+        giftOrderId: orderItemsTable.gift_order_id,
+        productName: productsTable.name,
+        quantity: orderItemsTable.quantity,
+      })
+      .from(orderItemsTable)
+      .innerJoin(productsTable, eq(orderItemsTable.product_id, productsTable.id))
+      .where(inArray(orderItemsTable.gift_order_id, orderIds));
+
+    // 3：合併明細到訂單中
+    const orderMap = {};
+    for (const order of orders) {
+      orderMap[order.id] = { ...order, items: [] };
+    }
+
+    for (const item of orderItems) {
+      orderMap[item.giftOrderId].items.push({
+        productName: item.productName,
+        quantity: item.quantity,
+      });
+    }
+
+    const result = Object.values(orderMap);
+    res.json(result);
+  } catch (err) {
+    console.error("取得我的訂單失敗", err);
+    res.status(500).json({ error: "伺服器錯誤" });
+  }
+}
+
 module.exports = {
   createOrder,
   confirmOrder,
+  getMyOrders,
 };
