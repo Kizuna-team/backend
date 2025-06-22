@@ -270,6 +270,7 @@ async function getMyOrders(req, res) {
         giftOrderId: orderItemsTable.gift_order_id,
         productName: productsTable.name,
         quantity: orderItemsTable.quantity,
+        imageUrl: productsTable.image_url,
       })
       .from(orderItemsTable)
       .innerJoin(productsTable, eq(orderItemsTable.product_id, productsTable.id))
@@ -285,6 +286,7 @@ async function getMyOrders(req, res) {
       orderMap[item.giftOrderId].items.push({
         productName: item.productName,
         quantity: item.quantity,
+        imageUrl: item.imageUrl,
       });
     }
 
