@@ -4,7 +4,7 @@ const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { s3 } = require("../db/s3");
 const db = require("../db");
 const { photosTable } = require("../db/schema");
-const { eq, and, sql } = require("drizzle-orm");
+const { eq, and } = require("drizzle-orm");
 const { findSpecifiedPhotos, setAvatar } = require("../services/userPhoto.js");
 
 const getMyAvatarPhoto = async (req, res) => {
@@ -44,10 +44,14 @@ const uploadImage = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
-    const sequence = Number(req.body.sequence);
+    let sequence = null;
 
-    if (!sequence || sequence < 1) {
-      return res.status(400).json({ message: "缺少或無效的 sequence 編號" });
+    // 真的有傳值 的情況下才驗證
+    if ("sequence" in req.body) {
+      sequence = Number(req.body.sequence);
+      if (!Number.isInteger(sequence) || sequence < 1) {
+        return res.status(400).json({ message: "sequence 無效" });
+      }
     }
 
     const [newPhoto] = await db
@@ -56,7 +60,7 @@ const uploadImage = async (req, res) => {
         image_url: imageUrl,
         image_key: fileKey,
         userId,
-        sequence,
+        sequence, // 有給就儲存，沒給就 null
         is_avatar: false, // 每張上傳的照片一律都不是大頭貼
       })
       .returning();
@@ -104,7 +108,7 @@ const deletePhoto = async (req, res) => {
       return res.status(403).json({ message: "你無權刪除此圖片" });
     }
 
-    // 1. 刪 S3
+    // 刪 S3
     await s3.send(
       new DeleteObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
@@ -112,7 +116,7 @@ const deletePhoto = async (req, res) => {
       })
     );
 
-    // 2. 刪資料庫
+    // 刪資料庫
     await db.delete(photosTable).where(eq(photosTable.image_key, key));
 
     res.json({ message: `已刪除：${key}` });
@@ -132,9 +136,9 @@ const changeAvatar = async (req, res) => {
   }
 
   try {
-    await setAvatar(userId, key); // 執行設定大頭貼
+    const result = await setAvatar(userId, key); // 執行設定大頭貼
 
-    res.json({ message: "大頭貼已更新", setAvatar });
+    res.json({ message: "大頭貼已更新", result });
   } catch (err) {
     console.error("更新大頭貼失敗", err);
     res.status(500).json({ message: "伺服器錯誤", error: err.message });
