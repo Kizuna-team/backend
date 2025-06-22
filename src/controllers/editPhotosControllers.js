@@ -62,7 +62,7 @@ const uploadImage = async (req, res) => {
         image_key: fileKey,
         userId,
         sequence, // 有給就儲存，沒給就 null
-        is_avatar: isAvatar, // 用傳來的判斷值
+        is_avatar: isAvatar, //  用傳來的判斷值
       })
       .returning();
 
