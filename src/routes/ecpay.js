@@ -15,6 +15,8 @@ const {
 const { eq } = require("drizzle-orm");
 dotenv.config();
 
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -89,7 +91,7 @@ router.post("/create", authMiddleware, async (req, res) => {
 
     res.send(form);
   } catch (error) {
-    console.error("❌ 建立訂單失敗", error);
+    console.error("建立訂單失敗", error);
     res.status(500).json({ message: "訂單建立失敗", reason: error.message });
   }
 });
@@ -129,6 +131,7 @@ router.post("/notify", async (req, res) => {
       // 將 PaymentDate 格式轉換為 yyyy-MM-dd HH:mm:ss
       // 注意：ECPay 的 PaymentDate 格式是 yyyy/MM/dd HH:mm:ss
       const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, "-") : null;
+      const now = dayjs();
 
       await db
         .update(subscriptionsTable)
@@ -136,6 +139,8 @@ router.post("/notify", async (req, res) => {
           status: "paid",
           paid_at: paidAtStr ? new Date(paidAtStr) : null,
           trade_no: TradeNo ?? null,
+          start_date: now.toDate(),
+          end_date: now.add(2, "minute").toDate(),
         })
         .where(eq(subscriptionsTable.merchanttradeno, MerchantTradeNo));
 
@@ -147,7 +152,7 @@ router.post("/notify", async (req, res) => {
 
       res.send("1|OK");
     } catch (error) {
-      console.error("❌ 資料庫更新失敗", error);
+      console.error("資料庫更新失敗", error);
       res.status(500).send("0|Error: " + error.message);
     }
   } else {

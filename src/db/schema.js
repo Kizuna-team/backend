@@ -173,8 +173,8 @@ const subscriptionsTable = pgTable("subscriptions", {
   trade_no: varchar({ length: 30 }), // 綠界平台回傳的交易編號
   paid_at: timestamp(),
   created_at: timestamp().defaultNow().notNull(),
-  start_date: timestamp("start_date", { withTimezone: true }).notNull(),
-  end_date: timestamp("end_date", { withTimezone: true }).notNull(),
+  start_date: timestamp("start_date", { withTimezone: true }),
+  end_date: timestamp("end_date", { withTimezone: true }),
 });
 
 const friendRequestsTable = pgTable("friend_requests", {
