@@ -20,6 +20,7 @@ const getMyAvatarPhoto = async (req, res) => {
   }
 };
 
+// 大頭照要額外用 isAvatar = true 告訴後端「這不用 sequence」
 const uploadImage = async (req, res) => {
   const file = req.file;
   if (!file) {
@@ -45,9 +46,9 @@ const uploadImage = async (req, res) => {
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
     let sequence = null;
+    const isAvatar = req.body.isAvatar === "true";
 
-    // 真的有傳值 的情況下才驗證
-    if ("sequence" in req.body) {
+    if (!isAvatar && "sequence" in req.body) {
       sequence = Number(req.body.sequence);
       if (!Number.isInteger(sequence) || sequence < 1) {
         return res.status(400).json({ message: "sequence 無效" });
@@ -61,7 +62,7 @@ const uploadImage = async (req, res) => {
         image_key: fileKey,
         userId,
         sequence, // 有給就儲存，沒給就 null
-        is_avatar: false, // 每張上傳的照片一律都不是大頭貼
+        is_avatar: isAvatar, // 用傳來的判斷值
       })
       .returning();
 
