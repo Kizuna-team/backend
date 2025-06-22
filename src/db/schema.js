@@ -114,6 +114,7 @@ const orderItemsTable = pgTable("order_items", {
 const likesTable = pgTable(
   "likes",
   {
+    id: serial("id").primaryKey().notNull(),
     userId: integer("user_id")
       .notNull()
       .references(() => usersTable.id),
