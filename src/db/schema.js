@@ -205,6 +205,9 @@ const messagesTable = pgTable("messages", {
   room_id: text("room_id"),
   sender_id: integer("sender_id").references(()=>usersTable.id),
   content: varchar({ length: 255 }).notNull(),
+  type: varchar("type", { length: 20 }).default("text").notNull(), // "text" 或 "sticker"
+  sticker_url: varchar("sticker_url", { length: 255 }), // 貼圖圖片路徑（可為 null）
+  sticker_emoji: varchar("sticker_emoji", { length: 10 }), // emoji（可為 null）
   created_at: timestamp().defaultNow(),
 });
 

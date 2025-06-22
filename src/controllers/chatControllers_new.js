@@ -1,4 +1,4 @@
-const db = require("../db/index.js"); 
+const db = require("../db/index.js");
 const { messagesTable, usersTable, friendsTable } = require("../db/schema.js");
 
 // 存儲房間和用戶資訊
@@ -63,7 +63,16 @@ function setupSocket(io) {
     });
 
     socket.on("chatMessage", async (data) => {
-      const { roomId, senderId, senderName, content, timestamp } = data;
+      const {
+        roomId,
+        senderId,
+        senderName,
+        content,
+        timestamp,
+        type,
+        stickerUrl,
+        stickerEmoji,
+      } = data;
 
       // 驗證用戶是否在房間中
       const user = users.get(socket.id);
@@ -74,6 +83,7 @@ function setupSocket(io) {
       }
 
       const now = new Date();
+      const messageType = type || "text"; //定義 messageType
 
       // 建立完整的訊息物件（前端顯示用）
       const message = {
@@ -84,6 +94,9 @@ function setupSocket(io) {
         content,
         timestamp: timestamp || now.toISOString(),
         socketId: socket.id,
+        type: type || "text", // 傳回給前端要知道訊息類型
+        stickerUrl: stickerUrl || null, //  讓前端能顯示貼圖
+        stickerEmoji: stickerEmoji || null, // 貼圖顯示失敗時備用
       };
 
       // 寫入資料庫
@@ -92,6 +105,9 @@ function setupSocket(io) {
           room_id: roomId,
           sender_id: senderId,
           content,
+          type: messageType, // 新增
+          sticker_url: stickerUrl || null, // 新增
+          sticker_emoji: stickerEmoji || null, // 新增
           created_at: now, // Drizzle timestamp 欄位
         });
         console.log(`訊息已寫入資料庫`);
@@ -134,16 +150,15 @@ function setupSocket(io) {
 
     // 從房間 Map 移除這位 socket.id
     const room = rooms.get(roomId);
-    if(room){
+    if (room) {
       room.delete(socket.id);
     }
-      // 如果房間沒人了 就移除房間
-      if(room.size === 0){
-        room.delete(roomId);
-      }else{
-        console.log(`房間 ${roomId} 目前剩下 ${room.size} 位用戶`)
-      }
-    
+    // 如果房間沒人了 就移除房間
+    if (room.size === 0) {
+      room.delete(roomId);
+    } else {
+      console.log(`房間 ${roomId} 目前剩下 ${room.size} 位用戶`);
+    }
   }
 }
 
