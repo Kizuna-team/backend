@@ -17,7 +17,7 @@ const {
   messagesTable,
 } = require("./db/schema.js");
 const { eq, and, desc } = require("drizzle-orm");
-const ecpayRoutes = require("./routes/ecpay");
+const ecpayRoutes = require("./routes/ecpay.js");
 const subPlansRoutes = require("./routes/subPlans");
 const editPhotoRoutes = require("./routes/editPhotoRoutes.js");
 const editProfileRoutes = require("./routes/editProfileRoutes");
