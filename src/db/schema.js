@@ -236,6 +236,7 @@ const userPreferencesTable = pgTable("user_preferences", {
   ageMin: integer("age_min").notNull(),
   ageMax: integer("age_max").notNull(),
 });
+
 const aiMemoriesTable = pgTable("ai_memories",{
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
@@ -243,6 +244,19 @@ const aiMemoriesTable = pgTable("ai_memories",{
   content: text("content").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 })
+
+const userAttendActivityTable = pgTable("user_attend_activity", {
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  activityId: integer("activity_id")
+    .notNull()
+    .references(() => activities.id),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.userId, table.activityId] }),
+  };
+});
 
 module.exports = {
   usersTable,
@@ -265,4 +279,5 @@ module.exports = {
   userInterestsTable,
   userPreferencesTable,
   aiMemoriesTable,
+  userAttendActivityTable
 };

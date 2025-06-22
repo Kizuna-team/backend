@@ -3,6 +3,11 @@ const { activities, usersTable } = require("../db/schema.js");
 const { eq, and } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
+const {
+  getJoinedActivitiesByUserId,
+  joinActivity,
+  cancelJoinActivity,
+} = require('../services/activityService');
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -56,9 +61,9 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// 取得我的活動 
+// 取得我創建的活動 
 const getMyActivities = async (req, res) => {
-  const userId = req.user.id; // 由 token/middleware 取得  
+  // const userId = req.user.id; // 由 token/middleware 取得  
   try {
     const result = await db
       .select({
@@ -117,7 +122,7 @@ const getActivityById = async (req, res) => {
 
 const createActivity = async (req, res) => {
   const { title, location, date, description } = req.body;
-  const created_by_id = req.user.id;
+  // const created_by_id = req.user.id;
   let image_url = "";
 
   try {
@@ -137,7 +142,7 @@ const createActivity = async (req, res) => {
 
 const updateActivity = async (req, res) => {
   const id = parseInt(req.params.id);
-  const userId = req.user.id;
+  // const userId = req.user.id;
 
   try {
     // 查原本的活動
@@ -183,7 +188,7 @@ const updateActivity = async (req, res) => {
 
 const deleteActivity = async (req, res) => {
   const id = parseInt(req.params.id);
-  const userId = req.user.id;
+  // const userId = req.user.id;
 
   try {
     const [activity] = await db
@@ -202,6 +207,42 @@ const deleteActivity = async (req, res) => {
   }
 };
 
+//取得我想參加的活動(顯示)
+const getMyJoinActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const activities = await getJoinedActivitiesByUserId(userId);
+    res.json(activities);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "伺服器錯誤" });
+  }
+};
+
+const postJoinActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const activityId = Number(req.params.id);
+    await joinActivity(userId, activityId);
+    res.json({ message: '已加入活動' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: '伺服器錯誤' });
+  }
+};
+
+const deleteJoinActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const activityId = Number(req.params.id);
+    await cancelJoinActivity(userId, activityId);
+    res.json({ message: '已取消活動' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: '伺服器錯誤' });
+  }
+};
+
 module.exports = {
   getAllActivities,
   getMyActivities,
@@ -209,4 +250,7 @@ module.exports = {
   createActivity,
   updateActivity,
   deleteActivity,
+  postJoinActivity,
+  deleteJoinActivity,
+  getMyJoinActivity,
 };
