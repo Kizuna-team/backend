@@ -3,14 +3,12 @@ const { activities, usersTable } = require("../db/schema.js");
 const { eq, and } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
-<<<<<<< HEAD
 const {
   getJoinedActivitiesByUserId,
   joinActivity,
   cancelJoinActivity,
 } = require("../services/activityService");
 // console.log("activities:", activities);
-=======
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -20,7 +18,6 @@ dayjs.extend(timezone);
 const formatDate = (date) =>
   dayjs(date).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
 
->>>>>>> 45b0476 (fix: resolve issue with activity update not working)
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -78,11 +75,7 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-// 取得我創建的活動
-=======
 // 取得我的活動
->>>>>>> 45b0476 (fix: resolve issue with activity update not working)
 const getMyActivities = async (req, res) => {
   const userId = req.user.id; // 由 token/middleware 取得
   try {
@@ -101,10 +94,6 @@ const getMyActivities = async (req, res) => {
       .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .where(eq(activities.created_by_id, userId));
-<<<<<<< HEAD
-    // console.log("資料庫查詢我的活動結果:", result);
-    res.json(result);
-=======
       const formatted = result.map((item) => ({
         ...item,
         date: formatDate(item.date),
@@ -113,7 +102,6 @@ const getMyActivities = async (req, res) => {
       console.log("資料庫查詢我的活動結果:", formatted);
 
     res.json(formatted);
->>>>>>> 45b0476 (fix: resolve issue with activity update not working)
   } catch (err) {
     console.error("取得我的活動錯誤：", err);
     res.status(500).json({ error: "伺服器錯誤" });
