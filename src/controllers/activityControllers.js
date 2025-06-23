@@ -159,6 +159,7 @@ const createActivity = async (req, res) => {
         description,
         created_by_id,
         image_url,
+        created_at: new Date(),
       })
       .returning();
     res.status(201).json({
