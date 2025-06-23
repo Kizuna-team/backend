@@ -2,6 +2,8 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 
+require('dotenv').config();
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -10,13 +12,12 @@ const options = {
       version: "1.0.0",
       description: "Kizuna 專案的 API 文件",
     },
-    // swagger.js 改回這樣
     servers: [
       {
         url:
           process.env.NODE_ENV === "production"
-            ? "https://kizuna-backend.zeabur.app" // 直接寫後端網址
-            : "http://localhost:3000",
+            ? "https://kizuna-backend.zeabur.app"
+            : process.env.BACKEND_URL,
         description:
           process.env.NODE_ENV === "production" ? "正式環境" : "開發環境",
       },
@@ -32,7 +33,7 @@ const options = {
       },
     },
   },
-  // 指向你的路由檔案位置
+  // 指向路由檔案位置
   apis: [
     path.join(__dirname, "routes", "*.js"),
     path.join(__dirname, "server.js"),
@@ -40,11 +41,6 @@ const options = {
 };
 
 const specs = swaggerJsdoc(options);
-//swagger degug用 記得刪掉
-// console.log('=== Swagger Debug ===');
-// console.log('Paths found:', Object.keys(specs.paths || {}));
-// console.log('Full paths:', JSON.stringify(specs.paths, null, 2));
-// console.log('====================');
 module.exports = {
   swaggerUi,
   specs,
