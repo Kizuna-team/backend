@@ -38,10 +38,24 @@ const matchedBeFriend = async (req, res) => {
     // 建立聊天室 ID
     const roomId = uuidv4();
 
-    // 雙向寫入
+    // // 雙向寫入 這樣寫會造成 id 重複
+    // await db.insert(friendshipsTable).values([
+    //   { user_id: userId, friend_id: targetId, room_id: roomId },
+    //   { user_id: targetId, friend_id: userId, room_id: roomId },
+    // ]);
+
     await db.insert(friendshipsTable).values([
-      { user_id: userId, friend_id: targetId, room_id: roomId },
-      { user_id: targetId, friend_id: userId, room_id: roomId },
+      {
+        user_id: userId,
+        friend_id: targetId,
+        room_id: roomId,
+        // ⚠️ 不要加 id，由資料庫自動產生
+      },
+      {
+        user_id: targetId,
+        friend_id: userId,
+        room_id: roomId,
+      },
     ]);
 
     // 呼叫 getMatchedCard 抓出雙方資訊
@@ -57,7 +71,7 @@ const matchedBeFriend = async (req, res) => {
       targetProfile,
     });
   } catch (error) {
-    console.error(" matchedBeFriend failed:", error.message);
+    console.error(" matchedBeFriend failed:", error);
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
   }
 };
