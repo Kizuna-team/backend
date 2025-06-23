@@ -3,12 +3,24 @@ const { activities, usersTable } = require("../db/schema.js");
 const { eq, and } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
+<<<<<<< HEAD
 const {
   getJoinedActivitiesByUserId,
   joinActivity,
   cancelJoinActivity,
 } = require("../services/activityService");
 // console.log("activities:", activities);
+=======
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const formatDate = (date) =>
+  dayjs(date).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
+
+>>>>>>> 45b0476 (fix: resolve issue with activity update not working)
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -54,14 +66,23 @@ const getAllActivities = async (req, res) => {
       .from(activities)
       .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id));
-    res.json(result);
+    const formatted = result.map((item) => ({
+      ...item,
+      date: formatDate(item.date),
+      created_at: formatDate(item.created_at),
+    }));
+    res.json(formatted);
   } catch (err) {
     console.error("取得所有活動錯誤：", err);
     res.status(500).json({ error: "伺服器錯誤" });
   }
 };
 
+<<<<<<< HEAD
 // 取得我創建的活動
+=======
+// 取得我的活動
+>>>>>>> 45b0476 (fix: resolve issue with activity update not working)
 const getMyActivities = async (req, res) => {
   const userId = req.user.id; // 由 token/middleware 取得
   try {
@@ -80,8 +101,19 @@ const getMyActivities = async (req, res) => {
       .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .where(eq(activities.created_by_id, userId));
+<<<<<<< HEAD
     // console.log("資料庫查詢我的活動結果:", result);
     res.json(result);
+=======
+      const formatted = result.map((item) => ({
+        ...item,
+        date: formatDate(item.date),
+        created_at: formatDate(item.created_at),
+      }));
+      console.log("資料庫查詢我的活動結果:", formatted);
+
+    res.json(formatted);
+>>>>>>> 45b0476 (fix: resolve issue with activity update not working)
   } catch (err) {
     console.error("取得我的活動錯誤：", err);
     res.status(500).json({ error: "伺服器錯誤" });
@@ -112,6 +144,8 @@ const getActivityById = async (req, res) => {
     if (!activity) {
       return res.status(404).json({ error: "Not found" });
     }
+    activity.date = formatDate(activity.date);
+    activity.created_at = formatDate(activity.created_at);
     res.json(activity);
   } catch (err) {
     console.error("取得活動錯誤：", err);
@@ -139,7 +173,11 @@ const createActivity = async (req, res) => {
         image_url,
       })
       .returning();
-    res.status(201).json(inserted);
+    res.status(201).json({
+      ...inserted,
+      date: formatDate(inserted.date),
+      created_at: formatDate(inserted.created_at),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "伺服器錯誤，稍後再試" });
@@ -168,7 +206,9 @@ const updateActivity = async (req, res) => {
     } else {
       image_url = image_url || activity.image_url;
     }
-
+    let dateValue = req.body.date;
+    if (Array.isArray(dateValue)) dateValue = dateValue[0];
+    const dateForDB = dateValue ? new Date(dateValue) : activity.date;
     const created_at = new Date();
 
     //合併舊值與新值（只改有傳進來的）
@@ -177,7 +217,7 @@ const updateActivity = async (req, res) => {
       .set({
         title: title ?? activity.title, // 沒送就用舊的
         location: location ?? activity.location,
-        date: date ?? activity.date,
+        date: dateForDB,
         description: description ?? activity.description,
         image_url,
         created_at,
@@ -185,7 +225,11 @@ const updateActivity = async (req, res) => {
       .where(eq(activities.id, id))
       .returning();
 
-    res.json(updated);
+    res.json({
+      ...updated,
+      date: formatDate(updated.date),
+      created_at: formatDate(updated.created_at),
+    });
   } catch (err) {
     console.error("更新活動錯誤：", err);
     res.status(500).json({ error: "伺服器錯誤，稍後再試" });
