@@ -1,6 +1,10 @@
 const db = require("../db/index.js");
 const { eq, and } = require("drizzle-orm");
-const { activities, userAttendActivityTable } = require("../db/schema.js");
+const {
+  activities,
+  userAttendActivityTable,
+  usersTable,
+} = require("../db/schema.js");
 
 const getActivityById = async (activityId) => {
   return await db
@@ -11,11 +15,14 @@ const getActivityById = async (activityId) => {
 };
 
 const getJoinedActivitiesByUserId = async (userId) => {
-  return await db
+  const res = await db
     .select({
-      activityId: activities.id,
+      id: activities.id,
       title: activities.title,
+      location: activities.location,
+      date: activities.date,
       description: activities.description,
+      image_url: activities.image_url,
     })
     .from(userAttendActivityTable)
     .innerJoin(
@@ -23,6 +30,8 @@ const getJoinedActivitiesByUserId = async (userId) => {
       eq(userAttendActivityTable.activityId, activities.id)
     )
     .where(eq(userAttendActivityTable.userId, userId));
+    console.log(res)
+    return res;
 };
 
 const joinActivity = async (userId, activityId) => {

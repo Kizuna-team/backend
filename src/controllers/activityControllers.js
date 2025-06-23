@@ -8,7 +8,7 @@ const {
   joinActivity,
   cancelJoinActivity,
 } = require("../services/activityService");
-
+// console.log("activities:", activities);
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -80,7 +80,7 @@ const getMyActivities = async (req, res) => {
       .orderBy(activities.id)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .where(eq(activities.created_by_id, userId));
-    console.log("資料庫查詢我的活動結果:", result);
+    // console.log("資料庫查詢我的活動結果:", result);
     res.json(result);
   } catch (err) {
     console.error("取得我的活動錯誤：", err);
@@ -217,6 +217,7 @@ const deleteActivity = async (req, res) => {
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(userId)
     const activities = await getJoinedActivitiesByUserId(userId);
     res.json(activities);
   } catch (error) {
