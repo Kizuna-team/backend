@@ -1,5 +1,5 @@
 const db = require("../db/index.js");
-const { eq, and } = require("drizzle-orm");
+const { eq, and, sql } = require("drizzle-orm");
 const {
   activities,
   userAttendActivityTable,
@@ -48,6 +48,32 @@ const joinActivity = async (userId, activityId) => {
 
   if (existing.length > 0) {
     return { success: false, message: "使用者已經加入過此活動" };
+  }
+
+  // 2. 查詢該活動最多可容納多少人
+  const activity = await db
+    .select({ max: activities.max_participants })
+    .from(activities)
+    .where(eq(activities.id, activityId))
+    .limit(1);
+
+  if (activity.length === 0) {
+    return { success: false, message: "找不到該活動" };
+  }
+
+  const maxParticipants = activity[0].max;
+  // console.log(maxParticipants)
+  // 查詢目前已報名人數
+  const countResult = await db
+    .select({ count: sql`COUNT(${userAttendActivityTable.activityId})` })
+    .from(userAttendActivityTable)
+    .where(eq(userAttendActivityTable.activityId, activityId));
+
+  const currentCount = countResult[0]?.count || 0;
+  // console.log(currentCount)
+
+  if (currentCount >= maxParticipants) {
+    return { success: false, message: "人數已滿，無法再報名" };
   }
 
   await db.insert(userAttendActivityTable).values({

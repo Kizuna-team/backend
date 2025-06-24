@@ -31,7 +31,9 @@ const activities = pgTable("activities", {
     .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
   image_url: varchar("image_url", { length: 255 }),
+  max_participants: integer("max_participants").default(0),
 });
+
 //上傳照片
 const photosTable = pgTable("photos", {
   id: serial("id").primaryKey(),
