@@ -168,6 +168,12 @@ const createActivity = async (req, res) => {
         max_participants:maxParticipants
       })
       .returning();
+
+    await db.insert(userAttendActivityTable).values({
+    userId: created_by_id,
+    activityId: inserted.id
+    });
+    
     res.status(201).json({
       ...inserted,
       date: formatDate(inserted.date),
