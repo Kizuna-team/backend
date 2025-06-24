@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { createOrder, confirmOrder, getMyOrders } = require("../controllers/orderControllers.js");
+const {
+  createOrder,
+  confirmOrder,
+  getMyOrders,
+  getReceivedOrders,
+} = require("../controllers/orderControllers.js");
 
 /**
  * @swagger
@@ -19,5 +24,6 @@ router.post("/gift-orders", createOrder);
  */
 router.get("/confirm", confirmOrder);
 router.get("/my-orders", getMyOrders);
+router.get("/received", getReceivedOrders);
 
 module.exports = router;
