@@ -8,7 +8,7 @@ const {
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
 const frontendUrl = process.env.FRONTEND_URL;
-const { eq, inArray, sql } = require("drizzle-orm");
+const { eq, inArray, sql, and } = require("drizzle-orm");
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
@@ -316,7 +316,12 @@ async function getReceivedOrders(req, res) {
       })
       .from(giftOrdersTable)
       .innerJoin(usersTable, eq(giftOrdersTable.sender_id, usersTable.id))
-      .where(eq(giftOrdersTable.receiver_id, userId));
+      .where(
+        and(
+          eq(giftOrdersTable.receiver_id, userId),
+          eq(giftOrdersTable.status, "paid")
+        )
+      );
 
     const orderIds = orders.map((order) => order.id);
     const orderItems = await db
