@@ -1,6 +1,6 @@
 const db = require("../db/index.js");
 const { activities, usersTable,userAttendActivityTable } = require("../db/schema.js");
-const { eq, and, sql } = require("drizzle-orm");
+const { eq, and, sql, desc } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
 const {
@@ -96,7 +96,7 @@ const getMyActivities = async (req, res) => {
         created_by_username: usersTable.username,
       })
       .from(activities)
-      .orderBy(activities.id)
+      .orderBy(desc(activities.created_at))
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .where(eq(activities.created_by_id, userId));
       const formatted = result.map((item) => ({
