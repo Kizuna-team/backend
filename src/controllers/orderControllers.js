@@ -273,7 +273,10 @@ async function getMyOrders(req, res) {
         imageUrl: productsTable.image_url,
       })
       .from(orderItemsTable)
-      .innerJoin(productsTable, eq(orderItemsTable.product_id, productsTable.id))
+      .innerJoin(
+        productsTable,
+        eq(orderItemsTable.product_id, productsTable.id)
+      )
       .where(inArray(orderItemsTable.gift_order_id, orderIds));
 
     // 3：合併明細到訂單中
@@ -298,8 +301,62 @@ async function getMyOrders(req, res) {
   }
 }
 
+async function getReceivedOrders(req, res) {
+  const userId = parseInt(req.query.userId);
+
+  try {
+    const orders = await db
+      .select({
+        id: giftOrdersTable.id,
+        orderId: giftOrdersTable.order_id,
+        createdAt: giftOrdersTable.created_at,
+        status: giftOrdersTable.status,
+        amount: giftOrdersTable.amount,
+        senderName: usersTable.username,
+      })
+      .from(giftOrdersTable)
+      .innerJoin(usersTable, eq(giftOrdersTable.sender_id, usersTable.id))
+      .where(eq(giftOrdersTable.receiver_id, userId));
+
+    const orderIds = orders.map((order) => order.id);
+    const orderItems = await db
+      .select({
+        giftOrderId: orderItemsTable.gift_order_id,
+        productName: productsTable.name,
+        quantity: orderItemsTable.quantity,
+        imageUrl: productsTable.image_url,
+      })
+      .from(orderItemsTable)
+      .innerJoin(
+        productsTable,
+        eq(orderItemsTable.product_id, productsTable.id)
+      )
+      .where(inArray(orderItemsTable.gift_order_id, orderIds));
+
+    const orderMap = {};
+    for (const order of orders) {
+      orderMap[order.id] = { ...order, items: [] };
+    }
+
+    for (const item of orderItems) {
+      orderMap[item.giftOrderId].items.push({
+        productName: item.productName,
+        quantity: item.quantity,
+        imageUrl: item.imageUrl,
+      });
+    }
+
+    const result = Object.values(orderMap);
+    res.json(result);
+  } catch (err) {
+    console.error("取得收到的訂單失敗", err);
+    res.status(500).json({ error: "伺服器錯誤" });
+  }
+}
+
 module.exports = {
   createOrder,
   confirmOrder,
   getMyOrders,
+  getReceivedOrders,
 };
