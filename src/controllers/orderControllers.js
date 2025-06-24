@@ -36,7 +36,7 @@ async function increaseProductSales(orderId) {
 }
 
 async function createOrder(req, res) {
-  const { sender_id, receiver_id, items } = req.body;
+  const { sender_id, receiver_id, items, message } = req.body;
 
   console.log("收到的訂單資料:", req.body);
 
@@ -93,6 +93,7 @@ async function createOrder(req, res) {
           receiver_id,
           status: "pending",
           amount: totalAmount,
+          message,
         })
         .returning();
 
@@ -256,6 +257,7 @@ async function getMyOrders(req, res) {
         createdAt: giftOrdersTable.created_at,
         status: giftOrdersTable.status,
         amount: giftOrdersTable.amount,
+        message: giftOrdersTable.message,
         receiverName: usersTable.username,
       })
       .from(giftOrdersTable)
@@ -313,6 +315,7 @@ async function getReceivedOrders(req, res) {
         status: giftOrdersTable.status,
         amount: giftOrdersTable.amount,
         senderName: usersTable.username,
+        message: giftOrdersTable.message,
       })
       .from(giftOrdersTable)
       .innerJoin(usersTable, eq(giftOrdersTable.sender_id, usersTable.id))
