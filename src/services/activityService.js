@@ -47,7 +47,7 @@ const joinActivity = async (userId, activityId) => {
     .limit(1);
 
   if (existing.length > 0) {
-    return { success: false, message: "使用者已經加入過此活動" };
+    return { success: false, message: "你已經加入過此活動" };
   }
 
   // 2. 查詢該活動最多可容納多少人
@@ -69,8 +69,7 @@ const joinActivity = async (userId, activityId) => {
     .from(userAttendActivityTable)
     .where(eq(userAttendActivityTable.activityId, activityId));
 
-  const currentCount = countResult[0]?.count || 0;
-  // console.log(currentCount)
+  const currentCount = Number(countResult[0]?.count) || 0;
 
   if (currentCount >= maxParticipants) {
     return { success: false, message: "人數已滿，無法再報名" };
@@ -81,7 +80,7 @@ const joinActivity = async (userId, activityId) => {
     activityId,
   });
 
-  return { success: true, message: "成功加入活動" };
+  return { success: true, message: "成功加入活動",current_participants:currentCount };
 };
 
 const cancelJoinActivity = async (userId, activityId) => {

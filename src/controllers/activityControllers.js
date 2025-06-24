@@ -147,7 +147,7 @@ const getActivityById = async (req, res) => {
 };
 
 const createActivity = async (req, res) => {
-  const { title, location, date, description } = req.body;
+  const { title, location, date, description,maxParticipants } = req.body;
   const created_by_id = req.user.id;
   let image_url = "";
 
@@ -165,6 +165,7 @@ const createActivity = async (req, res) => {
         created_by_id,
         image_url,
         created_at: new Date(),
+        max_participants:maxParticipants
       })
       .returning();
     res.status(201).json({
@@ -272,11 +273,10 @@ const postJoinActivity = async (req, res) => {
     const result = await joinActivity(userId, activityId);
 
     if (!result.success) {
-
       return res.status(409).json({ message: result.message });
     }
 
-    return res.status(201).json({ message: result.message });
+    return res.status(201).json({ message: result.message,current_participants: result.current_participants });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "伺服器錯誤" });
