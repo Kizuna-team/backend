@@ -1,8 +1,9 @@
 // 取得互相喜歡的使用者profiles/photos資料API
 const db = require("../db/index.js");
+
 const {
-  createFriendship,
   getMatchedCard,
+  createFriendship,
 } = require("../services/matchingService.js");
 
 const matchedBeFriend = async (req, res) => {
@@ -14,6 +15,7 @@ const matchedBeFriend = async (req, res) => {
   }
 
   try {
+    // 建立聊天室 ID
     const roomId = await createFriendship(userId, targetId);
 
     // 呼叫 getMatchedCard 抓出雙方資訊
