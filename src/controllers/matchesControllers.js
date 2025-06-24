@@ -1,9 +1,9 @@
 // 取得互相喜歡的使用者profiles/photos資料API
 const db = require("../db/index.js");
-const { eq, and, or } = require("drizzle-orm");
-const { v4: uuidv4 } = require("uuid");
-const { friendshipsTable } = require("../db/schema.js");
-const { getMatchedCard } = require("../services/matchingService.js");
+const {
+  createFriendship,
+  getMatchedCard,
+} = require("../services/matchingService.js");
 
 const matchedBeFriend = async (req, res) => {
   const userId = req.user?.id;
@@ -14,52 +14,9 @@ const matchedBeFriend = async (req, res) => {
   }
 
   try {
-    // 查詢是否已經存在好友關係」
-    const matchedRecord = await db
-      .select()
-      .from(friendshipsTable)
-      .where(
-        or(
-          and(
-            eq(friendshipsTable.user_id, userId),
-            eq(friendshipsTable.friend_id, targetId)
-          ),
-          and(
-            eq(friendshipsTable.user_id, targetId),
-            eq(friendshipsTable.friend_id, userId)
-          )
-        )
-      );
-
-    if (matchedRecord.length > 0) {
-      return res.status(409).json({ message: "已經是好友" });
-    }
-
-    // 建立聊天室 ID
-    const roomId = uuidv4();
-
-    // // 雙向寫入 這樣寫會造成 id 重複
-    // await db.insert(friendshipsTable).values([
-    //   { user_id: userId, friend_id: targetId, room_id: roomId },
-    //   { user_id: targetId, friend_id: userId, room_id: roomId },
-    // ]);
-
-    await db.insert(friendshipsTable).values([
-      {
-        user_id: userId,
-        friend_id: targetId,
-        room_id: roomId,
-        // ⚠️ 不要加 id，由資料庫自動產生
-      },
-      {
-        user_id: targetId,
-        friend_id: userId,
-        room_id: roomId,
-      },
-    ]);
+    const roomId = await createFriendship(userId, targetId);
 
     // 呼叫 getMatchedCard 抓出雙方資訊
-
     const profiles = await getMatchedCard([userId, targetId]);
     const myProfile = profiles.find((p) => p.userId === userId);
     const targetProfile = profiles.find((p) => p.userId === targetId);

@@ -1,9 +1,16 @@
 // 前端點擊super like按鈕後的處理邏輯
 // 先確定沒送過、沒超過限制，再寫入 superLikesTable
 // 最後判斷是否配對成功
+const { uuid } = require("drizzle-orm/gel-core");
 const db = require("../db/index.js");
-const { likesTable, superLikesTable, matchesTable } = require("../db/schema");
-const { checkSuperLikeAuth } = require("../services/superLikeService");
+const {
+  likesTable,
+  superLikesTable,
+  matchesTable,
+  friendshipsTable,
+} = require("../db/schema");
+const { checkSuperLikeAuth } = require("../services/superLikeService.js");
+const { createFriendship } = require("../services/matchingService.js");
 const { eq, and } = require("drizzle-orm");
 
 const createSuperLike = async (req, res) => {
@@ -114,6 +121,14 @@ const createSuperLike = async (req, res) => {
           matchedAt: new Date(),
         })
         .onConflictDoNothing(); // 防止重複配對紀錄
+
+      // 新增直接建立好友關係
+      const roomId = uuid4();
+
+      await db.insert(friendshipsTable).values([
+        { user_id: userId, friend_id: targetId, room_id: roomId },
+        { user_id: targetId, friend_id: userId, room_id: roomId },
+      ]);
 
       return res.status(200).json({
         success: true,
