@@ -1,6 +1,6 @@
 const db = require("../db/index.js");
-const { activities, usersTable } = require("../db/schema.js");
-const { eq, and } = require("drizzle-orm");
+const { activities, usersTable,userAttendActivityTable } = require("../db/schema.js");
+const { eq, and, sql } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
 const {
@@ -59,10 +59,15 @@ const getAllActivities = async (req, res) => {
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
         created_by_username: usersTable.username,
+        max_participants:activities.max_participants,
+        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as("current_participants")
       })
       .from(activities)
-      .orderBy(activities.id)
-      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id));
+      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
+      .leftJoin(userAttendActivityTable, eq(activities.id, userAttendActivityTable.activityId))
+      .groupBy(activities.id,usersTable.username)
+      .orderBy(activities.id);
+
     const formatted = result.map((item) => ({
       ...item,
       date: formatDate(item.date),
@@ -267,6 +272,7 @@ const postJoinActivity = async (req, res) => {
     const result = await joinActivity(userId, activityId);
 
     if (!result.success) {
+
       return res.status(409).json({ message: result.message });
     }
 
