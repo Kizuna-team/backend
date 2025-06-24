@@ -66,7 +66,7 @@ const getAllActivities = async (req, res) => {
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .leftJoin(userAttendActivityTable, eq(activities.id, userAttendActivityTable.activityId))
       .groupBy(activities.id,usersTable.username)
-      .orderBy(activities.id);
+      .orderBy(desc(activities.created_at))
 
     const formatted = result.map((item) => ({
       ...item,
