@@ -1,12 +1,45 @@
 const db = require("../db/index.js");
-const { and, eq, inArray } = require("drizzle-orm");
-
+const { and, eq, inArray, or } = require("drizzle-orm");
+const { v4: uuidv4 } = require("uuid");
 const {
   likesTable,
   superLikesTable,
   photosTable,
   profileTable,
+  friendshipsTable,
 } = require("../db/schema.js");
+
+// 強制 或 配對成功時也入好友
+const createFriendship = async (userId, targetId) => {
+  const friendshipRecord = await db
+    .select()
+    .from(friendshipsTable)
+    .where(
+      or(
+        and(
+          eq(friendshipsTable.user_id, userId),
+          eq(friendshipsTable.friend_id, targetId)
+        ),
+        and(
+          eq(friendshipsTable.user_id, targetId),
+          eq(friendshipsTable.friend_id, userId)
+        )
+      )
+    );
+
+  if (friendshipRecord.length > 0) {
+    return friendshipRecord[0].room_id;
+  }
+
+  const roomId = uuidv4();
+
+  await db.insert(friendshipsTable).values([
+    { user_id: userId, friend_id: targetId, room_id: roomId },
+    { user_id: targetId, friend_id: userId, room_id: roomId },
+  ]);
+
+  return roomId;
+};
 
 // 查出所有喜歡我的人ID
 const getLikedMeUserIds = async (userId) => {
@@ -115,4 +148,5 @@ module.exports = {
   getMatchedUserIds, // 互相喜歡的
   getMatchedName, // 取得互相喜歡的使用者的個人檔案資料
   getMatchedCard, // 所有配對對象的名稱與大頭貼
+  createFriendship,
 };
