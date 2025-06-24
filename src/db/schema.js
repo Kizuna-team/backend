@@ -97,6 +97,7 @@ const giftOrdersTable = pgTable("gift_orders", {
   transaction_id: varchar("transaction_id", { length: 100 }),
   // 訂單金額
   amount: integer("amount").notNull(),
+  message: text("message"),
   created_at: timestamp("created_at").defaultNow(),
 });
 
