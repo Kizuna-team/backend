@@ -242,6 +242,7 @@ const deleteActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
+    await db.delete(userAttendActivityTable).where(eq(userAttendActivityTable.activityId, id));
     const [activity] = await db
       .delete(activities)
       .where(and(eq(activities.id, id), eq(activities.created_by_id, userId)))
