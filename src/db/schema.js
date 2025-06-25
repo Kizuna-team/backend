@@ -272,7 +272,7 @@ const userAttendActivityTable = pgTable(
       .references(() => usersTable.id),
     activityId: integer("activity_id")
       .notNull()
-      .references(() => activities.id),
+      .references(() => activities.id, { onDelete: "cascade" }),
   },
   (table) => {
     return {
