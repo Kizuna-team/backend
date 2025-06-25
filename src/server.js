@@ -14,8 +14,11 @@ const {
   subscriptionsTable,
   subscriptionPlansTable,
   friendshipsTable,
-  messagesTable,
+  profileTable,
+  photosTable,
 } = require("./db/schema.js");
+// const { getMatchedCard } = require("./services/matchingService.js");
+
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay.js");
 const subPlansRoutes = require("./routes/subPlans");
@@ -33,7 +36,7 @@ const { getRoomMessages } = require("./lib/getRoomMessages.js");
 const matchesRoutes = require("./routes/matchesRoutes.js");
 const userFilterRoutes = require("./routes/userFilterRoutes.js");
 
-const { swaggerUi, specs } = require('./swagger.js');
+const { swaggerUi, specs } = require("./swagger.js");
 
 // 以下為即時聊天室新增模組
 const http = require("http");
@@ -208,16 +211,40 @@ app.get("/friendLists", authMiddleware, async (req, res) => {
     // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
     console.log("現在登入房間的使用者:", currentUserId);
-    // 查詢好友列表（好友名稱 + 聊天室 roomId）
+
+    // // 查詢好友列表（好友名稱 + 聊天室 roomId）
+    // const friends = await db
+    //   .select({
+    //     friendId: friendshipsTable.friend_id,
+    //     friendName: usersTable.username,
+    //     roomId: friendshipsTable.room_id,
+    //   })
+    //   .from(friendshipsTable)
+    //   .innerJoin(usersTable, eq(usersTable.id, friendshipsTable.friend_id))
+    //   .where(eq(friendshipsTable.user_id, currentUserId));
+
     const friends = await db
       .select({
-        friendId: friendshipsTable.friend_id,
-        friendName: usersTable.username,
-        roomId: friendshipsTable.room_id,
+        friendId: friendshipsTable.friend_id, // 好友 ID
+        roomId: friendshipsTable.room_id, // 聊天室 ID
+        name: profileTable.name, // 好友名字
+        avatarUrl: photosTable.image_url, // 好友大頭貼
       })
       .from(friendshipsTable)
-      .innerJoin(usersTable, eq(usersTable.id, friendshipsTable.friend_id))
+      .innerJoin(
+        profileTable,
+        eq(profileTable.userId, friendshipsTable.friend_id)
+      )
+      .leftJoin(
+        photosTable,
+        and(
+          eq(photosTable.userId, friendshipsTable.friend_id),
+          eq(photosTable.is_avatar, true)
+        )
+      )
       .where(eq(friendshipsTable.user_id, currentUserId));
+
+    console.log(friends);
 
     res.json({ friends });
   } catch (error) {
@@ -241,11 +268,15 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
 // 啟用 socket.io 聊天室邏輯
 setupSocket(io);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "Kizuna 交友平台 API 文件"
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Kizuna 交友平台 API 文件",
+  })
+);
 
 server.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
