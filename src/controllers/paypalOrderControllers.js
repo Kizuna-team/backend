@@ -7,9 +7,10 @@ const {
   productsTable,
 } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
-const { eq, inArray } = require("drizzle-orm");
+const { inArray } = require("drizzle-orm");
+const BACKEND_URL = process.env.BACKEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
-// 創建 PayPal 訂單
 async function createPayPalOrder(req, res) {
   try {
     const { sender_id, receiver_id, items } = req.body; // 移除 total_price
@@ -63,7 +64,7 @@ async function createPayPalOrder(req, res) {
       ],
       // 設定付款流程
       application_context: {
-        return_url: `${BACKEND_URL}paypal/success`, // 付款成功後跳轉
+        return_url: `${BACKEND_URL}/paypal/success`, // 付款成功後跳轉
         cancel_url: `${BACKEND_URL}/paypal/cancel`, // 取消付款後跳轉
         user_action: "PAY_NOW", // 顯示 "Pay Now" 按鈕
         brand_name: "Gift Shop", // 你的商店名稱
@@ -114,35 +115,38 @@ async function capturePayPalOrder(req, res) {
 
     // 檢查付款是否成功
     if (capture.result.status === "COMPLETED") {
-      let sender_id, receiver_id, items;
-      
-      // 修正：從正確的路徑取得 custom_id
+      // 🔧 優化：移除預設值，改為嚴格驗證
       const customId = capture.result.purchase_units[0].payments.captures[0].custom_id;
       console.log("取得的 custom_id:", customId);
       
-      if (customId) {
-        try {
-          const customData = JSON.parse(customId);
-          sender_id = customData.sender_id;
-          receiver_id = customData.receiver_id;
-          items = customData.items;
-          console.log("成功解析 PayPal 資料:", { sender_id, receiver_id, items });
-        } catch (err) {
-          console.error("JSON 解析失敗，使用預設資料:", err);
-          // 用預設值
-          sender_id = 2;
-          receiver_id = 10;
-          items = [{ product_id: 17, quantity: 1 }];
-        }
-      } else {
-        console.log("custom_id 不存在，使用預設資料");
-        // 用預設值
-        sender_id = 2;
-        receiver_id = 10;
-        items = [{ product_id: 17, quantity: 1 }];
+      if (!customId) {
+        console.error("PayPal 回調缺少 custom_id");
+        return res.status(400).json({
+          success: false,
+          error: "PayPal 回調資料不完整",
+        });
       }
 
-      console.log("要創建的訂單資料:", { sender_id, receiver_id, items });
+      let sender_id, receiver_id, items;
+      try {
+        const customData = JSON.parse(customId);
+        sender_id = customData.sender_id;
+        receiver_id = customData.receiver_id;
+        items = customData.items;
+
+        // 🔧 驗證必要欄位
+        if (!sender_id || !receiver_id || !items || !Array.isArray(items)) {
+          throw new Error("PayPal 自訂資料格式錯誤");
+        }
+
+        console.log("成功解析 PayPal 資料:", { sender_id, receiver_id, items });
+      } catch (err) {
+        console.error("PayPal 資料解析失敗:", err);
+        return res.status(400).json({
+          success: false,
+          error: "PayPal 回調資料解析失敗",
+        });
+      }
 
       // 使用 transaction 確保資料一致性
       await db.transaction(async (tx) => {
@@ -157,8 +161,7 @@ async function capturePayPalOrder(req, res) {
             order_id: orderId,
             sender_id,
             receiver_id,
-            status: "paid", // PayPal 已付款成功
-            // 修正：從正確的路徑取得金額
+            status: "paid",
             amount: parseFloat(capture.result.purchase_units[0].payments.captures[0].amount.value),
           })
           .returning();
@@ -184,7 +187,6 @@ async function capturePayPalOrder(req, res) {
         status: capture.result.status,
       });
     } else {
-      // 付款未完成的處理
       console.log("PayPal 付款未完成:", capture.result.status);
       res.status(400).json({
         success: false,
