@@ -1,6 +1,6 @@
 const db = require("../db/index.js");
 const { activities, usersTable,userAttendActivityTable } = require("../db/schema.js");
-const { eq, and, sql, desc } = require("drizzle-orm");
+const { eq, and, sql, desc,count,inArray } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
 const {
@@ -301,6 +301,63 @@ const deleteJoinActivity = async (req, res) => {
   }
 };
 
+const searchActivitiesStatus = async (req, res) =>{
+  const { userId, activityIds } = req.body;
+
+  try {
+    // 查詢所有該使用者已報名的活動
+    const joinedActivities = await db
+      .select({ activityId: userAttendActivityTable.activityId })
+      .from(userAttendActivityTable)
+      .where(and(
+        eq(userAttendActivityTable.userId, userId),
+        inArray(userAttendActivityTable.activityId, activityIds)
+      ));
+
+    const joinedSet = new Set(joinedActivities.map(a => a.activityId));
+
+    // 查詢所有活動的最大人數
+    const activitiesData = await db
+      .select({
+        id: activities.id,
+        maxParticipants: activities.max_participants
+      })
+      .from(activities)
+      .where(inArray(activities.id, activityIds));
+
+    // 查詢所有活動的目前參加人數
+    const countResults = await db
+      .select({
+        activityId: userAttendActivityTable.activityId,
+        count: count().as("count")
+      })
+      .from(userAttendActivityTable)
+      .where(inArray(userAttendActivityTable.activityId, activityIds))
+      .groupBy(userAttendActivityTable.activityId);
+
+    const countMap = new Map(countResults.map(row => [row.activityId, row.count]));
+
+    // 組合每個活動的狀態
+    const statuses = activitiesData.map(activity => {
+      if (joinedSet.has(activity.id)) {
+        return { activityId: activity.id, status: 'ALREADY_JOINED' };
+      }
+
+      const currentCount = countMap.get(activity.id) || 0;
+      if (currentCount >= activity.maxParticipants) {
+        return { activityId: activity.id, status: 'FULL' };
+      }
+
+      return { activityId: activity.id, status: 'OPEN' };
+    });
+
+    return res.json({ statuses });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: '伺服器錯誤' });
+  }
+};
+
 module.exports = {
   getAllActivities,
   getMyActivities,
@@ -311,4 +368,5 @@ module.exports = {
   postJoinActivity,
   deleteJoinActivity,
   getMyJoinActivity,
+  searchActivitiesStatus
 };

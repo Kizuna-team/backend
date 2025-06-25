@@ -50,7 +50,7 @@ const joinActivity = async (userId, activityId) => {
     return { success: false, message: "你已經加入過此活動" };
   }
 
-  // 2. 查詢該活動最多可容納多少人
+  // 查詢該活動最多可容納多少人
   const activity = await db
     .select({ max: activities.max_participants })
     .from(activities)
