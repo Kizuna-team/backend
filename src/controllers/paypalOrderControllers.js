@@ -115,7 +115,6 @@ async function capturePayPalOrder(req, res) {
 
     // 檢查付款是否成功
     if (capture.result.status === "COMPLETED") {
-      // 🔧 優化：移除預設值，改為嚴格驗證
       const customId = capture.result.purchase_units[0].payments.captures[0].custom_id;
       console.log("取得的 custom_id:", customId);
       
@@ -134,7 +133,7 @@ async function capturePayPalOrder(req, res) {
         receiver_id = customData.receiver_id;
         items = customData.items;
 
-        // 🔧 驗證必要欄位
+        // 驗證必要欄位
         if (!sender_id || !receiver_id || !items || !Array.isArray(items)) {
           throw new Error("PayPal 自訂資料格式錯誤");
         }
@@ -226,28 +225,29 @@ async function paypalSuccess(req, res) {
 
       // 檢查付款是否成功
       if (capture.result.status === "COMPLETED") {
-        // 檢查並取出 PayPal 儲存的資料
-        let sender_id, receiver_id, items;
-        
         const customId = capture.result.purchase_units[0].payments.captures[0].custom_id;
         
-        if (customId) {
-          try {
-            const customData = JSON.parse(customId);
-            sender_id = customData.sender_id;
-            receiver_id = customData.receiver_id;
-            items = customData.items;
-          } catch (err) {
-            console.error("JSON 解析失敗，使用預設資料:", err);
-            sender_id = 2;
-            receiver_id = 10;
-            items = [{ product_id: 17, quantity: 1 }];
+        if (!customId) {
+          console.error("PayPal 回調缺少 custom_id");
+          return res.redirect(`${FRONTEND_URL}/payment?error=missing_data`);
+        }
+
+        let sender_id, receiver_id, items;
+        try {
+          const customData = JSON.parse(customId);
+          sender_id = customData.sender_id;
+          receiver_id = customData.receiver_id;
+          items = customData.items;
+
+          // 驗證必要欄位
+          if (!sender_id || !receiver_id || !items || !Array.isArray(items)) {
+            throw new Error("PayPal 自訂資料格式錯誤");
           }
-        } else {
-          console.log("custom_id 不存在，使用預設資料");
-          sender_id = 2;
-          receiver_id = 10;
-          items = [{ product_id: 17, quantity: 1 }];
+
+          console.log("成功解析 PayPal 資料:", { sender_id, receiver_id, items });
+        } catch (err) {
+          console.error("PayPal 資料解析失敗:", err);
+          return res.redirect(`${FRONTEND_URL}/payment?error=data_parse_failed`);
         }
 
         // 使用 transaction 確保資料一致性
@@ -285,29 +285,17 @@ async function paypalSuccess(req, res) {
         // 跳轉到成功頁面
         res.redirect(`${FRONTEND_URL}/order/confirm?success=true`);
       } else {
-        // 付款未完成 - 顯示錯誤訊息
+        // 付款未完成
         console.log("PayPal 付款未完成:", capture.result.status);
-        res.status(400).json({
-          success: false,
-          error: "付款未完成",
-          status: capture.result.status
-        });
+        res.redirect(`${FRONTEND_URL}/payment?error=payment_incomplete`);
       }
     } catch (err) {
       console.error("處理訂單失敗:", err);
-      res.status(500).json({
-        success: false,
-        error: "訂單處理失敗",
-        details: err.message
-      });
+      res.redirect(`${FRONTEND_URL}/payment?error=order_processing_failed`);
     }
   } catch (err) {
     console.error("PayPal 成功頁面錯誤:", err);
-    res.status(500).json({
-      success: false,
-      error: "處理出錯",
-      details: err.message
-    });
+    res.redirect(`${FRONTEND_URL}/payment?error=system_error`);
   }
 }
 
