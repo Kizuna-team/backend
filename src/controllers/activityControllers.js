@@ -80,7 +80,7 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// 取得我的活動
+// 取得我創建的活動
 const getMyActivities = async (req, res) => {
   const userId = req.user.id; // 由 token/middleware 取得
   try {
