@@ -13,6 +13,7 @@ const {
   getMyJoinActivity,
   postJoinActivity,
   deleteJoinActivity,
+  searchActivitiesStatus,
 } = require("../controllers/activityControllers.js");
 
 const authMiddleware = require("../middleware/auth.js");
@@ -141,4 +142,5 @@ router.post("/join/:id", authMiddleware, postJoinActivity);
  *           type: integer
  */
 router.delete("/join/:id", authMiddleware, deleteJoinActivity);
+router.post("/status", authMiddleware, searchActivitiesStatus)
 module.exports = router;
