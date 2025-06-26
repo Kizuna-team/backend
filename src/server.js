@@ -131,7 +131,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
     // 查訂單，抓最新一筆 paid
     const [latestPaidOrder] = await db
       .select({
-        paid_at: subscriptionsTable.paid_at,
+        end_date: subscriptionsTable.end_date,
       })
       .from(subscriptionsTable)
       .where(
@@ -140,7 +140,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           eq(subscriptionsTable.status, "paid")
         )
       )
-      .orderBy(desc(subscriptionsTable.paid_at))
+      .orderBy(desc(subscriptionsTable.end_date))
       .limit(1);
 
     if (latestPaidOrder?.end_date) {
