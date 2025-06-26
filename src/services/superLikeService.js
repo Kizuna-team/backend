@@ -1,6 +1,6 @@
 const db = require("../db/index.js");
 const { superLikesTable } = require("../db/schema.js");
-const { isValidMember } = require("./memberService.js");
+const { isValidMember } = require("./subscriptionsService.js");
 const { eq, and } = require("drizzle-orm");
 
 // 使用者已經用了幾次 Super Like
