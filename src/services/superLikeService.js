@@ -1,6 +1,6 @@
 const db = require("../db/index.js");
 const { superLikesTable } = require("../db/schema.js");
-const { getPlan } = require("./memberService.js");
+const { getPlan } = require("./subscriptionsService.js");
 const { eq } = require("drizzle-orm");
 
 const checkSuperLikeAuth = async (userId) => {
