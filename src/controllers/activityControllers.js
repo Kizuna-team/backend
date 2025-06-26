@@ -1,6 +1,10 @@
 const db = require("../db/index.js");
-const { activities, usersTable,userAttendActivityTable } = require("../db/schema.js");
-const { eq, and, sql, desc,count,inArray } = require("drizzle-orm");
+const {
+  activities,
+  usersTable,
+  userAttendActivityTable,
+} = require("../db/schema.js");
+const { eq, and, sql, desc, count, inArray } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
 const {
@@ -59,14 +63,19 @@ const getAllActivities = async (req, res) => {
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
         created_by_username: usersTable.username,
-        max_participants:activities.max_participants,
-        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as("current_participants")
+        max_participants: activities.max_participants,
+        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
+          "current_participants"
+        ),
       })
       .from(activities)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
-      .leftJoin(userAttendActivityTable, eq(activities.id, userAttendActivityTable.activityId))
-      .groupBy(activities.id,usersTable.username)
-      .orderBy(desc(activities.created_at))
+      .leftJoin(
+        userAttendActivityTable,
+        eq(activities.id, userAttendActivityTable.activityId)
+      )
+      .groupBy(activities.id, usersTable.username)
+      .orderBy(desc(activities.created_at));
 
     const formatted = result.map((item) => ({
       ...item,
@@ -93,18 +102,28 @@ const getMyActivities = async (req, res) => {
         location: activities.location,
         description: activities.description,
         created_at: activities.created_at,
+        max_participants: activities.max_participants,
+        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
+          "current_participants"
+        ),
         created_by_username: usersTable.username,
       })
       .from(activities)
       .orderBy(desc(activities.created_at))
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
-      .where(eq(activities.created_by_id, userId));
-      const formatted = result.map((item) => ({
-        ...item,
-        date: formatDate(item.date),
-        created_at: formatDate(item.created_at),
-      }));
-      console.log("資料庫查詢我的活動結果:", formatted);
+      .leftJoin(
+        userAttendActivityTable,
+        eq(activities.id, userAttendActivityTable.activityId)
+      )
+      .where(eq(activities.created_by_id, userId))
+      .groupBy(activities.id, usersTable.username);
+
+    const formatted = result.map((item) => ({
+      ...item,
+      date: formatDate(item.date),
+      created_at: formatDate(item.created_at),
+    }));
+    console.log("資料庫查詢我的活動結果:", formatted);
 
     res.json(formatted);
   } catch (err) {
@@ -128,6 +147,7 @@ const getActivityById = async (req, res) => {
         image_url: activities.image_url,
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
+        max_participants: activities.max_participants,
         created_by_username: usersTable.username,
       })
       .from(activities)
@@ -147,7 +167,7 @@ const getActivityById = async (req, res) => {
 };
 
 const createActivity = async (req, res) => {
-  const { title, location, date, description,maxParticipants } = req.body;
+  const { title, location, date, description, maxParticipants } = req.body;
   const created_by_id = req.user.id;
   let image_url = "";
 
@@ -165,15 +185,15 @@ const createActivity = async (req, res) => {
         created_by_id,
         image_url,
         created_at: new Date(),
-        max_participants:maxParticipants
+        max_participants: maxParticipants,
       })
       .returning();
 
     await db.insert(userAttendActivityTable).values({
-    userId: created_by_id,
-    activityId: inserted.id
+      userId: created_by_id,
+      activityId: inserted.id,
     });
-    
+
     res.status(201).json({
       ...inserted,
       date: formatDate(inserted.date),
@@ -263,7 +283,7 @@ const deleteActivity = async (req, res) => {
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(userId)
+    console.log(userId);
     const activities = await getJoinedActivitiesByUserId(userId);
     res.json(activities);
   } catch (error) {
@@ -283,7 +303,12 @@ const postJoinActivity = async (req, res) => {
       return res.status(409).json({ message: result.message });
     }
 
-    return res.status(201).json({ message: result.message,current_participants: result.current_participants });
+    return res
+      .status(201)
+      .json({
+        message: result.message,
+        current_participants: result.current_participants,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "伺服器錯誤" });
@@ -302,7 +327,7 @@ const deleteJoinActivity = async (req, res) => {
   }
 };
 
-const searchActivitiesStatus = async (req, res) =>{
+const searchActivitiesStatus = async (req, res) => {
   const { userId, activityIds } = req.body;
 
   try {
@@ -310,18 +335,20 @@ const searchActivitiesStatus = async (req, res) =>{
     const joinedActivities = await db
       .select({ activityId: userAttendActivityTable.activityId })
       .from(userAttendActivityTable)
-      .where(and(
-        eq(userAttendActivityTable.userId, userId),
-        inArray(userAttendActivityTable.activityId, activityIds)
-      ));
+      .where(
+        and(
+          eq(userAttendActivityTable.userId, userId),
+          inArray(userAttendActivityTable.activityId, activityIds)
+        )
+      );
 
-    const joinedSet = new Set(joinedActivities.map(a => a.activityId));
+    const joinedSet = new Set(joinedActivities.map((a) => a.activityId));
 
     // 查詢所有活動的最大人數
     const activitiesData = await db
       .select({
         id: activities.id,
-        maxParticipants: activities.max_participants
+        maxParticipants: activities.max_participants,
       })
       .from(activities)
       .where(inArray(activities.id, activityIds));
@@ -330,32 +357,34 @@ const searchActivitiesStatus = async (req, res) =>{
     const countResults = await db
       .select({
         activityId: userAttendActivityTable.activityId,
-        count: count().as("count")
+        count: count().as("count"),
       })
       .from(userAttendActivityTable)
       .where(inArray(userAttendActivityTable.activityId, activityIds))
       .groupBy(userAttendActivityTable.activityId);
 
-    const countMap = new Map(countResults.map(row => [row.activityId, row.count]));
+    const countMap = new Map(
+      countResults.map((row) => [row.activityId, row.count])
+    );
 
     // 組合每個活動的狀態
-    const statuses = activitiesData.map(activity => {
+    const statuses = activitiesData.map((activity) => {
       if (joinedSet.has(activity.id)) {
-        return { activityId: activity.id, status: 'ALREADY_JOINED' };
+        return { activityId: activity.id, status: "ALREADY_JOINED" };
       }
 
       const currentCount = countMap.get(activity.id) || 0;
       if (currentCount >= activity.maxParticipants) {
-        return { activityId: activity.id, status: 'FULL' };
+        return { activityId: activity.id, status: "FULL" };
       }
 
-      return { activityId: activity.id, status: 'OPEN' };
+      return { activityId: activity.id, status: "OPEN" };
     });
 
     return res.json({ statuses });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: '伺服器錯誤' });
+    return res.status(500).json({ message: "伺服器錯誤" });
   }
 };
 
@@ -369,5 +398,5 @@ module.exports = {
   postJoinActivity,
   deleteJoinActivity,
   getMyJoinActivity,
-  searchActivitiesStatus
+  searchActivitiesStatus,
 };
