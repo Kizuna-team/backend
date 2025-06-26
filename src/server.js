@@ -165,6 +165,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           )
           .where(eq(usersTable.id, req.user.id));
 
+          console.log("重新更新過的使用者資料:",updatedUser);
         return res.json({
           user: {
             username: user.username,
@@ -182,7 +183,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
         username: user.username,
         subscription_plan: user.subscription_plan,
         subscription_name: user.subscription_name,
-        paid_at: latestPaidOrder?.paid_at ?? null,
+        end_date: latestPaidOrder?.end_date ?? null,
       },
     });
   } catch (error) {
