@@ -147,19 +147,12 @@ app.get("/api/me", authMiddleware, async (req, res) => {
     // 判斷是否過期（測試用 2 分鐘）
     if (latestPaidOrder?.paid_at) {
       const paidAt = dayjs(latestPaidOrder.paid_at).tz("Asia/Taipei");
-      const now = dayjs().tz("Asia/Taipei");
-
-      console.log("paidAt:", paidAt.format("YYYY-MM-DD HH:mm:ss"));
-      console.log("now:", now.format("YYYY-MM-DD HH:mm:ss"));
+      const now = dayjs().utc();
 
       const diffInMinutes = now.diff(paidAt, "minute");
 
-      console.log("已過分鐘數:", diffInMinutes);
-
       // 測試用：如果已超過 2 分鐘 → 更新回免費方案
       if (diffInMinutes >= 2 && user.subscription_plan !== 1) {
-        console.log("超過 2 分鐘，更新回免費方案");
-
         await db
           .update(usersTable)
           .set({

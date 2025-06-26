@@ -147,7 +147,7 @@ router.post("/notify", async (req, res) => {
       // 將 PaymentDate 格式轉換為 yyyy-MM-dd HH:mm:ss
       // 注意：ECPay 的 PaymentDate 格式是 yyyy/MM/dd HH:mm:ss
       const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, "-") : null;
-      const now = dayjs();
+      const now = dayjs().utc();
 
       await db
         .update(subscriptionsTable)
