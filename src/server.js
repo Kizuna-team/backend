@@ -146,13 +146,12 @@ app.get("/api/me", authMiddleware, async (req, res) => {
     // 判斷會員資格是否過期
     // 判斷是否過期（測試用 2 分鐘）
     if (latestPaidOrder?.paid_at) {
-      const paidAt = dayjs(latestPaidOrder.paid_at).tz("Asia/Taipei");
-      const now = dayjs().utc();
-
-      const diffInMinutes = now.diff(paidAt, "minute");
+      const paidAt = dayjs.utc(latestPaidOrder.paid_at); 
+      const now = dayjs.utc();
+      const diff = now.diff(paidAt, "minute");
 
       // 測試用：如果已超過 2 分鐘 → 更新回免費方案
-      if (diffInMinutes >= 2 && user.subscription_plan !== 1) {
+      if (diff >= 2 && user.subscription_plan !== 1) {
         await db
           .update(usersTable)
           .set({
