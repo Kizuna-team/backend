@@ -143,23 +143,16 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       .orderBy(desc(subscriptionsTable.paid_at))
       .limit(1);
 
-    // 判斷會員資格是否過期
-    // 判斷是否過期（測試用 2 分鐘）
-    if (latestPaidOrder?.paid_at) {
-      const paidAt = dayjs.utc(latestPaidOrder.paid_at); 
+    if (latestPaidOrder?.end_date) {
+      const endDate = dayjs.utc(latestPaidOrder.end_date);
       const now = dayjs.utc();
-      const diff = now.diff(paidAt, "minute");
 
-      // 測試用：如果已超過 2 分鐘 → 更新回免費方案
-      if (diff >= 2 && user.subscription_plan !== 1) {
+      if (now.isAfter(endDate) && user.subscription_plan !== 1) {
         await db
           .update(usersTable)
-          .set({
-            subscription_plan: 1, // 免費方案 id = 1
-          })
+          .set({ subscription_plan: 1 }) // 免費方案 id = 1
           .where(eq(usersTable.id, req.user.id));
 
-        // 重新查一次最新的 subscription_plan
         const [updatedUser] = await db
           .select({
             subscription_plan: usersTable.subscription_plan,
@@ -172,16 +165,16 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           )
           .where(eq(usersTable.id, req.user.id));
 
-        // 回傳更新後的 user
         return res.json({
           user: {
             username: user.username,
             subscription_plan: updatedUser.subscription_plan,
             subscription_name: updatedUser.subscription_name,
-            paid_at: latestPaidOrder.paid_at,
+            end_date: latestPaidOrder.end_date,
           },
         });
       }
+
     }
     // 正常回傳 user（沒過期）
     res.json({
