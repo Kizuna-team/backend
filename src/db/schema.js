@@ -60,7 +60,7 @@ const profileTable = pgTable("profiles", {
   orientation: integer("orientation").notNull(),
   bio: varchar({ length: 255 }),
   age: integer("age").notNull(),
-  location: varchar("location", { length: 30 }).notNull(),
+  city: varchar("city", { length: 30 }).notNull(),
   zodiac: varchar("zodiac", { length: 30 }),
   mbti: varchar("mbti", { length: 5 }),
   job: varchar("job", { length: 50 }),

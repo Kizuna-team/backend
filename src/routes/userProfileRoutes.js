@@ -16,7 +16,7 @@ const {
  *     security:
  *       - bearerAuth: []
  */
-// 查看所有人的檔案資
+
 router.get("/", authMiddleware, getSortedProfiles);
 
 /**
@@ -34,7 +34,7 @@ router.get("/", authMiddleware, getSortedProfiles);
  *         schema:
  *           type: integer
  */
-// 查看指定某人的檔案資訊
+
 router.get("/:userId", authMiddleware, getProfileById);
 
 module.exports = router;

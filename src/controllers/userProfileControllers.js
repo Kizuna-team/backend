@@ -34,7 +34,7 @@ const getSortedProfiles = async (req, res) => {
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
-        // location: profileTable.location,
+        city: profileTable.city,
       })
       .from(profileTable)
       .where(not(eq(profileTable.userId, userId))); // 排除自己
