@@ -13,7 +13,7 @@ const checkSuperLikeAuth = async (userId) => {
   const usedCount = usedRecord.length;
   const limit = config.superLikeLimit;
   const remainingCount = limit - usedCount;
-  const isWithinLimit = remainingCount > 0; // 是否還能送出super like
+  const isWithinLimit = remainingCount > 0;
 
   return {
     planName: config.planName,

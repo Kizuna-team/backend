@@ -4,7 +4,6 @@ const baseUrl = process.env.SUPABASE_PUBLIC_URL;
 const bucket = process.env.SUPABASE_AVATAR_BUCKET;
 
 const defaultAvatarList = (count = 10) => {
-  // 沒有指定每個元素值
   return Array.from({ length: count }).map((_, i) => {
     const num = i + 1;
     return {

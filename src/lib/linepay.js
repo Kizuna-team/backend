@@ -41,7 +41,6 @@ async function requestOnlineAPI({
       signal: signal,
     }
   );
-  // console.log(response);
   return await response.json();
 }
 

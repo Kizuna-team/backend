@@ -12,7 +12,6 @@ const {
   joinActivity,
   cancelJoinActivity,
 } = require("../services/activityService");
-// console.log("activities:", activities);
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -30,13 +29,11 @@ const s3 = new S3Client({
   },
 });
 
-// 產生唯一檔名 function
 const randomFileName = (originalname) => {
   const ext = originalname.split(".").pop();
   return `${crypto.randomUUID()}.${ext}`;
 };
 
-// 上傳檔案到 S3 function，會回傳網址
 const uploadToS3 = async (file) => {
   const fileName = randomFileName(file.originalname);
   const command = new PutObjectCommand({
@@ -49,7 +46,6 @@ const uploadToS3 = async (file) => {
   return `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 };
 
-// 取得所有活動
 const getAllActivities = async (req, res) => {
   try {
     const result = await db
@@ -89,9 +85,8 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// 取得我創建的活動
 const getMyActivities = async (req, res) => {
-  const userId = req.user.id; // 由 token/middleware 取得
+  const userId = req.user.id;
   try {
     const result = await db
       .select({
@@ -132,7 +127,6 @@ const getMyActivities = async (req, res) => {
   }
 };
 
-// 查詢單一活動（編輯）
 const getActivityById = async (req, res) => {
   const id = parseInt(req.params.id);
 
@@ -210,7 +204,6 @@ const updateActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 查原本的活動
     const [activity] = await db
       .select()
       .from(activities)
@@ -218,8 +211,6 @@ const updateActivity = async (req, res) => {
 
     if (!activity) return res.status(404).json({ error: "Not found" });
 
-    //有新圖片就上傳，沒有就用原本的
-    // 前端可選擇只更新部分欄位
     let image_url = activity.image_url;
     const { title, location, date, description } = req.body;
     if (req.file) {
@@ -232,11 +223,10 @@ const updateActivity = async (req, res) => {
     const dateForDB = dateValue ? new Date(dateValue) : activity.date;
     const created_at = new Date();
 
-    //合併舊值與新值（只改有傳進來的）
     const [updated] = await db
       .update(activities)
       .set({
-        title: title ?? activity.title, // 沒送就用舊的
+        title: title ?? activity.title,
         location: location ?? activity.location,
         date: dateForDB,
         description: description ?? activity.description,
@@ -262,7 +252,9 @@ const deleteActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    await db.delete(userAttendActivityTable).where(eq(userAttendActivityTable.activityId, id));
+    await db
+      .delete(userAttendActivityTable)
+      .where(eq(userAttendActivityTable.activityId, id));
     const [activity] = await db
       .delete(activities)
       .where(and(eq(activities.id, id), eq(activities.created_by_id, userId)))
@@ -279,7 +271,6 @@ const deleteActivity = async (req, res) => {
   }
 };
 
-//取得我想參加的活動(顯示)
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -303,12 +294,10 @@ const postJoinActivity = async (req, res) => {
       return res.status(409).json({ message: result.message });
     }
 
-    return res
-      .status(201)
-      .json({
-        message: result.message,
-        current_participants: result.current_participants,
-      });
+    return res.status(201).json({
+      message: result.message,
+      current_participants: result.current_participants,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "伺服器錯誤" });
@@ -331,7 +320,6 @@ const searchActivitiesStatus = async (req, res) => {
   const { userId, activityIds } = req.body;
 
   try {
-    // 查詢所有該使用者已報名的活動
     const joinedActivities = await db
       .select({ activityId: userAttendActivityTable.activityId })
       .from(userAttendActivityTable)
@@ -344,7 +332,6 @@ const searchActivitiesStatus = async (req, res) => {
 
     const joinedSet = new Set(joinedActivities.map((a) => a.activityId));
 
-    // 查詢所有活動的最大人數
     const activitiesData = await db
       .select({
         id: activities.id,
@@ -353,7 +340,6 @@ const searchActivitiesStatus = async (req, res) => {
       .from(activities)
       .where(inArray(activities.id, activityIds));
 
-    // 查詢所有活動的目前參加人數
     const countResults = await db
       .select({
         activityId: userAttendActivityTable.activityId,
@@ -367,7 +353,6 @@ const searchActivitiesStatus = async (req, res) => {
       countResults.map((row) => [row.activityId, row.count])
     );
 
-    // 組合每個活動的狀態
     const statuses = activitiesData.map((activity) => {
       if (joinedSet.has(activity.id)) {
         return { activityId: activity.id, status: "ALREADY_JOINED" };

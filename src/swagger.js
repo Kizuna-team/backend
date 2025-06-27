@@ -2,7 +2,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 
-require('dotenv').config();
+require("dotenv").config();
 
 const options = {
   definition: {
@@ -33,7 +33,6 @@ const options = {
       },
     },
   },
-  // 指向路由檔案位置
   apis: [
     path.join(__dirname, "routes", "*.js"),
     path.join(__dirname, "server.js"),

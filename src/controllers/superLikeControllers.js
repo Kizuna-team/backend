@@ -1,6 +1,3 @@
-// 前端點擊super like按鈕後的處理邏輯
-// 先確定沒送過、沒超過限制，再寫入 superLikesTable
-// 最後判斷是否配對成功
 const db = require("../db/index.js");
 const { superLikesTable, matchesTable } = require("../db/schema");
 const { checkSuperLikeAuth } = require("../services/superLikeService.js");
@@ -24,14 +21,13 @@ const createSuperLike = async (req, res) => {
     const { limit, remainingCount, isWithinLimit } = await checkSuperLikeAuth(
       userId
     );
-    // 次數已用盡
+
     if (!isWithinLimit) {
       return res.status(403).json({
         message: `今日使用次數已達${limit}次上限`,
       });
     }
 
-    // 已對對方使用過super like
     const mySuperLike = await db
       .select()
       .from(superLikesTable)
@@ -68,7 +64,6 @@ const createSuperLike = async (req, res) => {
 
     const roomId = await createFriendship(userId, targetId);
 
-    // 呼叫 getMatchedCard 抓出雙方資訊
     const profiles = await getMatchedCard([userId, targetId]);
     const myProfile = profiles.find((p) => p.userId === userId);
     const targetProfile = profiles.find((p) => p.userId === targetId);

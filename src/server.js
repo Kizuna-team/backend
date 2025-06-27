@@ -17,7 +17,6 @@ const {
   profileTable,
   photosTable,
 } = require("./db/schema.js");
-// const { getMatchedCard } = require("./services/matchingService.js");
 
 const { eq, and, desc } = require("drizzle-orm");
 const ecpayRoutes = require("./routes/ecpay.js");
@@ -38,19 +37,15 @@ const userFilterRoutes = require("./routes/userFilterRoutes.js");
 
 const { swaggerUi, specs } = require("./swagger.js");
 
-// 以下為即時聊天室新增模組
 const http = require("http");
 const { Server } = require("socket.io");
-// const setupSocket = require("./controllers/chatControllers.js");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
 
-// 聊天室
 const server = http.createServer(app);
-// 設定 Socket.io
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -58,7 +53,6 @@ const io = new Server(server, {
   },
 });
 
-// Socket.IO 連接邏輯
 io.on("connection", (socket) => {
   const username = socket.user?.username || `User-${socket.id}`;
   console.log("User connected:", username);
@@ -80,7 +74,6 @@ app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
 app.use("/admin", adminRoutes);
 
-// 掛載子路由群組 REST API建議 以資源為單位
 app.use("/profile/me", editProfileRoutes);
 app.use("/photos/me", editPhotoRoutes);
 app.use("/like/", likeRoutes);
@@ -88,7 +81,7 @@ app.use("/users/profile", userProfileRoutes);
 app.use("/users/photos", userPhotoRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/chat", aiRoutes);
-app.use(express.urlencoded({ extended: true })); //  處理ecpay /notify 回傳(x-www-form-urlencoded)
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/ecpay", ecpayRoutes);
 app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
@@ -111,7 +104,6 @@ app.use("/user-filter", userFilterRoutes);
  */
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
-    //把使用者資料抓出來（基本資訊 + 訂閱方案名稱）
     const [user] = await db
       .select({
         id: usersTable.id,
@@ -119,8 +111,6 @@ app.get("/api/me", authMiddleware, async (req, res) => {
         subscription_plan: usersTable.subscription_plan,
         subscription_name: subscriptionPlansTable.name,
       })
-      // 拿著現在登入者的id 去找到 usersTable 對應的id (找到那位使用者)
-      // 然後 usersTable 有存放該使用者目前的 訂閱等級 把該訂閱等級對應的方案名稱取出
       .from(usersTable)
       .leftJoin(
         subscriptionPlansTable,
@@ -128,7 +118,6 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       )
       .where(eq(usersTable.id, req.user.id));
 
-    // 查訂單，抓最新一筆 paid
     const [latestPaidOrder] = await db
       .select({
         end_date: subscriptionsTable.end_date,
@@ -150,7 +139,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
       if (now.isAfter(endDate) && user.subscription_plan !== 1) {
         await db
           .update(usersTable)
-          .set({ subscription_plan: 1 }) // 免費方案 id = 1
+          .set({ subscription_plan: 1 })
           .where(eq(usersTable.id, req.user.id));
 
         const [updatedUser] = await db
@@ -165,7 +154,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           )
           .where(eq(usersTable.id, req.user.id));
 
-          console.log("重新更新過的使用者資料:",updatedUser);
+        console.log("重新更新過的使用者資料:", updatedUser);
         return res.json({
           user: {
             username: user.username,
@@ -175,9 +164,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           },
         });
       }
-
     }
-    // 正常回傳 user（沒過期）
     res.json({
       user: {
         username: user.username,
@@ -194,27 +181,15 @@ app.get("/api/me", authMiddleware, async (req, res) => {
 
 app.get("/friendLists", authMiddleware, async (req, res) => {
   try {
-    // 取得目前登入使用者的 ID
     const currentUserId = req.user.id;
     console.log("現在登入房間的使用者:", currentUserId);
 
-    // // 查詢好友列表（好友名稱 + 聊天室 roomId）
-    // const friends = await db
-    //   .select({
-    //     friendId: friendshipsTable.friend_id,
-    //     friendName: usersTable.username,
-    //     roomId: friendshipsTable.room_id,
-    //   })
-    //   .from(friendshipsTable)
-    //   .innerJoin(usersTable, eq(usersTable.id, friendshipsTable.friend_id))
-    //   .where(eq(friendshipsTable.user_id, currentUserId));
-
     const friends = await db
       .select({
-        friendId: friendshipsTable.friend_id, // 好友 ID
-        roomId: friendshipsTable.room_id, // 聊天室 ID
-        name: profileTable.name, // 好友名字
-        avatarUrl: photosTable.image_url, // 好友大頭貼
+        friendId: friendshipsTable.friend_id,
+        roomId: friendshipsTable.room_id,
+        name: profileTable.name,
+        avatarUrl: photosTable.image_url,
       })
       .from(friendshipsTable)
       .innerJoin(
@@ -251,7 +226,6 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
   }
 });
 
-// 啟用 socket.io 聊天室邏輯
 setupSocket(io);
 
 app.use(
@@ -265,5 +239,5 @@ app.use(
 );
 
 server.listen(PORT, () =>
-  console.log(`✅ Server running on http://localhost:${PORT}`)
+  console.log(` Server running on http://localhost:${PORT}`)
 );

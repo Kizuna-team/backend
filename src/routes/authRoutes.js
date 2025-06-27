@@ -1,5 +1,12 @@
 const express = require("express");
-const { register, login, refresh, googleAuth, googleLogin, googleCallback } = require("../controllers/authControllers.js");
+const {
+  register,
+  login,
+  refresh,
+  googleAuth,
+  googleLogin,
+  googleCallback,
+} = require("../controllers/authControllers.js");
 
 const router = express.Router();
 
@@ -79,7 +86,6 @@ router.post("/login", login);
  *         description: Refresh Token 無效或過期
  */
 router.post("/refresh", refresh);
-// Google 第三方登入 使用 Google One Tap/Sign-in Button
 
 /**
  * @swagger

@@ -11,7 +11,7 @@ const getActivityById = async (activityId) => {
     .select()
     .from(activities)
     .where(eq(activities.id, activityId))
-    .limit(1); // 限制只返回一筆資料
+    .limit(1);
 };
 
 const getJoinedActivitiesByUserId = async (userId) => {
@@ -30,8 +30,8 @@ const getJoinedActivitiesByUserId = async (userId) => {
       eq(userAttendActivityTable.activityId, activities.id)
     )
     .where(eq(userAttendActivityTable.userId, userId));
-    console.log(res)
-    return res;
+  console.log(res);
+  return res;
 };
 
 const joinActivity = async (userId, activityId) => {
@@ -50,7 +50,6 @@ const joinActivity = async (userId, activityId) => {
     return { success: false, message: "你已經加入過此活動" };
   }
 
-  // 查詢該活動最多可容納多少人
   const activity = await db
     .select({ max: activities.max_participants })
     .from(activities)
@@ -62,8 +61,6 @@ const joinActivity = async (userId, activityId) => {
   }
 
   const maxParticipants = activity[0].max;
-  // console.log(maxParticipants)
-  // 查詢目前已報名人數
   const countResult = await db
     .select({ count: sql`COUNT(${userAttendActivityTable.activityId})` })
     .from(userAttendActivityTable)
@@ -80,7 +77,11 @@ const joinActivity = async (userId, activityId) => {
     activityId,
   });
 
-  return { success: true, message: "成功加入活動",current_participants:currentCount };
+  return {
+    success: true,
+    message: "成功加入活動",
+    current_participants: currentCount,
+  };
 };
 
 const cancelJoinActivity = async (userId, activityId) => {

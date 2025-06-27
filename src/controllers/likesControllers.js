@@ -20,7 +20,6 @@ const createLike = async (req, res) => {
   }
   const { targetId, status } = req.body;
   try {
-    // 查詢super like、like 是否也有按過的紀錄
     const mySuperLikesRecord = await db
       .select()
       .from(superLikesTable)
@@ -45,7 +44,6 @@ const createLike = async (req, res) => {
       });
     }
 
-    // 確定沒重複喜歡 > 插入新紀錄
     await db
       .insert(likesTable)
       .values({
@@ -55,7 +53,6 @@ const createLike = async (req, res) => {
       })
       .onConflictDoNothing();
 
-    // 查詢對方是否也 喜歡:1 > 這樣就是互相like 插入matches
     const targetLikesRecord = await db
       .select()
       .from(likesTable)
@@ -78,7 +75,6 @@ const createLike = async (req, res) => {
         .onConflictDoNothing();
       console.log("雙方配對成功，回傳 matchedWith:", targetId);
 
-      // 回傳對方照片與名字
       const targetProfileQuery = db
         .select({
           userId: profileTable.userId,
@@ -96,7 +92,6 @@ const createLike = async (req, res) => {
         .where(eq(profileTable.userId, targetId))
         .limit(1);
 
-      // 回傳自己照片與名字
       const myProfileQuery = db
         .select({
           userId: profileTable.userId,
@@ -116,11 +111,6 @@ const createLike = async (req, res) => {
 
       const [targetProfile] = await targetProfileQuery;
       const [myProfile] = await myProfileQuery;
-      // const defaultUrl =
-      //   "https://waapple.org/wp-content/uploads/2021/06/Untitled-design-20-e1745534545813-658x677.png";
-
-      // if (targetProfile) targetProfile.avatarUrl ||= defaultUrl;
-      // if (myProfile) myProfile.avatarUrl ||= defaultUrl;
 
       return res.json({
         success: true,

@@ -1,7 +1,6 @@
 const db = require("../db/index.js");
 const { messagesTable, usersTable, friendsTable } = require("../db/schema.js");
 
-// 存儲房間和用戶資訊
 const rooms = new Map();
 const users = new Map();
 
@@ -9,20 +8,16 @@ function setupSocket(io) {
   io.on("connection", (socket) => {
     console.log("新用戶連接:", socket.id);
 
-    // 處理加入房間
     socket.on("joinRoom", (data) => {
       const { roomId, userId, userName } = data;
 
-      // 離開之前的房間
       const previousUser = users.get(socket.id);
       if (previousUser?.roomId) {
         socket.leave(previousUser.roomId.toString());
       }
 
-      // 加入新房間
       socket.join(roomId);
 
-      // 儲存用戶資訊
       users.set(socket.id, {
         userId,
         userName,
@@ -30,13 +25,11 @@ function setupSocket(io) {
         joinTime: new Date(),
       });
 
-      // 更新房間資訊
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
       }
       rooms.get(roomId).add(socket.id);
 
-      // 通知房間內其他用戶有新用戶加入
       socket.to(roomId.toString()).emit("userJoined", {
         userId,
         userName,
@@ -44,7 +37,6 @@ function setupSocket(io) {
         timestamp: new Date().toISOString(),
       });
 
-      // 發送加入成功確認給當前用戶
       socket.emit("joinedRoom", {
         roomId,
         message: `歡迎加入房間 ${roomId}`,
@@ -52,7 +44,6 @@ function setupSocket(io) {
       });
     });
 
-    // 處理離開房間
     socket.on("leaveRoom", (data) => {
       const { roomId } = data;
       const user = users.get(socket.id);
@@ -74,7 +65,6 @@ function setupSocket(io) {
         stickerEmoji,
       } = data;
 
-      // 驗證用戶是否在房間中
       const user = users.get(socket.id);
       if (!user || user.roomId !== roomId) {
         console.log(`用戶 ${senderId} 不在房間 ${roomId} 中`);
@@ -83,9 +73,8 @@ function setupSocket(io) {
       }
 
       const now = new Date();
-      const messageType = type || "text"; //定義 messageType
+      const messageType = type || "text";
 
-      // 建立完整的訊息物件（前端顯示用）
       const message = {
         id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         roomId,
@@ -94,33 +83,30 @@ function setupSocket(io) {
         content,
         timestamp: timestamp || now.toISOString(),
         socketId: socket.id,
-        type: type || "text", // 傳回給前端要知道訊息類型
-        stickerUrl: stickerUrl || null, //  讓前端能顯示貼圖
-        stickerEmoji: stickerEmoji || null, // 貼圖顯示失敗時備用
+        type: type || "text",
+        stickerUrl: stickerUrl || null,
+        stickerEmoji: stickerEmoji || null,
       };
 
-      // 寫入資料庫
       try {
         await db.insert(messagesTable).values({
           room_id: roomId,
           sender_id: senderId,
           content,
-          type: messageType, // 新增
-          sticker_url: stickerUrl || null, // 新增
-          sticker_emoji: stickerEmoji || null, // 新增
-          created_at: now, // Drizzle timestamp 欄位
+          type: messageType,
+          sticker_url: stickerUrl || null,
+          sticker_emoji: stickerEmoji || null,
+          created_at: now,
         });
         console.log(`訊息已寫入資料庫`);
       } catch (error) {
         console.error("寫入資料庫時出錯:", error);
       }
 
-      // 廣播給房間內所有人
       io.to(roomId.toString()).emit("chatMessage", message);
       console.log(`訊息已廣播給房間 ${roomId} 的所有用戶`);
     });
 
-    // 處理斷開連接
     socket.on("disconnect", () => {
       const user = users.get(socket.id);
 
@@ -132,28 +118,23 @@ function setupSocket(io) {
       }
     });
 
-    // 處理錯誤
     socket.on("error", (error) => {
       console.error("Socket 錯誤:", error);
     });
   });
 
-  // 處理用戶離開 避免消耗不必要的記憶體空間
   function handleUserLeave(socket, user) {
     const { roomId, userId, userName } = user;
 
-    // 從房間中移除用戶
     socket.leave(roomId.toString());
 
-    // 刪除用戶資訊
     users.delete(socket.id);
 
-    // 從房間 Map 移除這位 socket.id
     const room = rooms.get(roomId);
     if (room) {
       room.delete(socket.id);
     }
-    // 如果房間沒人了 就移除房間
+
     if (room.size === 0) {
       room.delete(roomId);
     } else {

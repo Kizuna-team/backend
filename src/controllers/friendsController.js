@@ -7,7 +7,6 @@ const {
 } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 
-// 1. 發送交友邀請
 async function sendFriendRequest(req, res) {
   const { from_id, to_id } = req.body;
 
@@ -23,7 +22,6 @@ async function sendFriendRequest(req, res) {
   }
 }
 
-// 2. 查詢某用戶收到的邀請
 async function getReceivedRequests(req, res) {
   const { userId } = req.query;
 
@@ -34,12 +32,9 @@ async function getReceivedRequests(req, res) {
         from_id: friendRequestsTable.from_id,
         to_id: friendRequestsTable.to_id,
         created_at: friendRequestsTable.created_at,
-        // 新增 from_username 欄位，它來自 profileTable 的 name 欄位
         from_username: profileTable.name,
       })
       .from(friendRequestsTable)
-      // 將 friendRequestsTable 與 profileTable 進行 JOIN
-      // 條件是 friendRequestsTable 的 from_id 等於 profileTable 的 userId
       .innerJoin(
         profileTable,
         eq(friendRequestsTable.from_id, profileTable.userId)
@@ -54,11 +49,9 @@ async function getReceivedRequests(req, res) {
 }
 
 async function rejectFriendRequest(req, res) {
-  // 假設從 URL 參數獲取邀請 ID (例如: DELETE /api/friends/requests/123)
   const requestId = req.params.id;
 
   try {
-    // 先檢查邀請是否存在
     const [request] = await db
       .select()
       .from(friendRequestsTable)
@@ -68,7 +61,6 @@ async function rejectFriendRequest(req, res) {
       return res.status(404).json({ error: "邀請不存在" });
     }
 
-    // 直接刪除該筆邀請紀錄
     await db
       .delete(friendRequestsTable)
       .where(eq(friendRequestsTable.id, requestId));
@@ -78,12 +70,10 @@ async function rejectFriendRequest(req, res) {
   }
 }
 
-// 3. 同意好友邀請
 async function acceptFriendRequest(req, res) {
   const { requestId } = req.body;
 
   try {
-    // 先找出邀請資料
     const [request] = await db
       .select()
       .from(friendRequestsTable)
@@ -91,13 +81,11 @@ async function acceptFriendRequest(req, res) {
 
     if (!request) return res.status(404).json({ error: "邀請不存在" });
 
-    // 寫入雙方好友紀錄
     await db.insert(friendshipsTable).values([
       { user_id: request.from_id, friend_id: request.to_id },
       { user_id: request.to_id, friend_id: request.from_id },
     ]);
 
-    // 刪除該筆邀請
     await db
       .delete(friendRequestsTable)
       .where(eq(friendRequestsTable.id, requestId));
@@ -109,8 +97,6 @@ async function acceptFriendRequest(req, res) {
   }
 }
 
-// 4. 好友列表
-
 async function getFriendsList(req, res) {
   const userId = Number(req.query.userId);
 
@@ -118,7 +104,6 @@ async function getFriendsList(req, res) {
     return res.status(400).json({ error: "請提供有效的 userId" });
   }
 
-  // 好友的名字改成從 usersTable 抓就好了
   try {
     const rawFriends = await db
       .select({

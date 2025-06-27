@@ -7,7 +7,8 @@ const { text } = require("drizzle-orm/gel-core");
 require("dotenv").config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const systemPrompt = "你是一個親切、有耐心的 AI 助理，用簡單清楚的方式回覆問題。";
+const systemPrompt =
+  "你是一個親切、有耐心的 AI 助理，用簡單清楚的方式回覆問題。";
 
 async function handleChat(req, res) {
   const { message } = req.body;
@@ -57,19 +58,21 @@ async function handleSuggestion(req, res) {
   const userId = req.user?.id;
 
   try {
-    // 從資料庫中撈出單獨聊天室的聊天記錄
     const messages = await getRoomMessages(roomId);
 
-    const history = [{ role: "user", parts: [{ text: systemPrompt }] }, ...messages.map((msg) => ({
-      // 把對方說的話當作 AI 回覆的訊息 讓 AI 可以接著說
-      role: msg.sender_id === userId ? "user" : "model",
-      parts: [{ text: msg.content }],
-    }))]
+    const history = [
+      { role: "user", parts: [{ text: systemPrompt }] },
+      ...messages.map((msg) => ({
+        role: msg.sender_id === userId ? "user" : "model",
+        parts: [{ text: msg.content }],
+      })),
+    ];
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const chat = model.startChat({ history });
 
-    const prompt = "請根據這段對話內容，幫我提出一些我可以接著說的話題建議。請用簡單的中文列出1~3個建議。";
+    const prompt =
+      "請根據這段對話內容，幫我提出一些我可以接著說的話題建議。請用簡單的中文列出1~3個建議。";
     const result = await chat.sendMessage(prompt);
     const response = await result.response;
     const suggestion = response.text();

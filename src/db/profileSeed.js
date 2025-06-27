@@ -62,10 +62,7 @@ async function seed() {
 
   await db.insert(userInterestsTable).values(userInterestsData);
 
-
-  //userPreference表
   for (let userId = 1; userId <= 100; userId++) {
-    //這邊是不是要更多
     const fakePref = generateFakeUserPreference(userId);
     await db.insert(userPreferencesTable).values(fakePref);
   }

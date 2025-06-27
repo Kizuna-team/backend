@@ -18,7 +18,6 @@ const {
 
 const authMiddleware = require("../middleware/auth.js");
 
-// 公開取得所有活動
 /**
  * @swagger
  * /activities:
@@ -27,8 +26,6 @@ const authMiddleware = require("../middleware/auth.js");
  *     tags: [Activity]
  */
 router.get("/", getAllActivities);
-
-// 需要授權的操作 使用者創建/編輯/刪除活動
 
 /**
  * @swagger
@@ -109,7 +106,6 @@ router.put("/:id", authMiddleware, upload.single("image"), updateActivity);
  */
 router.delete("/:id", authMiddleware, deleteActivity);
 
-//使用者(操作)加入/取消參與活動(資源)
 /**
  * @swagger
  * /activities/join/{id}:
@@ -142,5 +138,5 @@ router.post("/join/:id", authMiddleware, postJoinActivity);
  *           type: integer
  */
 router.delete("/join/:id", authMiddleware, deleteJoinActivity);
-router.post("/status", authMiddleware, searchActivitiesStatus)
+router.post("/status", authMiddleware, searchActivitiesStatus);
 module.exports = router;

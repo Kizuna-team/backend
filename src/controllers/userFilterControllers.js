@@ -12,14 +12,13 @@ const saveUserInterests = async (req, res) => {
   }
 
   try {
-    // 清空舊興趣，確保不重複
     await db
       .delete(userInterestsTable)
       .where(eq(userInterestsTable.userId, userId));
 
     const newInterests = interestIds.map((id) => ({
       userId,
-      interestId: id, // 對應興趣 ID 陣列
+      interestId: id,
     }));
     await db.insert(userInterestsTable).values(newInterests);
 
@@ -47,7 +46,6 @@ const saveUserPreference = async (req, res) => {
     return res.status(400).json({ message: "缺少必要欄位" });
   }
   try {
-    // 重複資料就刪除
     await db
       .delete(userPreferencesTable)
       .where(eq(userPreferencesTable.userId, userId));

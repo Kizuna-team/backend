@@ -20,7 +20,6 @@ const getMyAvatarPhoto = async (req, res) => {
   }
 };
 
-// 大頭照要額外用 isAvatar = true 告訴後端「這不用 sequence」
 const uploadImage = async (req, res) => {
   const file = req.file;
   if (!file) {
@@ -61,8 +60,8 @@ const uploadImage = async (req, res) => {
         image_url: imageUrl,
         image_key: fileKey,
         userId,
-        sequence, // 有給就儲存，沒給就 null
-        is_avatar: isAvatar, //  用傳來的判斷值
+        sequence,
+        is_avatar: isAvatar,
       })
       .returning();
 
@@ -109,7 +108,6 @@ const deletePhoto = async (req, res) => {
       return res.status(403).json({ message: "你無權刪除此圖片" });
     }
 
-    // 刪 S3
     await s3.send(
       new DeleteObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
@@ -117,7 +115,6 @@ const deletePhoto = async (req, res) => {
       })
     );
 
-    // 刪資料庫
     await db.delete(photosTable).where(eq(photosTable.image_key, key));
 
     res.json({ message: `已刪除：${key}` });
@@ -137,7 +134,7 @@ const changeAvatar = async (req, res) => {
   }
 
   try {
-    const result = await setAvatar(userId, key); // 執行設定大頭貼
+    const result = await setAvatar(userId, key);
 
     res.json({ message: "大頭貼已更新", result });
   } catch (err) {

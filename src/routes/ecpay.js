@@ -21,7 +21,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const options = {
-  OperationMode: "Test", //測試環境是Test不是Stage，正式環境是Production
+  OperationMode: "Test",
   MercProfile: {
     MerchantID: process.env.ECPAY_MERCHANT_ID,
     HashKey: process.env.ECPAY_HASH_KEY,
@@ -33,7 +33,6 @@ const options = {
 
 const createOrder = new ecpay(options);
 
-// ecpay 時間格式為 yyyy/MM/dd HH:mm:ss
 function getTimeString() {
   const date = new Date();
   const yyyy = date.getFullYear();
@@ -45,8 +44,6 @@ function getTimeString() {
   return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
 }
 
-// console.log(new Date().toString()); //檢查時區
-// 建立訂單（付款表單）
 /**
  * @swagger
  * /api/ecpay/create:
@@ -70,10 +67,7 @@ router.post("/create", authMiddleware, async (req, res) => {
   console.log("建立訂單的商戶交易編號:", MerchantTradeNo);
 
   try {
-    // 將訂單編號先存入資料庫
-    // 這裡的訂單狀態先設為 pending，等付款成功後再更新為 paid
     await db.transaction(async (tx) => {
-      // 將訂單編號先存入資料庫
       await tx.insert(subscriptionsTable).values({
         user_id: userId,
         plan: plan.name,
@@ -105,7 +99,6 @@ router.post("/create", authMiddleware, async (req, res) => {
   }
 });
 
-// 綠界付款完成後會post回來（付款成功回傳）=> 更新資料庫訂閱狀態
 /**
  * @swagger
  * /api/ecpay/notify:
@@ -119,7 +112,6 @@ router.post("/notify", async (req, res) => {
 
   if (RtnCode === "1") {
     try {
-      // 查訂單
       const [order] = await db
         .select()
         .from(subscriptionsTable)
@@ -135,7 +127,6 @@ router.post("/notify", async (req, res) => {
 
       if (!order) return res.status(404).send("0|訂單不存在");
 
-      // 查對應的方案 id（根據 plan name）
       const [matchedPlan] = await db
         .select()
         .from(subscriptionPlansTable)
@@ -143,9 +134,6 @@ router.post("/notify", async (req, res) => {
 
       if (!matchedPlan) return res.status(404).send("0|方案不存在");
 
-      // 更新訂單狀態
-      // 將 PaymentDate 格式轉換為 yyyy-MM-dd HH:mm:ss
-      // 注意：ECPay 的 PaymentDate 格式是 yyyy/MM/dd HH:mm:ss
       const paidAtStr = PaymentDate ? PaymentDate.replace(/\//g, "-") : null;
       const now = dayjs().utc();
 
@@ -160,7 +148,6 @@ router.post("/notify", async (req, res) => {
         })
         .where(eq(subscriptionsTable.merchanttradeno, MerchantTradeNo));
 
-      // 更新會員目前方案（要設的是 plan.id）
       await db
         .update(usersTable)
         .set({ subscription_plan: matchedPlan.id })

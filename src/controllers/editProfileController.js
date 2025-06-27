@@ -2,7 +2,6 @@ const db = require("../db/index.js");
 const { profileTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 
-
 const getProfile = async (req, res) => {
   console.log("getProfile req.user:", req.user);
   try {
@@ -30,7 +29,6 @@ const getProfile = async (req, res) => {
     const userProfile = result[0];
 
     if (!userProfile) {
-      // 先給一份預設空值
       return res.json({
         message: "使用者尚未建立個人資料",
         user: {
@@ -55,8 +53,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-
-
 const createProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -64,7 +60,6 @@ const createProfile = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "未授權，請先登入" });
     }
-    // 先檢查是否已有資料，有就回傳409(沒有設關聯？)
     const existingProfile = await db
       .select()
       .from(profileTable)
@@ -75,34 +70,24 @@ const createProfile = async (req, res) => {
       return res.status(409).json({ message: "使用者資料已存在" });
     }
 
-    const {
-      name,
-      gender,
-      bio,
-      age,
-      location,
-      zodiac,
-      mbti,
-      job,
-      orientation,
-    } = req.body || {};
+    const { name, gender, bio, age, location, zodiac, mbti, job, orientation } =
+      req.body || {};
 
-    // 沒有使用者資料才新增
     const newData = await db
       .insert(profileTable)
       .values({
         userId: userId,
         name: name || "",
-        gender: gender || "U", // U 表示 unknown
+        gender: gender || "U",
         bio: bio || "",
         age: age || 0,
         location: location || "",
         zodiac: zodiac || "",
         mbti: mbti || "",
         job: job || "",
-        orientation: orientation || 2, // 沒填就預設男女都可以
+        orientation: orientation || 2,
       })
-      .returning(); 
+      .returning();
 
     const createdProfile = newData[0];
 
@@ -112,7 +97,6 @@ const createProfile = async (req, res) => {
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
   }
 };
-
 
 const updateProfile = async (req, res) => {
   try {
@@ -136,9 +120,8 @@ const updateProfile = async (req, res) => {
     const updateData = {};
 
     fields.forEach((field) => {
-      // 只更新有被送出的欄位 等同於 req.body[field] !== undefined
-      if (Object.hasOwn(req.body, field)) {    
-          updateData[field] = req.body[field];      
+      if (Object.hasOwn(req.body, field)) {
+        updateData[field] = req.body[field];
       }
     });
 
@@ -146,7 +129,6 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "未提供任何更新資料" });
     }
 
-  
     const updateResult = await db
       .update(profileTable)
       .set(updateData)

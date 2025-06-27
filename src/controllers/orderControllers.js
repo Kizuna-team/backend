@@ -40,7 +40,6 @@ async function createOrder(req, res) {
 
   console.log("收到的訂單資料:", req.body);
 
-  // 驗證前端送來的訂單資料
   if (
     !sender_id ||
     !receiver_id ||
@@ -51,20 +50,14 @@ async function createOrder(req, res) {
   }
 
   try {
-    // 用 transaction 保持一致性
     await db.transaction(async (tx) => {
-      // 前端傳的 items 資訊有 商品id 跟 使用者購買的數量
-      // 我只要商品id 來查詢商品資訊
       const productIds = items.map((item) => item.product_id);
-      // SELECT * FROM products WHERE id IN (productIds)
       const products = await tx
         .select()
         .from(productsTable)
         .where(inArray(productsTable.id, productIds));
 
-      // 組成 LINE PAY 格式 ＋ 計算金額
       const linepayItems = items.map((item) => {
-        // 找到對應的商品資訊
         const product = products.find((p) => p.id === item.product_id);
         return {
           id: product.id.toString(),
@@ -75,16 +68,13 @@ async function createOrder(req, res) {
         };
       });
 
-      // 計算總金額
       const totalAmount = linepayItems.reduce((sum, item) => {
         return (sum += item.price * item.quantity);
       }, 0);
 
-      // 產生訂單編號
       const orderId = orderGenerator();
       console.log("產生的訂單編號:", orderId);
 
-      // 特別說明 returning() 回傳的是一個 array 而我只想要剛剛insert的那筆 所以 解構
       const [giftOrder] = await tx
         .insert(giftOrdersTable)
         .values({
@@ -99,10 +89,7 @@ async function createOrder(req, res) {
 
       const { id: gift_order_id } = giftOrder;
 
-      // 準備要插入的多筆 items
-      // 把前端打過來的 items array => 轉成可以插入OrderItemsTable的格式
       const itemRows = items.map((item) => ({
-        // 該筆禮物是對應到哪筆訂單
         gift_order_id: gift_order_id,
         product_id: item.product_id,
         quantity: item.quantity,
@@ -110,10 +97,8 @@ async function createOrder(req, res) {
 
       console.log(itemRows);
 
-      // 插入多筆 items
       await tx.insert(orderItemsTable).values(itemRows);
 
-      // 呼叫 LINE Pay API 來建立付款連結
       const data = {
         amount: totalAmount,
         currency: "TWD",
@@ -141,7 +126,6 @@ async function createOrder(req, res) {
       if (response.returnCode === "0000") {
         const paymentURL = response.info.paymentUrl.web;
 
-        // 回傳 LINE Pay 付款網址讓前端跳轉
         res.json({
           success: true,
           paymentUrl: paymentURL,
@@ -149,7 +133,6 @@ async function createOrder(req, res) {
           order_id: orderId,
         });
       } else {
-        // 如果 LINE Pay 呼叫失敗 把訂單標為 failed
         await tx
           .update(giftOrdersTable)
           .set({
@@ -171,12 +154,10 @@ async function createOrder(req, res) {
   }
 }
 
-// 確認付款流程
 async function confirmOrder(req, res) {
   const { transactionId, orderId } = req.query;
 
   try {
-    // 拿著 orderId 到資料庫中抓訂單總金額
     const [order] = await db
       .select()
       .from(giftOrdersTable)
@@ -200,24 +181,19 @@ async function confirmOrder(req, res) {
     console.log("LINE Pay confirm 回傳結果：", result);
 
     if (result.returnCode === "0000") {
-      // 付款成功，更新訂單狀態
       await db
         .update(giftOrdersTable)
         .set({
           status: "paid",
           transaction_id: transactionId,
-          // 訂單狀態可以加上付款方式(現在沒有這個欄位)
-          // payment_method: "LINE Pay"
         })
         .where(eq(giftOrdersTable.order_id, orderId));
 
-      // 查詢該筆訂單的商品項目 => 更新對應商品的庫存
       const orderItems = await db
         .select()
         .from(orderItemsTable)
         .where(eq(orderItemsTable.gift_order_id, order.id));
 
-      // 因為 forEach 沒有支援 await 所以 for loop
       for (const item of orderItems) {
         await db
           .update(productsTable)
@@ -249,7 +225,6 @@ async function getMyOrders(req, res) {
   const userId = parseInt(req.query.userId);
 
   try {
-    // 1：查出所有該用戶送出的訂單（ 收件者是誰也要知道 ）
     const orders = await db
       .select({
         id: giftOrdersTable.id,
@@ -261,11 +236,9 @@ async function getMyOrders(req, res) {
         receiverName: usersTable.username,
       })
       .from(giftOrdersTable)
-      // 用 innerJoin 取得 收件人的名字
       .innerJoin(usersTable, eq(giftOrdersTable.receiver_id, usersTable.id))
       .where(eq(giftOrdersTable.sender_id, userId));
 
-    // 2：查出這些訂單的明細
     const orderIds = orders.map((order) => order.id);
     const orderItems = await db
       .select({
@@ -281,7 +254,6 @@ async function getMyOrders(req, res) {
       )
       .where(inArray(orderItemsTable.gift_order_id, orderIds));
 
-    // 3：合併明細到訂單中
     const orderMap = {};
     for (const order of orders) {
       orderMap[order.id] = { ...order, items: [] };
