@@ -24,13 +24,14 @@
   * `Express`
   * `PostgreSQL`
   * `Socket.IO`
+  * `Gemini AI`
   
 ## 如何安裝及執行這個專案:
 
 ### 1. Clone 專案
 ```
 git clone https://github.com/Kizuna-team/backend.git
-cd kizuna-backend
+cd backend
 ```
 
 ### 2. 安裝依賴套件
@@ -52,8 +53,8 @@ npm run dev
 * 資料庫: `PostgreSQL`
 
 * 命名方式 以 使用者名稱 為例
-  * 資料庫欄位請使用 蛇式命名法 ( snacke-case ) => user_name
-  * `JavaScript` 使用 駝峰式命名法 => userName
+  * 資料庫欄位請使用 蛇式命名法 ( `snacke-case` ) => `user_name`
+  * `JavaScript` 使用 駝峰式命名法 => `userName`
 
 * `.env`環境變數設定
 
