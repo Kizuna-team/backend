@@ -2,7 +2,6 @@ const db = require("../db/index.js");
 const { profileTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 
-
 const getProfile = async (req, res) => {
   console.log("getProfile req.user:", req.user);
   try {
@@ -19,7 +18,7 @@ const getProfile = async (req, res) => {
         orientation: profileTable.orientation,
         bio: profileTable.bio,
         age: profileTable.age,
-        location: profileTable.location,
+        city: profileTable.city,
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
@@ -40,7 +39,7 @@ const getProfile = async (req, res) => {
           orientation: "",
           bio: "",
           age: null,
-          location: "",
+          city: "",
           zodiac: "",
           mbti: "",
           job: "",
@@ -54,8 +53,6 @@ const getProfile = async (req, res) => {
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
-
-
 
 const createProfile = async (req, res) => {
   try {
@@ -75,17 +72,8 @@ const createProfile = async (req, res) => {
       return res.status(409).json({ message: "使用者資料已存在" });
     }
 
-    const {
-      name,
-      gender,
-      bio,
-      age,
-      location,
-      zodiac,
-      mbti,
-      job,
-      orientation,
-    } = req.body || {};
+    const { name, gender, bio, age, city, zodiac, mbti, job, orientation } =
+      req.body || {};
 
     // 沒有使用者資料才新增
     const newData = await db
@@ -96,13 +84,13 @@ const createProfile = async (req, res) => {
         gender: gender || "U", // U 表示 unknown
         bio: bio || "",
         age: age || 0,
-        location: location || "",
+        city: city || "",
         zodiac: zodiac || "",
         mbti: mbti || "",
         job: job || "",
         orientation: orientation || 2, // 沒填就預設男女都可以
       })
-      .returning(); 
+      .returning();
 
     const createdProfile = newData[0];
 
@@ -112,7 +100,6 @@ const createProfile = async (req, res) => {
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
   }
 };
-
 
 const updateProfile = async (req, res) => {
   try {
@@ -127,7 +114,7 @@ const updateProfile = async (req, res) => {
       "orientation",
       "bio",
       "age",
-      "location",
+      "city",
       "zodiac",
       "mbti",
       "job",
@@ -137,8 +124,8 @@ const updateProfile = async (req, res) => {
 
     fields.forEach((field) => {
       // 只更新有被送出的欄位 等同於 req.body[field] !== undefined
-      if (Object.hasOwn(req.body, field)) {    
-          updateData[field] = req.body[field];      
+      if (Object.hasOwn(req.body, field)) {
+        updateData[field] = req.body[field];
       }
     });
 
@@ -146,7 +133,6 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "未提供任何更新資料" });
     }
 
-  
     const updateResult = await db
       .update(profileTable)
       .set(updateData)
