@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middleware/auth.js");
 const {
   sendFriendRequest,
   getReceivedRequests,
   acceptFriendRequest,
   getFriendsList,
   rejectFriendRequest,
+  directAddFriend,
 } = require("../controllers/friendsController");
 /**
  * @swagger
@@ -29,7 +31,7 @@ router.get("/requests", getReceivedRequests);
  *   post:
  *     summary: 接受好友邀請
  *     tags: [Friends]
- */   
+ */
 router.post("/accept", acceptFriendRequest);
 /**
  * @swagger
@@ -52,6 +54,8 @@ router.get("/", getFriendsList);
  *         schema:
  *           type: integer
  */
-router.delete("/requests/:id", rejectFriendRequest);                
+router.delete("/requests/:id", rejectFriendRequest);
+
+router.post("/direct-add", authMiddleware, directAddFriend);
 
 module.exports = router;
