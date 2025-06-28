@@ -4,6 +4,7 @@ const {
   giftOrdersTable,
   orderItemsTable,
   productsTable,
+  profileTable,
 } = require("../db/schema.js");
 const { orderGenerator } = require("../lib/order.js");
 const { requestOnlineAPI } = require("../lib/linepay.js");
@@ -233,10 +234,12 @@ async function getMyOrders(req, res) {
         status: giftOrdersTable.status,
         amount: giftOrdersTable.amount,
         message: giftOrdersTable.message,
-        receiverName: usersTable.username,
+        receiverName: profileTable.name,
       })
       .from(giftOrdersTable)
-      .innerJoin(usersTable, eq(giftOrdersTable.receiver_id, usersTable.id))
+
+      // 用 innerJoin 取得 收件人的名字
+      .innerJoin(profileTable, eq(giftOrdersTable.receiver_id, profileTable.userId))
       .where(eq(giftOrdersTable.sender_id, userId));
 
     const orderIds = orders.map((order) => order.id);
@@ -286,11 +289,11 @@ async function getReceivedOrders(req, res) {
         createdAt: giftOrdersTable.created_at,
         status: giftOrdersTable.status,
         amount: giftOrdersTable.amount,
-        senderName: usersTable.username,
+        senderName: profileTable.name,
         message: giftOrdersTable.message,
       })
       .from(giftOrdersTable)
-      .innerJoin(usersTable, eq(giftOrdersTable.sender_id, usersTable.id))
+      .innerJoin(profileTable, eq(giftOrdersTable.sender_id, profileTable.userId))
       .where(
         and(
           eq(giftOrdersTable.receiver_id, userId),

@@ -18,7 +18,7 @@ const getProfile = async (req, res) => {
         orientation: profileTable.orientation,
         bio: profileTable.bio,
         age: profileTable.age,
-        location: profileTable.location,
+        city: profileTable.city,
         zodiac: profileTable.zodiac,
         mbti: profileTable.mbti,
         job: profileTable.job,
@@ -38,7 +38,7 @@ const getProfile = async (req, res) => {
           orientation: "",
           bio: "",
           age: null,
-          location: "",
+          city: "",
           zodiac: "",
           mbti: "",
           job: "",
@@ -70,7 +70,7 @@ const createProfile = async (req, res) => {
       return res.status(409).json({ message: "使用者資料已存在" });
     }
 
-    const { name, gender, bio, age, location, zodiac, mbti, job, orientation } =
+    const { name, gender, bio, age, city, zodiac, mbti, job, orientation } =
       req.body || {};
 
     const newData = await db
@@ -81,7 +81,7 @@ const createProfile = async (req, res) => {
         gender: gender || "U",
         bio: bio || "",
         age: age || 0,
-        location: location || "",
+        city: city || "",
         zodiac: zodiac || "",
         mbti: mbti || "",
         job: job || "",
@@ -111,7 +111,7 @@ const updateProfile = async (req, res) => {
       "orientation",
       "bio",
       "age",
-      "location",
+      "city",
       "zodiac",
       "mbti",
       "job",
