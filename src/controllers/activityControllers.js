@@ -149,10 +149,15 @@ const getActivityById = async (req, res) => {
         created_by_id: activities.created_by_id,
         max_participants: activities.max_participants,
         created_by_username: usersTable.username,
+        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
+          "current_participants"
+        ),
       })
       .from(activities)
       .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
-      .where(eq(activities.id, id));
+      .leftJoin(userAttendActivityTable, eq(activities.id, userAttendActivityTable.activityId))
+      .where(eq(activities.id, id))
+      .groupBy(activities.id, usersTable.username);
 
     if (!activity) {
       return res.status(404).json({ error: "Not found" });
@@ -262,7 +267,9 @@ const deleteActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    await db.delete(userAttendActivityTable).where(eq(userAttendActivityTable.activityId, id));
+    await db
+      .delete(userAttendActivityTable)
+      .where(eq(userAttendActivityTable.activityId, id));
     const [activity] = await db
       .delete(activities)
       .where(and(eq(activities.id, id), eq(activities.created_by_id, userId)))
@@ -303,12 +310,10 @@ const postJoinActivity = async (req, res) => {
       return res.status(409).json({ message: result.message });
     }
 
-    return res
-      .status(201)
-      .json({
-        message: result.message,
-        current_participants: result.current_participants,
-      });
+    return res.status(201).json({
+      message: result.message,
+      current_participants: result.current_participants,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "伺服器錯誤" });
