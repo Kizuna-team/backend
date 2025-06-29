@@ -81,14 +81,14 @@ const createProfile = async (req, res) => {
       .values({
         userId: userId,
         name: name || "",
-        gender: gender || "U", // U 表示 unknown
+        gender: gender || -1, // -1 表示 未知未填寫
         bio: bio || "",
-        age: age || 0,
+        age: age || null,
         city: city || "",
         zodiac: zodiac || "",
         mbti: mbti || "",
         job: job || "",
-        orientation: orientation || 2, // 沒填就預設男女都可以
+        orientation: orientation || 2, // 沒填預設男女都可以
       })
       .returning();
 
