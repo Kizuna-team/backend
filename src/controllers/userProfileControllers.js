@@ -1,11 +1,15 @@
 const db = require("../db/index.js");
 
+
 const { profileTable, photosTable } = require("../db/schema");
 const { eq, not } = require("drizzle-orm");
+
 const { getProfileByIdFromDB } = require("../services/userProfile");
 const { findSpecifiedPhotos } = require("../services/userPhoto");
 const { getRecommendedUsers } = require("../services/recommendationService");
 
+
+// GET 篩選邏輯的配對對象 「推薦排序 + 個人資料 + 照片」
 const getSortedProfiles = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -79,7 +83,12 @@ const getSortedProfiles = async (req, res) => {
       photos: photoMap[user.userId] || [],
     }));
 
-    usersWithPhotos.forEach((user) => {
+    const filteredWithPhotos = usersWithPhotos.filter(
+      (user) => user.photos.length > 0
+    );
+
+    // 印出「有照片的使用者」的照片資訊 debug 用
+    filteredWithPhotos.forEach((user) => {
       console.log(` 使用者 ${user.userId} 的照片：`);
       user.photos.forEach((photo, index) => {
         console.log(`   第 ${index + 1} 張:`, photo);
@@ -88,7 +97,7 @@ const getSortedProfiles = async (req, res) => {
 
     res.status(200).json({
       message: "取得配對對象成功",
-      users: usersWithPhotos,
+      users: filteredWithPhotos,
     });
   } catch (error) {
     console.error("getAllProfiles failed:", error.message);
