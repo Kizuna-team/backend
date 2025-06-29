@@ -65,7 +65,7 @@ router.get("/me", authMiddleware, getMyJoinActivity);
  *         schema:
  *           type: integer
  */
-router.get("/:id", authMiddleware, getActivityById);
+router.get("/:id", getActivityById);
 /**
  * @swagger
  * /activities:
