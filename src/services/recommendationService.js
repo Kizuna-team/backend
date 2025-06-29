@@ -58,70 +58,93 @@ async function getRecommendedUsers(userId) {
   const userOrientation = userProfile?.orientation;
   const userInterests = await getUserInterests(userId);
 
-  // 開始比對推薦對象
-  const recommendations = await Promise.all(
-    targetPrefResult.map(async (targetPref) => {
-      const targetUserId = targetPref.userId;
-      const targetProfile = profileMap.get(targetUserId);
-      if (!targetProfile) return null;
+  const filterAndScore = async (relaxAge = false) => {
+    const ageMin = relaxAge ? userPref.ageMin - 8 : userPref.ageMin;
+    const ageMax = relaxAge ? userPref.ageMax + 8 : userPref.ageMax;
 
-      const targetGender = genderToNum(targetProfile.gender);
-      const targetOrientation = targetProfile.orientation;
-      const targetAge = targetProfile.age;
+    // 開始比對推薦對象
+    const recommendations = await Promise.all(
+      targetPrefResult.map(async (targetPref) => {
+        const targetUserId = targetPref.userId;
+        const targetProfile = profileMap.get(targetUserId);
+        if (!targetProfile) return null;
 
-      // 雙向性向條件檢查 彼此接受
-      const isMatch =
-        matchOrientation(userOrientation, userGender, targetGender) &&
-        matchOrientation(targetOrientation, targetGender, userGender);
+        const targetGender = genderToNum(targetProfile.gender);
+        const targetOrientation = targetProfile.orientation;
+        const targetAge = targetProfile.age;
 
-      if (!isMatch) return null;
+        // 雙向性向條件檢查 彼此接受
+        const isMatch =
+          matchOrientation(userOrientation, userGender, targetGender) &&
+          matchOrientation(targetOrientation, targetGender, userGender);
 
-      // 補檢查照片數量 過濾條件
-      const targetPhotos = await findSpecifiedPhotos(targetUserId, {
-        sequenceRange: [1, 6],
-      });
+        if (!isMatch) return null;
 
-      if (!targetPhotos || targetPhotos.length < 1) {
-        return null;
-      }
+        // 年齡不符跳過
+        if (targetAge < ageMin || targetAge > ageMax) return null;
 
-      let score = 0;
+        // 補檢查照片數量 過濾條件
+        const targetPhotos = await findSpecifiedPhotos(targetUserId, {
+          sequenceRange: [1, 6],
+        });
+        if (!targetPhotos || targetPhotos.length < 1) {
+          return null;
+        }
 
-      if (targetAge >= userPref.ageMin && targetAge <= userPref.ageMax) {
-        score++;
-      }
+        let score = 0;
+        score++; // 年齡已通過篩選
+        if (targetPref.musicMatch === userPref.musicMatch) score++;
+        if (targetPref.introvertOrExtrovert === userPref.introvertOrExtrovert)
+          score++;
+        if (targetPref.pet === userPref.pet) score++;
+        if (targetPref.wakeUpTime === userPref.wakeUpTime) score++;
 
-      if (targetPref.musicMatch === userPref.musicMatch) score++;
-      if (targetPref.introvertOrExtrovert === userPref.introvertOrExtrovert)
-        score++;
-      if (targetPref.pet === userPref.pet) score++;
-      if (targetPref.wakeUpTime === userPref.wakeUpTime) score++;
+        const targetInterests = await getUserInterests(targetUserId);
+        const sharedInterests = targetInterests.filter((i) =>
+          userInterests.includes(i)
+        );
+        score += sharedInterests.length;
 
-      const targetInterests = await getUserInterests(targetUserId);
-      const sharedInterests = targetInterests.filter((i) =>
-        userInterests.includes(i)
-      );
-      score += sharedInterests.length;
+        return {
+          ...targetPref,
+          score,
+          photos: targetPhotos,
+        };
+      })
+    );
 
-      return {
-        ...targetPref,
-        score,
-        photos: targetPhotos,
-      };
-    })
-  );
+    const sorted = recommendations
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score);
 
-  const sorted = recommendations
-    .filter(Boolean)
-    .sort((a, b) => b.score - a.score);
+    const finalRecommendations = sorted
+      .slice(0, 30) // 用前端鎖人數
+      .map(({ score, ...rest }) => rest); // 拿掉 score 再傳給前端
 
+    console.log("這是sorted出來的值:", sorted);
+
+    return finalRecommendations;
+  };
+  // 嘗試先用 原本年齡區間
+  let sorted = await filterAndScore(false);
+  let relaxed = false;
+
+  // 如果找不到 放寬條件
+  if (sorted.length < 50) {
+    const relaxedSorted = await filterAndScore(true);
+    if (relaxedSorted.length > sorted.length) {
+      sorted = await relaxedSorted;
+      relaxed = true;
+    }
+  }
   const finalRecommendations = sorted
-    .slice(0, 30) // 用前端鎖人數
-    .map(({ score, ...rest }) => rest); // 拿掉 score 再傳給前端
+    .slice(0, 30)
+    .map(({ score, ...rest }) => rest);
 
-  console.log("這是sorted出來的值:", sorted);
-
-  return finalRecommendations;
+  return {
+    users: finalRecommendations,
+    relaxed,
+  };
 }
 
 module.exports = { getRecommendedUsers };

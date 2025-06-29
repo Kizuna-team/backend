@@ -74,7 +74,6 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
-app.use("/recommendations", recommendationRoutes);
 app.use("/order", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
@@ -94,7 +93,7 @@ app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
 app.use("/matches", matchesRoutes);
 app.use("/user-filter", userFilterRoutes);
-
+app.use("/recommend", recommendationRoutes);
 /**
  * @swagger
  * /api/me:
@@ -165,7 +164,7 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           )
           .where(eq(usersTable.id, req.user.id));
 
-          console.log("重新更新過的使用者資料:",updatedUser);
+        console.log("重新更新過的使用者資料:", updatedUser);
         return res.json({
           user: {
             username: user.username,
@@ -175,7 +174,6 @@ app.get("/api/me", authMiddleware, async (req, res) => {
           },
         });
       }
-
     }
     // 正常回傳 user（沒過期）
     res.json({
