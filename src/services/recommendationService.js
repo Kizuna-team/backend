@@ -106,6 +106,7 @@ async function getRecommendedUsers(userId) {
       return {
         ...targetPref,
         score,
+        photos: targetPhotos,
       };
     })
   );
