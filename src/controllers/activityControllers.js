@@ -3,6 +3,7 @@ const {
   activities,
   usersTable,
   userAttendActivityTable,
+  profileTable
 } = require("../db/schema.js");
 const { eq, and, sql, desc, count, inArray } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -107,6 +108,7 @@ const getMyActivities = async (req, res) => {
           "current_participants"
         ),
         created_by_username: usersTable.username,
+        participants: sql`COALESCE(JSON_AGG(${profileTable.name}) FILTER (WHERE ${profileTable.name} IS NOT NULL), '[]')`.as("participants"),
       })
       .from(activities)
       .orderBy(desc(activities.created_at))
@@ -115,6 +117,7 @@ const getMyActivities = async (req, res) => {
         userAttendActivityTable,
         eq(activities.id, userAttendActivityTable.activityId)
       )
+      .leftJoin(profileTable, eq(userAttendActivityTable.userId, profileTable.userId))
       .where(eq(activities.created_by_id, userId))
       .groupBy(activities.id, usersTable.username);
 
