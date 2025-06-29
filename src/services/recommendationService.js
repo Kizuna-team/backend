@@ -59,8 +59,10 @@ async function getRecommendedUsers(userId) {
   const userInterests = await getUserInterests(userId);
 
   const filterAndScore = async (relaxAge = false) => {
-    const ageMin = relaxAge ? userPref.ageMin - 8 : userPref.ageMin;
-    const ageMax = relaxAge ? userPref.ageMax + 8 : userPref.ageMax;
+    const ageMin = relaxAge ? userPref.ageMin - 5 : userPref.ageMin;
+    const ageMax = relaxAge ? userPref.ageMax + 5 : userPref.ageMax;
+
+    console.log(`🎯 比對條件：ageMin=${ageMin}, ageMax=${ageMax}`);
 
     // 開始比對推薦對象
     const recommendations = await Promise.all(
@@ -81,8 +83,10 @@ async function getRecommendedUsers(userId) {
         if (!isMatch) return null;
 
         // 年齡不符跳過
-        if (targetAge < ageMin || targetAge > ageMax) return null;
-
+        if (targetAge < ageMin || targetAge > ageMax) {
+          console.log(`🚫 排除年齡不符：${targetProfile.name} (${targetAge})`);
+          return null;
+        }
         // 補檢查照片數量 過濾條件
         const targetPhotos = await findSpecifiedPhotos(targetUserId, {
           sequenceRange: [1, 6],
@@ -106,9 +110,17 @@ async function getRecommendedUsers(userId) {
         score += sharedInterests.length;
 
         return {
-          ...targetPref,
-          score,
+          userId: targetUserId,
           photos: targetPhotos,
+          score,
+          name: targetProfile?.name || "",
+          age: targetProfile?.age || null,
+          city: targetProfile?.city || "",
+          mbti: targetProfile?.mbti || "",
+          zodiac: targetProfile?.zodiac || "",
+          job: targetProfile?.job || "",
+          bio: targetProfile?.bio || "",
+          ...targetPref,
         };
       })
     );
@@ -118,7 +130,7 @@ async function getRecommendedUsers(userId) {
       .sort((a, b) => b.score - a.score);
 
     const finalRecommendations = sorted
-      .slice(0, 30) // 用前端鎖人數
+      .slice(0, 5) // 改這邊
       .map(({ score, ...rest }) => rest); // 拿掉 score 再傳給前端
 
     console.log("這是sorted出來的值:", sorted);
@@ -126,25 +138,36 @@ async function getRecommendedUsers(userId) {
     return finalRecommendations;
   };
   // 嘗試先用 原本年齡區間
-  let sorted = await filterAndScore(false);
+  let hardSortedResult = await filterAndScore(false);
   let relaxed = false;
 
+  const minResult = 20;
+
   // 如果找不到 放寬條件
-  if (sorted.length < 50) {
-    const relaxedSorted = await filterAndScore(true);
-    if (relaxedSorted.length > sorted.length) {
-      sorted = await relaxedSorted;
+  if (hardSortedResult.length < minResult) {
+    const relaxedSortedResult = await filterAndScore(true);
+    if (relaxedSortedResult.length > hardSortedResult.length) {
+      hardSortedResult = relaxedSortedResult;
       relaxed = true;
     }
   }
+
+  const sorted = hardSortedResult
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score);
+
   const finalRecommendations = sorted
-    .slice(0, 30)
+    .slice(0, 10)
     .map(({ score, ...rest }) => rest);
 
-  return {
-    users: finalRecommendations,
+  console.log(" 篩選後的對象：", finalRecommendations.length, "人");
+  console.log(" 回傳結果：", {
     relaxed,
+    finalRecommendations,
+  });
+  return {
+    relaxed,
+    data: finalRecommendations,
   };
 }
-
 module.exports = { getRecommendedUsers };
