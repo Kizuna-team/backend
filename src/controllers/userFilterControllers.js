@@ -7,8 +7,8 @@ const saveUserInterests = async (req, res) => {
   const userId = req.user?.id;
   const { interestIds } = req.body;
 
-  if (!Array.isArray(interestIds)) {
-    return res.status(400).json({ message: "interestIds 必須是陣列" });
+  if (!Array.isArray(interestIds) || interestIds.length === 0) {
+    return res.status(400).json({ message: "請挑選至少一個你感興趣的選項" });
   }
 
   try {
