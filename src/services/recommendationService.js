@@ -64,6 +64,8 @@ async function getRecommendedUsers(userId) {
 
     console.log(`🎯 比對條件：ageMin=${ageMin}, ageMax=${ageMax}`);
 
+    const firstFiltered = []; // 測試
+
     // 開始比對推薦對象
     const recommendations = await Promise.all(
       targetPrefResult.map(async (targetPref) => {
@@ -80,13 +82,20 @@ async function getRecommendedUsers(userId) {
           matchOrientation(userOrientation, userGender, targetGender) &&
           matchOrientation(targetOrientation, targetGender, userGender);
 
-        if (!isMatch) return null;
+        if (!isMatch) {
+          console.log(`❌ 性向不符，跳過：${targetProfile.name}`);
+          return null;
+        }
 
         // 年齡不符跳過
         if (targetAge < ageMin || targetAge > ageMax) {
           console.log(`🚫 排除年齡不符：${targetProfile.name} (${targetAge})`);
           return null;
         }
+
+        // 記錄性向＋年齡通過的人
+        firstFiltered.push(targetUserId);
+
         // 補檢查照片數量 過濾條件
         const targetPhotos = await findSpecifiedPhotos(targetUserId, {
           sequenceRange: [1, 6],
@@ -130,13 +139,15 @@ async function getRecommendedUsers(userId) {
       .sort((a, b) => b.score - a.score);
 
     const finalRecommendations = sorted
-      .slice(0, 5) // 改這邊
+      .slice(0, 20) // 改這邊
       .map(({ score, ...rest }) => rest); // 拿掉 score 再傳給前端
 
+    console.log("✅ 通過硬條件（性向 + 年齡）的人數：", firstFiltered.length);
     console.log("這是sorted出來的值:", sorted);
 
     return finalRecommendations;
   };
+
   // 嘗試先用 原本年齡區間
   let hardSortedResult = await filterAndScore(false);
   let relaxed = false;
@@ -160,11 +171,11 @@ async function getRecommendedUsers(userId) {
     .slice(0, 10)
     .map(({ score, ...rest }) => rest);
 
-  console.log(" 篩選後的對象：", finalRecommendations.length, "人");
-  console.log(" 回傳結果：", {
-    relaxed,
-    finalRecommendations,
-  });
+  console.log(
+    `✅ 【${relaxed ? "放寬年齡" : "原始條件"}】推薦筆數：`,
+    finalRecommendations.length
+  );
+
   return {
     relaxed,
     data: finalRecommendations,

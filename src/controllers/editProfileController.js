@@ -107,6 +107,10 @@ const createProfile = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
+  console.log("✅ 進入 PATCH /profile/me");
+  console.log("🔐 req.user:", req.user); // 看是否有登入資訊
+  console.log("📦 req.body:", req.body); // 看前端送了哪些資料
+
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -138,6 +142,8 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "未提供任何更新資料" });
     }
 
+    console.log("📤 即將更新資料：", updateData);
+
     const updateResult = await db
       .update(profileTable)
       .set(updateData)
@@ -147,6 +153,8 @@ const updateProfile = async (req, res) => {
     if (updateResult.length === 0) {
       return res.status(404).json({ message: "使用者資料不存在" });
     }
+
+    console.log("✅ 更新成功：", updateResult[0]);
 
     res.json({ message: "更新成功", user: updateResult[0] });
   } catch (error) {
