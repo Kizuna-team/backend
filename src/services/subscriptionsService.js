@@ -5,24 +5,14 @@ const db = require("../db/index");
 const plansConfig = {
   1: {
     planName: "普通會員",
-    TargetUserLimit: 20,
+    TargetUserLimit: 10,
     superLikeLimit: 1,
   },
   2: {
     planName: "高級會員",
-    TargetUserLimit: 50,
+    TargetUserLimit: 20,
     superLikeLimit: 5,
   },
-};
-
-const getPlan = async (userId) => {
-  const [user] = await db
-    .select({ subscription_plan: usersTable.subscription_plan })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-
-  const planId = user?.subscription_plan || 1;
-  return plansConfig[planId] || plansConfig[1];
 };
 
 const isValidMember = async (userId) => {
@@ -37,10 +27,22 @@ const isValidMember = async (userId) => {
         gte(subscriptionsTable.end_date, present)
       )
     );
-  return memberRecord.length > 0;
+  return memberRecord.length > 0; // 有紀錄 > 效訂閱會員
+};
+
+// 自動取得該使用者的方案設定
+const getPlan = async (userId) => {
+  const [user] = await db
+    .select({ subscription_plan: usersTable.subscription_plan })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+
+  const planId = user?.subscription_plan || 1; // 預設為普通會員
+  const isActive = await isValidMember(userId);
+  const verifiedPlanId = isActive ? planId : 1;
+  return plansConfig[verifiedPlanId] || plansConfig[1];
 };
 
 module.exports = {
   getPlan,
-  isValidMember,
 };

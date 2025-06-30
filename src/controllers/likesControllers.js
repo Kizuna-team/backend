@@ -40,7 +40,7 @@ const createLike = async (req, res) => {
       return res.status(409).json({
         success: false,
         matched: false,
-        message: "不可重複發送喜歡",
+        message: "已發送過，等待對方回應中...",
       });
     }
 
@@ -123,7 +123,7 @@ const createLike = async (req, res) => {
       return res.json({
         success: true,
         matched: false,
-        message: "已送出喜歡，等待對方回應",
+        message: "已發送過，等待對方回應中...",
       });
     }
   } catch (error) {

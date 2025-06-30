@@ -4,19 +4,19 @@ const { getPlan } = require("./subscriptionsService.js");
 const { eq } = require("drizzle-orm");
 
 const checkSuperLikeAuth = async (userId) => {
-  const config = await getPlan(userId);
+  const planConfig = await getPlan(userId);
   const usedRecord = await db
     .select()
     .from(superLikesTable)
     .where(eq(superLikesTable.userId, userId));
 
   const usedCount = usedRecord.length;
-  const limit = config.superLikeLimit;
+  const limit = planConfig.superLikeLimit;
   const remainingCount = limit - usedCount;
   const isWithinLimit = remainingCount > 0;
 
   return {
-    planName: config.planName,
+    planName: planConfig.planName,
     limit,
     remainingCount,
     isWithinLimit,

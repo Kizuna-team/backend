@@ -1,7 +1,7 @@
 const db = require("../db/index.js");
 const { profileTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
-
+const { validateProfileInput } = require("../lib/profileValidators.js");
 const getProfile = async (req, res) => {
   console.log("getProfile req.user:", req.user);
   try {
@@ -32,7 +32,7 @@ const getProfile = async (req, res) => {
       return res.json({
         message: "使用者尚未建立個人資料",
         user: {
-          id: null,
+          id: req.user.id,
           name: "",
           gender: "",
           orientation: "",
@@ -70,8 +70,13 @@ const createProfile = async (req, res) => {
       return res.status(409).json({ message: "使用者資料已存在" });
     }
 
+    const errors = validateProfileInput(req.body);
+    if (errors.length > 0) {
+      return res.status(400).json({ message: "資料格式錯誤", errors });
+    }
+
     const { name, gender, bio, age, city, zodiac, mbti, job, orientation } =
-      req.body || {};
+      req.body;
 
     const newData = await db
       .insert(profileTable)

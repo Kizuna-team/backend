@@ -68,7 +68,6 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
-app.use("/recommendations", recommendationRoutes);
 app.use("/order", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/activities", activityRoutes);
@@ -87,7 +86,7 @@ app.use("/api/subPlans", subPlansRoutes);
 app.use("/paypal", paypalRoutes);
 app.use("/matches", matchesRoutes);
 app.use("/user-filter", userFilterRoutes);
-
+app.use("/recommend", recommendationRoutes);
 /**
  * @swagger
  * /api/me:
