@@ -121,18 +121,59 @@ const getRecommendedUsers = async (userId) => {
         };
       })
     );
-    return recommendations
-      .filter(Boolean)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10) // 改這邊
-      .map(({ score, ...rest }) => rest); // 拿掉 score 再傳給前端
+    return recommendations.filter(Boolean).sort((a, b) => b.score - a.score); // 先看多少人
   };
-  const data = await filterAndScore(false);
 
-  // 加上 relaxed 標記
+  // 先嚴格找
+  const dataStrict = await filterAndScore(false);
+
+  let finalList = [...dataStrict];
+  let relaxed = false;
+
+  // 不足放寬補人
+  if (finalList.length < 20) {
+    // 不足放寬補人
+    const relaxedList = await filterAndScore(true);
+    const existingIds = new Set(finalList.map((u) => u.userId));
+    const newRelaxed = relaxedList.filter((u) => !existingIds.has(u.userId));
+
+    if (newRelaxed.length > 0) {
+      finalList = [...finalList, ...newRelaxed];
+      relaxed = true;
+    }
+  }
+
+  // 最後如果還不足 20 人 → 從資料庫補人
+  if (finalList.length < 20) {
+    const finalIds = new Set(finalList.map((u) => u.userId));
+    finalIds.add(userId); // 不加自己
+
+    const allFillerCandidates = await db.select().from(profileTable);
+    const fillerNeeded = 20 - finalList.length;
+
+    const fillers = allFillerCandidates
+      .filter((u) => !finalIds.has(u.userId))
+      .slice(0, fillerNeeded)
+      .map((u) => ({
+        userId: u.userId,
+        name: u.name || "",
+        age: u.age || null,
+        city: u.city || "",
+        mbti: u.mbti || "",
+        zodiac: u.zodiac || "",
+        job: u.job || "",
+        bio: u.bio || "",
+        photos: [],
+        isFiller: true,
+      }));
+
+    finalList = [...finalList, ...fillers];
+    relaxed = true;
+  }
+  // 回傳最終 20 人（不含 score）
   return {
-    relaxed: false,
-    data,
+    relaxed,
+    data: finalList.slice(0, 20).map(({ score, ...rest }) => rest),
   };
 };
 
