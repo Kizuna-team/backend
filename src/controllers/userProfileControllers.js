@@ -1,13 +1,12 @@
 const db = require("../db/index.js");
 
-
 const { profileTable, photosTable } = require("../db/schema");
 const { eq, not } = require("drizzle-orm");
 
 const { getProfileByIdFromDB } = require("../services/userProfile");
+
 const { findSpecifiedPhotos } = require("../services/userPhoto");
 const { getRecommendedUsers } = require("../services/recommendationService");
-
 
 // GET 篩選邏輯的配對對象 「推薦排序 + 個人資料 + 照片」
 const getSortedProfiles = async (req, res) => {
@@ -17,90 +16,12 @@ const getSortedProfiles = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: "未授權操作，請先登入" });
     }
-
-    const recommendedUsers = await getRecommendedUsers(userId);
-    console.log("推薦對象筆數：", recommendedUsers.length);
-    console.log(
-      "推薦清單：",
-      recommendedUsers.map((u) => u.userId)
-    );
-
-    const profilesRecord = await db
-      .select({
-        userId: profileTable.userId,
-        name: profileTable.name,
-        bio: profileTable.bio,
-        age: profileTable.age,
-        zodiac: profileTable.zodiac,
-        mbti: profileTable.mbti,
-        job: profileTable.job,
-        city: profileTable.city,
-      })
-      .from(profileTable)
-      .where(not(eq(profileTable.userId, userId)));
-
-    console.log("typeof userId:", typeof userId);
-    const profileMap = new Map();
-    profilesRecord.forEach((p) => profileMap.set(p.userId, p));
-
-    const sortedProfiles = recommendedUsers
-      .map((u) => profileMap.get(u.userId))
-      .filter(Boolean);
-
-    const targetSortedIds = sortedProfiles.map((user) => user.userId);
-
-    const targetUserIds = profilesRecord.map((target) => target.userId);
-
-    const photoRecords = await Promise.all(
-      targetUserIds.map(async (targetId) => {
-        const lifePhotos = await findSpecifiedPhotos(targetId, {
-          sequenceRange: [1, 6],
-        });
-
-        const top3Photos = lifePhotos
-          .filter((p) => p.sequence !== null)
-          .sort((a, b) => a.sequence - b.sequence)
-          .slice(0, 3)
-          .map((p) => ({
-            image_url: p.image_url,
-            sequence: p.sequence,
-          }));
-
-        return {
-          userId: targetId,
-          photos: top3Photos,
-        };
-      })
-    );
-
-    const photoMap = {};
-    for (const record of photoRecords) {
-      photoMap[record.userId] = record.photos;
-    }
-
-    const usersWithPhotos = sortedProfiles.map((user) => ({
-      ...user,
-      photos: photoMap[user.userId] || [],
-    }));
-
-    const filteredWithPhotos = usersWithPhotos.filter(
-      (user) => user.photos.length > 0
-    );
-
-    // 印出「有照片的使用者」的照片資訊 debug 用
-    filteredWithPhotos.forEach((user) => {
-      console.log(` 使用者 ${user.userId} 的照片：`);
-      user.photos.forEach((photo, index) => {
-        console.log(`   第 ${index + 1} 張:`, photo);
-      });
-    });
-
     res.status(200).json({
       message: "取得配對對象成功",
-      users: filteredWithPhotos,
+      users: recommendedUsers,
     });
   } catch (error) {
-    console.error("getAllProfiles failed:", error.message);
+    console.error("getSortedProfiles failed:", error);
     res.status(500).json({ message: "伺服器錯誤", error: error.message });
   }
 };
