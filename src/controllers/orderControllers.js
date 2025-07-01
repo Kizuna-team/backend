@@ -246,6 +246,7 @@ async function getMyOrders(req, res) {
     const orderItems = await db
       .select({
         giftOrderId: orderItemsTable.gift_order_id,
+        productId: productsTable.id,
         productName: productsTable.name,
         quantity: orderItemsTable.quantity,
         imageUrl: productsTable.image_url,
@@ -264,6 +265,7 @@ async function getMyOrders(req, res) {
 
     for (const item of orderItems) {
       orderMap[item.giftOrderId].items.push({
+        productId: item.productId,
         productName: item.productName,
         quantity: item.quantity,
         imageUrl: item.imageUrl,
@@ -337,9 +339,41 @@ async function getReceivedOrders(req, res) {
   }
 }
 
+async function deleteOrder(req, res) {
+  const { orderId } = req.params;
+
+  try {
+    // 先找出訂單主鍵 id
+    const [order] = await db
+      .select({ id: giftOrdersTable.id })
+      .from(giftOrdersTable)
+      .where(eq(giftOrdersTable.order_id, orderId));
+
+    if (!order) {
+      return res.status(404).json({ error: "找不到訂單" });
+    }
+
+    // 刪除 orderItems（先刪子表）
+    await db
+      .delete(orderItemsTable)
+      .where(eq(orderItemsTable.gift_order_id, order.id));
+
+    // 再刪 giftOrders
+    await db
+      .delete(giftOrdersTable)
+      .where(eq(giftOrdersTable.id, order.id));
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("刪除訂單失敗", err);
+    res.status(500).json({ error: "刪除訂單時發生錯誤" });
+  }
+}
+
 module.exports = {
   createOrder,
   confirmOrder,
   getMyOrders,
   getReceivedOrders,
+  deleteOrder,
 };

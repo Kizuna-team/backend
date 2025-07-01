@@ -225,6 +225,27 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
   }
 });
 
+app.get("/get-user-id", async (req, res) => {
+  const { username } = req.query;
+  console.log(username)
+  try {
+    const [user] = await db
+      .select({ userId: profileTable.userId })
+      .from(profileTable)
+      .where(eq(profileTable.name, username));
+
+    if (!user) {
+      return res.status(404).json({ error: "找不到使用者" });
+    }
+
+    res.json({ userId: user.userId });
+  } catch (err) {
+    console.error("查詢使用者錯誤", err);
+    res.status(500).json({ error: "伺服器錯誤" });
+  }
+});
+
+// 啟用 socket.io 聊天室邏輯
 setupSocket(io);
 
 app.use(

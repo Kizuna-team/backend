@@ -5,6 +5,7 @@ const {
   confirmOrder,
   getMyOrders,
   getReceivedOrders,
+  deleteOrder,
 } = require("../controllers/orderControllers.js");
 
 /**
@@ -25,5 +26,6 @@ router.post("/gift-orders", createOrder);
 router.get("/confirm", confirmOrder);
 router.get("/my-orders", getMyOrders);
 router.get("/received", getReceivedOrders);
+router.delete("/delete/:orderId", deleteOrder);
 
 module.exports = router;
