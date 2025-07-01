@@ -45,6 +45,16 @@ const saveUserPreference = async (req, res) => {
   ) {
     return res.status(400).json({ message: "缺少必要欄位" });
   }
+
+  if (
+    Number(ageMin) < 18 ||
+    Number(ageMax) > 70 ||
+    Number(ageMin) > Number(ageMax)
+  ) {
+    return res.status(400).json({
+      message: "年齡範圍需在 18～70 歲，且最小值不可大於最大值",
+    });
+  }
   try {
     await db
       .delete(userPreferencesTable)
@@ -56,8 +66,8 @@ const saveUserPreference = async (req, res) => {
       introvertOrExtrovert,
       pet,
       wakeUpTime,
-      ageMin,
-      ageMax,
+      ageMin: Number(ageMin),
+      ageMax: Number(ageMax),
     });
 
     res.json({ success: true, message: "使用者偏好已儲存" });

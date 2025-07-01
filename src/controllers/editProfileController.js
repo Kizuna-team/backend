@@ -131,9 +131,29 @@ const updateProfile = async (req, res) => {
     });
 
     if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ message: "未提供任何更新資料" });
+      return res.status(400).json({
+        message: "未提供任何更新資料",
+        errors: ["未提供任何更新資料"],
+      });
     }
 
+    // 驗證欄位
+    const errors = validateProfileInput(updateData);
+    if (errors.length > 0) {
+      return res.status(400).json({
+        message: "欄位驗證失敗",
+        errors, // 陣列，前端直接用
+      });
+    }
+    if ("age" in updateData) {
+      const age = Number(updateData.age);
+      if (isNaN(age) || age < 18 || age > 70) {
+        return res.status(400).json({
+          message: "資料格式錯誤",
+          errors: ["年齡需介於 18～70 歲之間"],
+        });
+      }
+    }
     const updateResult = await db
       .update(profileTable)
       .set(updateData)
