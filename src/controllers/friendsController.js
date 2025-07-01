@@ -7,6 +7,8 @@ const {
 } = require("../db/schema");
 const { eq, and } = require("drizzle-orm");
 
+const { createFriendship } = require("../services/matchingService");
+
 async function sendFriendRequest(req, res) {
   const { from_id, to_id } = req.body;
 
@@ -134,26 +136,9 @@ async function directAddFriend(req, res) {
   }
 
   try {
-    const existing = await db
-      .select()
-      .from(friendshipsTable)
-      .where(
-        and(
-          eq(friendshipsTable.user_id, userId),
-          eq(friendshipsTable.friend_id, targetId)
-        )
-      );
+    const roomId = await createFriendship(userId, targetId);
 
-    if (existing.length > 0) {
-      return res.status(200).json({ message: "已是好友", already: true });
-    }
-
-    await db.insert(friendshipsTable).values([
-      { user_id: userId, friend_id: targetId },
-      { user_id: targetId, friend_id: userId },
-    ]);
-
-    res.json({ message: "成功加為好友" });
+    res.json({ message: "成功加為好友", roomId });
   } catch (err) {
     console.error("直接加好友失敗", err);
     res.status(500).json({ error: "伺服器錯誤" });
