@@ -47,7 +47,6 @@ const uploadToS3 = async (file) => {
   return `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 };
 
-// 取得所有活動
 const getAllActivities = async (req, res) => {
   try {
     const result = await db
@@ -87,9 +86,8 @@ const getAllActivities = async (req, res) => {
   }
 };
 
-// 取得我創建的活動
 const getMyActivities = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user.id; 
   try {
     const result = await db
       .select({
@@ -104,17 +102,19 @@ const getMyActivities = async (req, res) => {
         current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
           "current_participants"
         ),
-        created_by_username: profileTable.name,
+        created_by_username: usersTable.username,
+        participants: sql`COALESCE(JSON_AGG(${profileTable.name}) FILTER (WHERE ${profileTable.name} IS NOT NULL), '[]')`.as("participants"),
       })
       .from(activities)
       .orderBy(desc(activities.created_at))
-      .leftJoin(profileTable, eq(activities.created_by_id, profileTable.userId))
+      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
       .leftJoin(
         userAttendActivityTable,
         eq(activities.id, userAttendActivityTable.activityId)
       )
+      .leftJoin(profileTable, eq(userAttendActivityTable.userId, profileTable.userId))
       .where(eq(activities.created_by_id, userId))
-      .groupBy(activities.id, profileTable.name);
+      .groupBy(activities.id, usersTable.username);
 
     const formatted = result.map((item) => ({
       ...item,
@@ -130,7 +130,6 @@ const getMyActivities = async (req, res) => {
   }
 };
 
-// 查詢單一活動（編輯）
 const getActivityById = async (req, res) => {
   const id = parseInt(req.params.id);
 
@@ -208,7 +207,6 @@ const updateActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 查原本的活動
     const [activity] = await db
       .select()
       .from(activities)
@@ -228,7 +226,6 @@ const updateActivity = async (req, res) => {
     const dateForDB = dateValue ? new Date(dateValue) : activity.date;
     const created_at = new Date();
 
-    //合併舊值與新值（只改有傳進來的）
     const [updated] = await db
       .update(activities)
       .set({
@@ -277,7 +274,6 @@ const deleteActivity = async (req, res) => {
   }
 };
 
-//取得我想參加的活動(顯示)
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -327,7 +323,6 @@ const searchActivitiesStatus = async (req, res) => {
   const { userId, activityIds } = req.body;
 
   try {
-    // 查詢所有該使用者已報名的活動
     const joinedActivities = await db
       .select({ activityId: userAttendActivityTable.activityId })
       .from(userAttendActivityTable)
