@@ -3,7 +3,7 @@ const {
   activities,
   usersTable,
   userAttendActivityTable,
-  profileTable
+  profileTable,
 } = require("../db/schema.js");
 const { eq, and, sql, desc, count, inArray } = require("drizzle-orm");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -47,6 +47,7 @@ const uploadToS3 = async (file) => {
   return `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 };
 
+// 取得所有活動
 const getAllActivities = async (req, res) => {
   try {
     const result = await db
@@ -59,19 +60,19 @@ const getAllActivities = async (req, res) => {
         image_url: activities.image_url,
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
-        created_by_username: usersTable.username,
+        created_by_username: profileTable.name,
         max_participants: activities.max_participants,
         current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
           "current_participants"
         ),
       })
       .from(activities)
-      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
+      .leftJoin(profileTable, eq(activities.created_by_id, profileTable.userId))
       .leftJoin(
         userAttendActivityTable,
         eq(activities.id, userAttendActivityTable.activityId)
       )
-      .groupBy(activities.id, usersTable.username)
+      .groupBy(activities.id, profileTable.name)
       .orderBy(desc(activities.created_at));
 
     const formatted = result.map((item) => ({
@@ -86,6 +87,7 @@ const getAllActivities = async (req, res) => {
   }
 };
 
+// 取得我創建的活動
 const getMyActivities = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -102,19 +104,17 @@ const getMyActivities = async (req, res) => {
         current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
           "current_participants"
         ),
-        created_by_username: usersTable.username,
-        participants: sql`COALESCE(JSON_AGG(${profileTable.name}) FILTER (WHERE ${profileTable.name} IS NOT NULL), '[]')`.as("participants"),
+        created_by_username: profileTable.name,
       })
       .from(activities)
       .orderBy(desc(activities.created_at))
-      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
+      .leftJoin(profileTable, eq(activities.created_by_id, profileTable.userId))
       .leftJoin(
         userAttendActivityTable,
         eq(activities.id, userAttendActivityTable.activityId)
       )
-      .leftJoin(profileTable, eq(userAttendActivityTable.userId, profileTable.userId))
       .where(eq(activities.created_by_id, userId))
-      .groupBy(activities.id, usersTable.username);
+      .groupBy(activities.id, profileTable.name);
 
     const formatted = result.map((item) => ({
       ...item,
@@ -130,6 +130,7 @@ const getMyActivities = async (req, res) => {
   }
 };
 
+// 查詢單一活動（編輯）
 const getActivityById = async (req, res) => {
   const id = parseInt(req.params.id);
 
@@ -145,16 +146,11 @@ const getActivityById = async (req, res) => {
         created_at: activities.created_at,
         created_by_id: activities.created_by_id,
         max_participants: activities.max_participants,
-        created_by_username: usersTable.username,
-        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
-          "current_participants"
-        ),
+        created_by_username: profileTable.name,
       })
       .from(activities)
-      .leftJoin(usersTable, eq(activities.created_by_id, usersTable.id))
-      .leftJoin(userAttendActivityTable, eq(activities.id, userAttendActivityTable.activityId))
-      .where(eq(activities.id, id))
-      .groupBy(activities.id, usersTable.username);
+      .leftJoin(profileTable, eq(activities.created_by_id, profileTable.userId))
+      .where(eq(activities.id, id));
 
     if (!activity) {
       return res.status(404).json({ error: "Not found" });
@@ -212,6 +208,7 @@ const updateActivity = async (req, res) => {
   const userId = req.user.id;
 
   try {
+    // 查原本的活動
     const [activity] = await db
       .select()
       .from(activities)
@@ -231,6 +228,7 @@ const updateActivity = async (req, res) => {
     const dateForDB = dateValue ? new Date(dateValue) : activity.date;
     const created_at = new Date();
 
+    //合併舊值與新值（只改有傳進來的）
     const [updated] = await db
       .update(activities)
       .set({
@@ -279,6 +277,7 @@ const deleteActivity = async (req, res) => {
   }
 };
 
+//取得我想參加的活動(顯示)
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -328,6 +327,7 @@ const searchActivitiesStatus = async (req, res) => {
   const { userId, activityIds } = req.body;
 
   try {
+    // 查詢所有該使用者已報名的活動
     const joinedActivities = await db
       .select({ activityId: userAttendActivityTable.activityId })
       .from(userAttendActivityTable)
@@ -340,6 +340,7 @@ const searchActivitiesStatus = async (req, res) => {
 
     const joinedSet = new Set(joinedActivities.map((a) => a.activityId));
 
+    // 查詢所有活動的最大人數
     const activitiesData = await db
       .select({
         id: activities.id,
@@ -348,6 +349,7 @@ const searchActivitiesStatus = async (req, res) => {
       .from(activities)
       .where(inArray(activities.id, activityIds));
 
+    // 查詢所有活動的目前參加人數
     const countResults = await db
       .select({
         activityId: userAttendActivityTable.activityId,
@@ -361,6 +363,7 @@ const searchActivitiesStatus = async (req, res) => {
       countResults.map((row) => [row.activityId, row.count])
     );
 
+    // 組合每個活動的狀態
     const statuses = activitiesData.map((activity) => {
       if (joinedSet.has(activity.id)) {
         return { activityId: activity.id, status: "ALREADY_JOINED" };
