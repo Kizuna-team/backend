@@ -87,7 +87,7 @@ const getAllActivities = async (req, res) => {
 };
 
 const getMyActivities = async (req, res) => {
-  const userId = req.user.id; 
+  const userId = req.user.id;
   try {
     const result = await db
       .select({
@@ -103,7 +103,10 @@ const getMyActivities = async (req, res) => {
           "current_participants"
         ),
         created_by_username: usersTable.username,
-        participants: sql`COALESCE(JSON_AGG(${profileTable.name}) FILTER (WHERE ${profileTable.name} IS NOT NULL), '[]')`.as("participants"),
+        participants:
+          sql`COALESCE(JSON_AGG(${profileTable.name}) FILTER (WHERE ${profileTable.name} IS NOT NULL), '[]')`.as(
+            "participants"
+          ),
       })
       .from(activities)
       .orderBy(desc(activities.created_at))
@@ -112,7 +115,10 @@ const getMyActivities = async (req, res) => {
         userAttendActivityTable,
         eq(activities.id, userAttendActivityTable.activityId)
       )
-      .leftJoin(profileTable, eq(userAttendActivityTable.userId, profileTable.userId))
+      .leftJoin(
+        profileTable,
+        eq(userAttendActivityTable.userId, profileTable.userId)
+      )
       .where(eq(activities.created_by_id, userId))
       .groupBy(activities.id, usersTable.username);
 
@@ -146,10 +152,18 @@ const getActivityById = async (req, res) => {
         created_by_id: activities.created_by_id,
         max_participants: activities.max_participants,
         created_by_username: profileTable.name,
+        current_participants: sql`COUNT(${userAttendActivityTable.userId})`.as(
+          "current_participants"
+        ),
       })
       .from(activities)
       .leftJoin(profileTable, eq(activities.created_by_id, profileTable.userId))
-      .where(eq(activities.id, id));
+      .leftJoin(
+        userAttendActivityTable,
+        eq(activities.id, userAttendActivityTable.activityId)
+      )
+      .where(eq(activities.id, id))
+      .groupBy(activities.id, profileTable.name);
 
     if (!activity) {
       return res.status(404).json({ error: "Not found" });
