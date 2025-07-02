@@ -33,14 +33,21 @@ const createLike = async (req, res) => {
       .select()
       .from(likesTable)
       .where(
-        and(eq(likesTable.userId, userId), eq(likesTable.targetId, targetId))
+        and(
+          eq(likesTable.userId, userId),
+          eq(likesTable.targetId, targetId),
+          eq(likesTable.status, 1) // 只擋送過 like，讓 dislike 通過
+        )
       );
 
-    if (mySuperLikesRecord.length > 0 || myLikesRecord.length > 0) {
+    if (
+      (status === 1 && myLikesRecord.length > 0) ||
+      (status === 2 && mySuperLikesRecord.length > 0)
+    ) {
       return res.status(409).json({
         success: false,
         matched: false,
-        message: "已發送過，等待對方回應中...",
+        message: "你已經送出反應，請勿重複操作",
       });
     }
 
@@ -64,7 +71,7 @@ const createLike = async (req, res) => {
         )
       );
 
-    if (targetLikesRecord.length > 0) {
+    if (targetLikesRecord.length > 0 && status === 1) {
       await db
         .insert(matchesTable)
         .values({
@@ -119,13 +126,13 @@ const createLike = async (req, res) => {
         myProfile,
         message: "雙方配對成功！",
       });
-    } else {
-      return res.json({
-        success: true,
-        matched: false,
-        message: "已發送過，等待對方回應中...",
-      });
     }
+
+    return res.status(200).json({
+      success: true,
+      matched: false,
+      message: "送出成功，等待對方回應中...",
+    });
   } catch (error) {
     console.error("Create like failed:", error.message);
     res.status(500).json({ message: "伺服器錯誤，請稍後再試" });
