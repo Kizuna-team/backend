@@ -30,8 +30,8 @@ const matchOrientation = (orientation, userGender, targetGender) => {
   return false;
 };
 
-// 完成名單過濾與排序
-const getRecommendedUsers = async (userId) => {
+// 完成名單過濾與排序，一律會根據方案傳入 limit
+const getRecommendedUsers = async (userId, limit) => {
   const currentUserPrefResult = await db
     .select()
     .from(userPreferencesTable)
@@ -131,7 +131,7 @@ const getRecommendedUsers = async (userId) => {
   let relaxed = false;
 
   // 不足放寬補人
-  if (finalList.length < 20) {
+  if (finalList.length < limit) {
     // 不足放寬補人
     const relaxedList = await filterAndScore(true);
     const existingIds = new Set(finalList.map((u) => u.userId));
@@ -144,12 +144,12 @@ const getRecommendedUsers = async (userId) => {
   }
 
   // 最後如果還不足 20 人 → 從資料庫補人
-  if (finalList.length < 20) {
+  if (finalList.length < limit) {
     const finalIds = new Set(finalList.map((u) => u.userId));
     finalIds.add(userId); // 不加自己
 
     const allFillerCandidates = await db.select().from(profileTable);
-    const fillerNeeded = 20 - finalList.length;
+    const fillerNeeded = limit - finalList.length;
 
     const fillers = allFillerCandidates
       .filter((u) => !finalIds.has(u.userId))
@@ -170,10 +170,10 @@ const getRecommendedUsers = async (userId) => {
     finalList = [...finalList, ...fillers];
     relaxed = true;
   }
-  // 回傳最終 20 人（不含 score）
+  // 回傳最終 limit(方案人數) （不含 score）
   return {
     relaxed,
-    data: finalList.slice(0, 20).map(({ score, ...rest }) => rest),
+    data: finalList.slice(0, limit).map(({ score, ...rest }) => rest),
   };
 };
 
