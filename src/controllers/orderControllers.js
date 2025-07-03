@@ -39,8 +39,6 @@ async function increaseProductSales(orderId) {
 async function createOrder(req, res) {
   const { sender_id, receiver_id, items, message } = req.body;
 
-  console.log("收到的訂單資料:", req.body);
-
   if (
     !sender_id ||
     !receiver_id ||
@@ -179,8 +177,6 @@ async function confirmOrder(req, res) {
       },
     });
 
-    console.log("LINE Pay confirm 回傳結果：", result);
-
     if (result.returnCode === "0000") {
       await db
         .update(giftOrdersTable)
@@ -239,7 +235,10 @@ async function getMyOrders(req, res) {
       .from(giftOrdersTable)
 
       // 用 innerJoin 取得 收件人的名字
-      .innerJoin(profileTable, eq(giftOrdersTable.receiver_id, profileTable.userId))
+      .innerJoin(
+        profileTable,
+        eq(giftOrdersTable.receiver_id, profileTable.userId)
+      )
       .where(eq(giftOrdersTable.sender_id, userId));
 
     const orderIds = orders.map((order) => order.id);
@@ -295,7 +294,10 @@ async function getReceivedOrders(req, res) {
         message: giftOrdersTable.message,
       })
       .from(giftOrdersTable)
-      .innerJoin(profileTable, eq(giftOrdersTable.sender_id, profileTable.userId))
+      .innerJoin(
+        profileTable,
+        eq(giftOrdersTable.sender_id, profileTable.userId)
+      )
       .where(
         and(
           eq(giftOrdersTable.receiver_id, userId),
@@ -359,9 +361,7 @@ async function deleteOrder(req, res) {
       .where(eq(orderItemsTable.gift_order_id, order.id));
 
     // 再刪 giftOrders
-    await db
-      .delete(giftOrdersTable)
-      .where(eq(giftOrdersTable.id, order.id));
+    await db.delete(giftOrdersTable).where(eq(giftOrdersTable.id, order.id));
 
     res.json({ success: true });
   } catch (err) {

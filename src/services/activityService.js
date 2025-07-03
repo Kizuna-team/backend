@@ -30,7 +30,6 @@ const getJoinedActivitiesByUserId = async (userId) => {
       eq(userAttendActivityTable.activityId, activities.id)
     )
     .where(eq(userAttendActivityTable.userId, userId));
-  console.log(res);
   return res;
 };
 

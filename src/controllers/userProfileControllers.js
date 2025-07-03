@@ -12,7 +12,6 @@ const { getRecommendedUsers } = require("../services/recommendationService");
 const getSortedProfiles = async (req, res) => {
   try {
     const userId = req.user?.id;
-    console.log("userId:", userId);
     if (!userId) {
       return res.status(401).json({ message: "未授權操作，請先登入" });
     }

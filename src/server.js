@@ -181,7 +181,6 @@ app.get("/api/me", authMiddleware, async (req, res) => {
 app.get("/friendLists", authMiddleware, async (req, res) => {
   try {
     const currentUserId = req.user.id;
-    console.log("現在登入房間的使用者:", currentUserId);
 
     const friends = await db
       .select({
@@ -204,8 +203,6 @@ app.get("/friendLists", authMiddleware, async (req, res) => {
       )
       .where(eq(friendshipsTable.user_id, currentUserId));
 
-    console.log(friends);
-
     res.json({ friends });
   } catch (error) {
     console.error("無法取得好友列表", error);
@@ -227,7 +224,6 @@ app.get("/messages/:roomId", authMiddleware, async (req, res) => {
 
 app.get("/get-user-id", async (req, res) => {
   const { username } = req.query;
-  console.log(username)
   try {
     const [user] = await db
       .select({ userId: profileTable.userId })

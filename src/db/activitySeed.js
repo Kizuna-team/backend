@@ -95,7 +95,6 @@ const seedActivities = async () => {
     }
 
     await db.insert(activities).values(fakeActivities);
-    console.log("activities 假資料已插入完成");
   } catch (err) {
     console.error("activities 假資料插入錯誤:", err);
   } finally {

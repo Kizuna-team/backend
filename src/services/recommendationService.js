@@ -184,11 +184,11 @@ const sortedProfileWithPhotos = async (userId) => {
   );
 
   const targetUserIds = finalRecommendations.map((u) => u.userId);
-  console.log("推薦對象筆數：", finalRecommendations.length);
-  console.log(
-    "推薦清單：",
-    finalRecommendations.map((u) => u.userId)
-  );
+  // console.log("推薦對象筆數：", finalRecommendations.length);
+  // console.log(
+  //   "推薦清單：",
+  //   finalRecommendations.map((u) => u.userId)
+  // );
 
   const photoRecords = await Promise.all(
     targetUserIds.map(async (targetId) => {

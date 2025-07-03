@@ -73,7 +73,6 @@ const createLike = async (req, res) => {
           matchedAt: new Date(),
         })
         .onConflictDoNothing();
-      console.log("雙方配對成功，回傳 matchedWith:", targetId);
 
       const targetProfileQuery = db
         .select({
