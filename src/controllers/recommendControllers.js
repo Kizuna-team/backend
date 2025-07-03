@@ -1,5 +1,5 @@
 const { getRecommendedUsers } = require("../services/recommendationService.js");
-const { getPlan } = require("./subscriptionsService.js");
+const { getPlan } = require("../services/subscriptionsService.js");
 
 const getRecommendations = async (req, res) => {
   const userId = req.user?.id;
