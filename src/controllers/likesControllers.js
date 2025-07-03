@@ -33,21 +33,14 @@ const createLike = async (req, res) => {
       .select()
       .from(likesTable)
       .where(
-        and(
-          eq(likesTable.userId, userId),
-          eq(likesTable.targetId, targetId),
-          eq(likesTable.status, 1) // 只擋送過 like，讓 dislike 通過
-        )
+        and(eq(likesTable.userId, userId), eq(likesTable.targetId, targetId))
       );
 
-    if (
-      (status === 1 && myLikesRecord.length > 0) ||
-      (status === 2 && mySuperLikesRecord.length > 0)
-    ) {
+    if (myLikesRecord.length > 0 || mySuperLikesRecord.length > 0) {
       return res.status(409).json({
         success: false,
         matched: false,
-        message: "你已經送出反應，請勿重複操作",
+        message: "已回應過，等待對方回應中...",
       });
     }
 
