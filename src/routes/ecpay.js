@@ -117,13 +117,10 @@ router.post("/notify", async (req, res) => {
         .from(subscriptionsTable)
         .where(eq(subscriptionsTable.merchanttradeno, MerchantTradeNo));
 
-      console.log("查詢到的訂單:", order);
-
       const paidAtUTC = order.paid_at;
       const paidAtTaipei = dayjs(paidAtUTC)
         .tz("Asia/Taipei")
         .format("YYYY-MM-DD HH:mm:ss");
-      console.log("台灣時間:", paidAtTaipei);
 
       if (!order) return res.status(404).send("0|訂單不存在");
 

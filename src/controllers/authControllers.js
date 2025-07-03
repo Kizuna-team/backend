@@ -20,7 +20,6 @@ async function register(req, res) {
       .select()
       .from(usersTable)
       .where(eq(usersTable.username, username));
-    console.log(checkUser);
     if (checkUser.length > 0) {
       return res.status(400).json({ message: "此帳號已存在，請嘗試其他名稱" });
     }

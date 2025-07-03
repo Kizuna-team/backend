@@ -67,7 +67,6 @@ function setupSocket(io) {
 
       const user = users.get(socket.id);
       if (!user || user.roomId !== roomId) {
-        console.log(`用戶 ${senderId} 不在房間 ${roomId} 中`);
         socket.emit("error", { message: "您不在此房間中" });
         return;
       }

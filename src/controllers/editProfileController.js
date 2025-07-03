@@ -3,7 +3,6 @@ const { profileTable } = require("../db/schema");
 const { eq } = require("drizzle-orm");
 const { validateProfileInput } = require("../lib/profileValidators.js");
 const getProfile = async (req, res) => {
-  console.log("getProfile req.user:", req.user);
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -56,7 +55,6 @@ const getProfile = async (req, res) => {
 const createProfile = async (req, res) => {
   try {
     const userId = req.user?.id;
-    console.log("後端收到的 req.body:", req.body);
     if (!userId) {
       return res.status(401).json({ message: "未授權，請先登入" });
     }

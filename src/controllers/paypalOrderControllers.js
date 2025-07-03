@@ -15,8 +15,6 @@ async function createPayPalOrder(req, res) {
   try {
     const { sender_id, receiver_id, items } = req.body;
 
-    console.log("收到的 PayPal 訂單資料:", req.body);
-
     if (
       !sender_id ||
       !receiver_id ||
@@ -40,8 +38,6 @@ async function createPayPalOrder(req, res) {
         totalAmount += product.price * item.quantity;
       }
     });
-
-    console.log("計算出的總金額:", totalAmount);
 
     const request = new paypal.orders.OrdersCreateRequest();
 
@@ -72,9 +68,6 @@ async function createPayPalOrder(req, res) {
       (link) => link.rel === "approve"
     );
 
-    console.log("PayPal 訂單建立成功:", order.result.id);
-    console.log("付款連結:", approveLink.href);
-
     res.json({
       success: true,
       orderID: order.result.id,
@@ -93,18 +86,13 @@ async function capturePayPalOrder(req, res) {
   try {
     const { orderID } = req.body;
 
-    console.log("開始確認 PayPal 付款:", orderID);
-
     const request = new paypal.orders.OrdersCaptureRequest(orderID);
 
     const capture = await paypalClient.execute(request);
 
-    console.log("PayPal 付款狀態:", capture.result.status);
-
     if (capture.result.status === "COMPLETED") {
       const customId =
         capture.result.purchase_units[0].payments.captures[0].custom_id;
-      console.log("取得的 custom_id:", customId);
 
       if (!customId) {
         console.error("PayPal 回調缺少 custom_id");
@@ -191,8 +179,6 @@ async function paypalSuccess(req, res) {
   try {
     const { token, PayerID } = req.query;
 
-    console.log("PayPal 付款成功回調:", { token, PayerID });
-
     if (!token) {
       console.error("缺少 PayPal 訂單 token");
       return res.redirect(`${FRONTEND_URL}/payment?error=missing_token`);
@@ -202,8 +188,6 @@ async function paypalSuccess(req, res) {
       const request = new paypal.orders.OrdersCaptureRequest(token);
 
       const capture = await paypalClient.execute(request);
-
-      console.log("PayPal 付款狀態:", capture.result.status);
 
       if (capture.result.status === "COMPLETED") {
         const customId =
@@ -264,13 +248,10 @@ async function paypalSuccess(req, res) {
           }));
 
           await tx.insert(orderItemsTable).values(itemRows);
-
-          console.log(`PayPal 訂單創建成功: ${orderId}`);
         });
 
         res.redirect(`${FRONTEND_URL}/order/confirm?success=true`);
       } else {
-        console.log("PayPal 付款未完成:", capture.result.status);
         res.redirect(`${FRONTEND_URL}/payment?error=payment_incomplete`);
       }
     } catch (err) {
@@ -285,9 +266,6 @@ async function paypalSuccess(req, res) {
 
 async function paypalCancel(req, res) {
   try {
-    const { token } = req.query;
-    console.log("PayPal 付款被取消:", { token });
-
     res.redirect(`${FRONTEND_URL}/product`);
   } catch (err) {
     console.error("PayPal 取消頁面處理錯誤:", err);

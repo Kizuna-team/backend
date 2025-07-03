@@ -127,7 +127,6 @@ const getMyActivities = async (req, res) => {
       date: formatDate(item.date),
       created_at: formatDate(item.created_at),
     }));
-    console.log("資料庫查詢我的活動結果:", formatted);
 
     res.json(formatted);
   } catch (err) {
@@ -291,7 +290,6 @@ const deleteActivity = async (req, res) => {
 const getMyJoinActivity = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(userId);
     const activities = await getJoinedActivitiesByUserId(userId);
     res.json(activities);
   } catch (error) {
